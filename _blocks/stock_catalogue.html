@@ -1,0 +1,71 @@
+<section id="stock" class="stock-catalogue">
+  <style>
+    .stock-catalogue{background:var(--navy);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .stock-top{display:flex;justify-content:space-between;gap:1.5rem;align-items:end;flex-wrap:wrap;margin-bottom:1.4rem}
+    .stock-top .sec-head{margin-bottom:0}
+    .stock-count{font-family:'IBM Plex Mono';font-size:.82rem;color:var(--blue-bright);white-space:nowrap}
+    .stock-toolbar{display:grid;grid-template-columns:minmax(220px,2fr) repeat(3,minmax(150px,1fr));gap:.7rem;margin-bottom:1.3rem}
+    .stock-toolbar input,.stock-toolbar select{background:var(--navy-deep)}
+    .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
+    .stock-card{display:flex;flex-direction:column;background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:100%}
+    .stock-image{position:relative;aspect-ratio:4/3;background:linear-gradient(145deg,#13294e,#09172f);overflow:hidden}
+    .stock-image img{width:100%;height:100%;object-fit:cover;display:block}
+    .stock-image.no-image{display:grid;place-items:center}
+    .stock-placeholder{text-align:center;color:var(--grey);padding:1rem}
+    .stock-placeholder strong{display:block;color:var(--white);font-family:'Barlow Condensed';font-size:1.5rem;text-transform:uppercase}
+    .stock-badges{position:absolute;top:.7rem;left:.7rem;right:.7rem;display:flex;justify-content:space-between;gap:.5rem}
+    .stock-badge{background:rgba(6,14,31,.9);border:1px solid var(--line);border-radius:999px;padding:.28rem .6rem;font-family:'IBM Plex Mono';font-size:.68rem;color:var(--white)}
+    .stock-badge.featured{background:var(--blue);border-color:var(--blue)}
+    .stock-content{display:flex;flex-direction:column;flex:1;padding:1.2rem}
+    .stock-brand{font-family:'IBM Plex Mono';font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-bright)}
+    .stock-title{font-size:1.35rem;margin:.35rem 0 .45rem;text-transform:none;line-height:1.12}
+    .stock-part{font-family:'IBM Plex Mono';font-size:.82rem;color:var(--white);word-break:break-word}
+    .stock-meta{color:var(--grey);font-size:.88rem;margin:.6rem 0}
+    .stock-desc{color:var(--grey);font-size:.9rem;margin-bottom:1rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .stock-price-row{display:flex;align-items:end;justify-content:space-between;gap:.8rem;margin-top:auto;padding-top:.8rem;border-top:1px solid var(--line)}
+    .stock-price{font-family:'Barlow Condensed';font-size:1.8rem;font-weight:800}
+    .stock-qty{font-size:.78rem;color:var(--grey);text-align:right}
+    .stock-actions{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.9rem}
+    .stock-actions .btn{padding:.7rem .65rem;text-align:center;font-size:.95rem}
+    .stock-actions .btn.only{grid-column:1/-1}
+    .stock-message{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem;color:var(--grey)}
+    .stock-message strong{color:var(--white)}
+    .stock-loading{font-family:'IBM Plex Mono';font-size:.85rem;color:var(--blue-bright)}
+    @media(max-width:900px){.stock-toolbar{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){
+      .stock-toolbar{grid-template-columns:1fr}
+      .stock-grid{grid-template-columns:1fr}
+      .stock-actions{grid-template-columns:1fr}
+      .stock-actions .btn.only{grid-column:auto}
+    }
+  </style>
+
+  <div class="wrap">
+    <div class="stock-top">
+      <div class="sec-head">
+        <h2>Current <span>stock</span></h2>
+        <p>Search by part number, brand or equipment type. Test status and condition are stated clearly on every item.</p>
+      </div>
+      <div class="stock-count" id="stockCount">Loading stock…</div>
+    </div>
+
+    <div class="stock-toolbar" aria-label="Stock filters">
+      <input id="stockSearch" type="search" placeholder="Search part number or description…" autocomplete="off">
+      <select id="stockBrand" aria-label="Filter by brand">
+        <option value="">All brands</option>
+      </select>
+      <select id="stockCategory" aria-label="Filter by category">
+        <option value="">All categories</option>
+      </select>
+      <select id="stockSort" aria-label="Sort stock">
+        <option value="featured">Featured first</option>
+        <option value="price-low">Price: low to high</option>
+        <option value="price-high">Price: high to low</option>
+        <option value="part">Part number</option>
+      </select>
+    </div>
+
+    <div class="stock-loading" id="stockLoading">Loading available stock…</div>
+    <div class="stock-grid" id="stockGrid" aria-live="polite"></div>
+  </div>
+</section>

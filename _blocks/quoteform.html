@@ -1,0 +1,48 @@
+<section class="quote" id="quote">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Get a <span>quote</span></h2>
+      <p>Selling surplus, after a part, or need something programmed, built or tested? Tell us what you're after and we'll come straight back — usually the same working day.</p>
+    </div>
+    <form id="quoteForm" action="https://formspree.io/f/xqevvvll" method="POST">
+      <input type="hidden" name="_subject" value="Automation Outlet — general enquiry">
+      <div class="field">
+        <label for="enquiry">What's this about?</label>
+        <select id="enquiry" name="enquiry">
+          <option>Selling surplus equipment</option>
+          <option>Buying parts</option>
+          <option>Obsolete part sourcing</option>
+          <option>PLC programming</option>
+          <option>HMI programming</option>
+          <option>Panel build</option>
+          <option>Bench testing</option>
+          <option>Something else</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="company">Company (optional)</label>
+        <input id="company" name="company" type="text" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label for="details">Tell us more</label>
+        <textarea id="details" name="details" placeholder="e.g. 3× Siemens S7-1200 CPUs to sell, or a panel build for a new line, or an Omron program that needs a fault chasing down" required></textarea>
+      </div>
+      <p class="form-note">We'll come back to you the same working day where possible.</p>
+      <p class="form-note">By submitting this form, you agree that Automation Outlet may use your details to respond to your enquiry. See our <a href="/privacy.html">privacy notice</a>.</p>
+      <button type="submit" class="btn big">Send for a quote</button>
+      <p class="form-status" id="formStatus" role="status"></p>
+    </form>
+  </div>
+</section>

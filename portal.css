@@ -1,0 +1,257 @@
+.portal-kicker{
+  font-family:'IBM Plex Mono',monospace;
+  color:var(--blue-bright);
+  font-size:.78rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:.7rem;
+}
+.seller-portal .sell-form{max-width:100%}
+.portal-section{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:1.4rem;
+  margin-bottom:1rem;
+  background:rgba(15,34,66,.52);
+}
+.portal-section legend{
+  padding:0 .55rem;
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  font-size:1.35rem;
+  font-weight:700;
+}
+.portal-section legend span{
+  color:var(--blue-bright);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.78rem;
+  margin-right:.45rem;
+}
+.choice-grid{display:grid;gap:.75rem}
+.route-grid{grid-template-columns:repeat(3,1fr)}
+.choice-card{
+  position:relative;
+  display:block;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:1rem;
+  background:var(--navy-deep);
+  cursor:pointer;
+  margin:0;
+}
+.choice-card input{position:absolute;opacity:0;pointer-events:none}
+.choice-card span{display:block}
+.choice-card b{
+  display:block;
+  color:var(--white);
+  font-family:'Barlow Condensed';
+  text-transform:uppercase;
+  font-size:1.12rem;
+  margin-bottom:.25rem;
+}
+.choice-card small{display:block;color:var(--grey);line-height:1.45}
+.choice-card:has(input:checked){
+  border-color:var(--blue-bright);
+  box-shadow:0 0 0 2px rgba(77,148,255,.15);
+  background:rgba(43,127,255,.1);
+}
+.portal-item-row{
+  grid-template-columns:64px 1.1fr 1fr 1.15fr 1fr 36px;
+}
+.portal-item-head{
+  grid-template-columns:64px 1.1fr 1fr 1.15fr 1fr 36px;
+}
+.portal-fields.two-col,.panel-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 1rem;
+}
+.money-field{display:flex;align-items:stretch}
+.money-field span{
+  display:grid;place-items:center;
+  padding:0 .8rem;
+  border:1px solid var(--line);
+  border-right:0;
+  border-radius:9px 0 0 9px;
+  background:var(--navy-card);
+  color:var(--blue-bright);
+  font-weight:700;
+}
+.money-field input{border-radius:0 9px 9px 0}
+.consent-row{
+  display:flex;
+  gap:.7rem;
+  align-items:flex-start;
+  color:var(--grey);
+  margin:1rem 0 1.3rem;
+}
+.consent-row input{width:auto;margin-top:.3rem}
+.hp-field{
+  position:absolute!important;
+  width:1px!important;height:1px!important;
+  overflow:hidden!important;
+  clip:rect(0 0 0 0)!important;
+}
+.portal-success{
+  margin-top:1rem;
+  padding:1rem;
+  border-radius:12px;
+  border:1px solid rgba(77,148,255,.45);
+  background:rgba(43,127,255,.1);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+.portal-success small,.portal-success p{display:block;color:var(--grey)}
+.portal-success strong{
+  display:block;
+  font-family:'IBM Plex Mono';
+  color:var(--blue-bright);
+  font-size:1.15rem;
+  margin:.15rem 0;
+}
+
+/* deal desk */
+.desk-body{min-height:100vh}
+.desk-private{color:var(--grey);font-size:.88rem}
+.desk-header-actions{display:flex;align-items:center;gap:1rem}
+.desk-small-btn{padding:.45rem .9rem;font-size:.9rem}
+.desk-login{min-height:calc(100vh - 66px);display:grid;align-items:center}
+.login-card{
+  max-width:560px;
+  margin:0 auto;
+  padding:2rem;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--navy-card);
+}
+.login-card h1,.desk-title-row h1{font-size:clamp(2.3rem,5vw,3.6rem)}
+.login-card h1 em,.desk-title-row h1 em{font-style:normal;color:var(--blue-bright)}
+.login-card>p{color:var(--grey);margin:1rem 0 1.5rem}
+.login-card form{max-width:none}
+.desk-app{padding:2.6rem 0}
+.desk-title-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:1rem;
+  margin-bottom:1.4rem;
+}
+.desk-metrics{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:.75rem;
+  margin-bottom:1rem;
+}
+.desk-metric{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:1rem;
+  background:var(--navy-card);
+}
+.desk-metric span{display:block;color:var(--grey);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.desk-metric strong{display:block;font-family:'Barlow Condensed';font-size:1.7rem;margin-top:.2rem}
+.desk-toolbar{
+  display:grid;
+  grid-template-columns:1fr 190px 190px;
+  gap:.75rem;
+  margin-bottom:1rem;
+}
+.deal-layout{
+  display:grid;
+  grid-template-columns:minmax(320px,.85fr) minmax(420px,1.45fr);
+  gap:1rem;
+  align-items:start;
+}
+.deal-list{display:grid;gap:.65rem}
+.deal-card{
+  width:100%;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:1rem;
+  background:var(--navy-card);
+  color:var(--white);
+  cursor:pointer;
+}
+.deal-card:hover,.deal-card.selected{border-color:var(--blue-bright);background:#11294f}
+.deal-card-top{display:flex;justify-content:space-between;gap:.6rem;align-items:center}
+.deal-ref{font-family:'IBM Plex Mono';font-size:.76rem;color:var(--blue-bright)}
+.deal-card h3{font-size:1.25rem;margin:.45rem 0 .25rem}
+.deal-card p{color:var(--grey);font-size:.9rem}
+.deal-card-meta{display:flex;gap:.65rem;flex-wrap:wrap;margin-top:.65rem}
+.deal-card-meta span{font-size:.74rem;color:var(--grey);padding:.25rem .45rem;border:1px solid var(--line);border-radius:999px}
+.status-pill{font-size:.72rem;padding:.25rem .5rem;border-radius:999px;background:rgba(77,148,255,.12);color:var(--blue-bright);white-space:nowrap}
+.status-won,.status-consignment{background:rgba(74,222,128,.12);color:#7ee2a8}
+.status-declined,.status-closed{background:rgba(255,128,128,.1);color:#ff9c9c}
+.status-offer-ready,.status-offer-sent,.status-negotiating{background:rgba(250,204,21,.1);color:#f4d76f}
+.deal-panel{
+  position:sticky;
+  top:82px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--navy-card);
+  min-height:400px;
+  overflow:hidden;
+}
+.deal-placeholder{display:grid;place-items:center;text-align:center;min-height:400px;padding:2rem}
+.deal-placeholder span{
+  width:58px;height:58px;border-radius:14px;display:grid;place-items:center;
+  background:rgba(43,127,255,.14);border:1px solid var(--line);
+  color:var(--blue-bright);font-family:'IBM Plex Mono';font-weight:700;
+}
+.deal-placeholder p{color:var(--grey);max-width:320px}
+.panel-head,.panel-section{padding:1.1rem 1.2rem;border-bottom:1px solid var(--line)}
+.panel-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+.panel-head h2{font-size:1.65rem;margin-top:.25rem}
+.panel-section h3{font-size:1.15rem;margin-bottom:.65rem}
+.seller-summary p,.seller-notes{color:var(--grey);font-size:.9rem;margin:.25rem 0}
+.panel-items{display:grid;gap:.45rem}
+.panel-items>div{
+  padding:.65rem .75rem;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--navy-deep);
+}
+.panel-items strong,.panel-items span,.panel-items small{display:block}
+.panel-items span{color:var(--blue-bright);font-family:'IBM Plex Mono';font-size:.8rem}
+.panel-items small{color:var(--grey)}
+.deal-form{max-width:none;border-bottom:0}
+.valuation-box{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:.8rem;
+  margin-bottom:1rem;
+  background:var(--navy-deep);
+}
+.valuation-box summary{cursor:pointer;font-weight:700;color:var(--blue-bright)}
+.calc-grid{margin-top:1rem}
+.valuation-result{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+.valuation-result span{padding:.45rem .6rem;border-radius:8px;background:var(--navy-card);color:var(--grey);font-size:.82rem}
+.valuation-result b{color:var(--white)}
+.desk-empty{padding:1rem;color:var(--grey);text-align:center}
+
+@media(max-width:980px){
+  .route-grid{grid-template-columns:1fr}
+  .portal-item-head{display:none}
+  .portal-item-row{
+    grid-template-columns:90px 1fr 1fr;
+    padding:.9rem;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--navy-deep);
+  }
+  .portal-item-row .item-remove{grid-column:3;justify-self:end;width:40px}
+  .desk-metrics{grid-template-columns:1fr 1frin:sticky;
+   1lay:noneD8rem}4-10.mal;cnhkgr:var(--grey);text}
+  .desk-metrics{griTpanel-head h2{font-size:1.65rem;margin-top:.25rem}
+.panel-section h3{font-size:1.15rem;margin-bottom:.65rem}
+.seller-summary p,.seller-notes{color:var(--grey);font-size:.9rem;margin:.25rem 0}
+.panel-items{display:grid;gap:.45rem}
+.panel-items>div{
+  padding:55sourcing.hFrem 0}"d55s1xy;
+   1lay:noneDgriTpanel-head h2{font-size:1.65rem;margin-top:.24lid -grid{margin-top:1rem}
+.valuation-result{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+.valuation-result s

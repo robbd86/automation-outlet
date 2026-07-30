@@ -1,0 +1,172 @@
+const itemRows = document.getElementById("itemRows");
+const firstItemTemplate = itemRows.querySelector(".item-row").cloneNode(true);
+
+function resetItemRow(row) {
+  row.querySelectorAll("input").forEach((input) => {
+    input.value = input.name === "qty" ? "1" : "";
+  });
+  row.querySelectorAll("select").forEach((select) => select.selectedIndex = 0);
+}
+
+document.getElementById("addItem").addEventListener("click", () => {
+  const clone = firstItemTemplate.cloneNode(true);
+  resetItemRow(clone);
+  itemRows.appendChild(clone);
+});
+
+itemRows.addEventListener("click", (event) => {
+  if (!event.target.classList.contains("item-remove")) return;
+  const rows = itemRows.querySelectorAll(".item-row");
+  const row = event.target.closest(".item-row");
+  if (rows.length > 1) row.remove();
+  else resetItemRow(row);
+});
+
+function collectItems() {
+  return Array.from(itemRows.querySelectorAll(".item-row"))
+    .map((row) => ({
+      quantity: Number(row.querySelector("[name=qty]").value || 1),
+      equipmentType: row.querySelector("[name=equipment_type]").value.trim(),
+      manufacturer: row.querySelector("[name=manufacturer]").value.trim(),
+      partNumber: row.querySelector("[name=part]").value.trim(),
+      condition: row.querySelector("[name=condition]").value.trim(),
+    }))
+    .filter((item) =>
+      item.equipmentType || item.manufacturer || item.partNumber || item.condition
+    );
+}
+
+function readableItems(items) {
+  return items.map((item, index) =>
+    `${index + 1}. Qty ${item.quantity || "?"} — ${item.equipmentType || "type not stated"} — ${item.manufacturer || "manufacturer not stated"} ${item.partNumber || ""} — ${item.condition || "condition not stated"}`
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+}
+
+function formValue(id) {
+  return document.getElementById(id).value.trim();
+}
+
+async function sendFormspreeFallback(payload) {
+  const form = new FormData();
+  form.append("_subject", `Seller portal enquiry — ${payload.reference || "new submission"}`);
+  form.append("enquiry", "Selling surplus equipment");
+  form.append("preferred_route", payload.preference);
+  form.append("seller_type", payload.sellerType);
+  form.append("urgency", payload.urgency);
+  form.append("expected_price", payload.expectedPriceGbp || "Not stated");
+  form.append("postcode", payload.postcode || "Not stated");
+  form.append("logistics", payload.logistics);
+  form.append("availability", payload.availability);
+  form.append("name", payload.contact.name);
+  form.append("company", payload.contact.company || "-");
+  form.append("phone", payload.contact.phone);
+  form.append("email", payload.contact.email);
+  form.append("items", "\n" + readableItems(payload.items).join("\n"));
+  form.append("notes", payload.notes || "-");
+  const response = await fetch(FORM_ENDPOINT, {
+    method: "POST",
+    body: form,
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error("Fallback submission failed");
+}
+
+const sellForm = document.getElementById("sellForm");
+const sellStatus = document.getElementById("sellStatus");
+const sellSuccess = document.getElementById("sellSuccess");
+const sellBtn = sellForm.querySelector("button[type=submit]");
+
+sellForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  sellStatus.style.color = "";
+  sellStatus.textContent = "Checking your submission…";
+  sellSuccess.hidden = true;
+  sellBtn.disabled = true;
+
+  const items = collectItems();
+  if (!sellForm.reportValidity()) {
+    sellStatus.style.color = "#ff9c9c";
+    sellStatus.textContent = "Please complete the required contact and ownership fields.";
+    sellBtn.disabled = false;
+    return;
+  }
+  if (items.length === 0) {
+    sellStatus.style.color = "#ff9c9c";
+    sellStatus.textContent = "Please add at least one item, panel, machine or job lot.";
+    sellBtn.disabled = false;
+    return;
+  }
+
+  const payload = {
+    website: formValue("sellerWebsite"),
+    preference: sellForm.querySelector("[name=sale_route]:checked").value,
+    sellerType: formValue("s-seller-type"),
+    urgency: formValue("s-urgency"),
+    expectedPriceGbp: Number(formValue("s-expectation") || 0) || null,
+    postcode: formValue("s-postcode"),
+    logistics: formValue("s-logistics"),
+    availability: formValue("s-availability"),
+    contact: {
+      name: formValue("s-name"),
+      company: formValue("s-company"),
+      phone: formValue("s-phone"),
+      email: formValue("s-email"),
+    },
+    items,
+    notes: formValue("s-notes"),
+  };
+
+  let reference = "";
+  let usedFallback = false;
+  try {
+    sellStatus.textContent = "Creating your Automation Outlet enquiry…";
+    const response = await fetch("/api/deal-desk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 503 || response.status === 404) {
+        usedFallback = true;
+        await sendFormspreeFallback(payload);
+        reference = `AO-EMAIL-${Date.now().toString().slice(-6)}`;
+      } else {
+        throw new Error(data.error || "Submission could not be accepted");
+      }
+    } else {
+      reference = data.reference;
+    }
+
+    sellForm.reset();
+    Array.from(itemRows.querySelectorAll(".item-row")).forEach((row, index) => {
+      if (index > 0) row.remove();
+      else resetItemRow(row);
+    });
+
+    const whatsappText = encodeURIComponent(
+      `Hi Automation Outlet, I have just submitted seller enquiry ${reference}. I would like to send photographs for the assessment.`
+    );
+    sellStatus.style.color = "var(--blue-bright)";
+    sellStatus.textContent = usedFallback
+      ? "Thanks — your details have been emailed successfully."
+      : "Thanks — your enquiry is now in our assessment queue.";
+    sellSuccess.hidden = false;
+    sellSuccess.innerHTML = `
+      <div>
+        <small>Your reference</small>
+        <strong>${reference}</strong>
+        <p>Keep this reference with any photos or stock spreadsheets you send.</p>
+      </div>
+      <a class="btn" target="_blank" rel="noopener" href="https://wa.me/447849506371?text=${whatsappText}">Send photos on WhatsApp</a>
+    `;
+  } catch (error) {
+    sellStatus.style.color = "#ff9c9c";
+    sellStatus.textContent =
+      error.message || "Something went wrong — please email info@automation-outlet.co.uk.";
+  } finally {
+    sellBtn.disabled = false;
+  }
+});

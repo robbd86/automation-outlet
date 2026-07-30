@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Acquisition Deal Desk | Automation Outlet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body class="desk-body">
+  <header>
+    <div class="wrap nav">
+      <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
+      <div class="desk-header-actions">
+        <span class="desk-private">Private acquisition workspace</span>
+        <button id="lockDesk" class="btn ghost desk-small-btn" type="button" hidden>Lock</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="deskLogin" class="desk-login">
+      <div class="wrap">
+        <div class="login-card">
+          <div class="portal-kicker">Automation Outlet</div>
+          <h1>Acquisition <em>deal desk</em></h1>
+          <p>Review seller submissions, calculate an offer, set follow-ups and move each opportunity through the acquisition pipeline.</p>
+          <form id="loginForm">
+            <div class="field">
+              <label for="deskKey">Deal desk key</label>
+              <input id="deskKey" type="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn big">Open deal desk</button>
+            <p id="loginStatus" class="form-status" role="status"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="deskApp" class="desk-app" hidden>
+      <div class="wrap">
+        <div class="desk-title-row">
+          <div>
+            <div class="portal-kicker">Acquisition pipeline</div>
+            <h1>Seller <em>opportunities</em></h1>
+          </div>
+          <button id="refreshDesk" class="btn" type="button">Refresh</button>
+        </div>
+
+        <div class="desk-metrics" id="deskMetrics"></div>
+
+        <div class="desk-toolbar">
+          <input id="deskSearch" type="search" placeholder="Search reference, company, part number…">
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="reviewing">Reviewing</option>
+            <option value="offer-ready">Offer ready</option>
+            <option value="offer-sent">Offer sent</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="won">Stock secured</option>
+            <option value="consignment">Consignment agreed</option>
+            <option value="declined">Declined</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select id="routeFilter">
+            <option value="">All routes</option>
+            <option value="best-option">Best option</option>
+            <option value="cash">Cash sale</option>
+            <option value="revenue-share">Revenue share</option>
+          </select>
+        </div>
+
+        <div class="deal-layout">
+          <div>
+            <div id="dealList" class="deal-list"></div>
+            <p id="deskEmpty" class="desk-empty" hidden>No enquiries match these filters.</p>
+          </div>
+
+          <aside id="dealPanel" class="deal-panel">
+            <div class="deal-placeholder">
+              <span>AO</span>
+              <h2>Select an enquiry</h2>
+              <p>Seller details, equipment and offer controls will appear here.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/deal-desk.js" defer></script>
+</body>
+</html>
