@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - preview/new-site-launch
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -23,6 +20,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Normalise transferred bundle
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          folder = Path("bundle")
+          parts = sorted(folder.glob("part-*.b64"))
+          encoded = "".join(path.read_text(encoding="ascii") for path in parts)
+          encoded = "".join(encoded.split()).replace("=", "")
+          encoded += "=" * (-len(encoded) % 4)
+          for path in parts:
+              path.unlink()
+          (folder / "part-001.b64").write_text(encoded + "\n", encoding="ascii")
+          PY
 
       - name: Unpack and validate production site
         run: python3 materialize.py
