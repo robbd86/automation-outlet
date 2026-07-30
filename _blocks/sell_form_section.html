@@ -1,0 +1,160 @@
+<link rel="stylesheet" href="/portal.css">
+<section class="quote seller-portal" id="sell-form">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="portal-kicker">Automation Outlet seller portal</div>
+      <h2>Turn surplus into <span>cash or revenue</span></h2>
+      <p>Tell us what you have once. We will assess the strongest route: an immediate purchase, a selective offer, or managed resale for higher-value and slower-moving equipment.</p>
+    </div>
+
+    <form id="sellForm" class="sell-form" novalidate>
+      <input type="text" name="website" id="sellerWebsite" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <fieldset class="portal-section">
+        <legend><span>01</span> How would you like us to help?</legend>
+        <div class="choice-grid route-grid">
+          <label class="choice-card">
+            <input type="radio" name="sale_route" value="best-option" checked>
+            <span><b>Recommend the best option</b><small>We compare cash purchase, selective purchase and managed resale.</small></span>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="sale_route" value="cash">
+            <span><b>Immediate cash sale</b><small>Lower price, simple transaction and quick collection.</small></span>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="sale_route" value="revenue-share">
+            <span><b>Revenue share / consignment</b><small>Potentially higher return when stock needs time, testing and marketing.</small></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="portal-section">
+        <legend><span>02</span> What equipment do you have?</legend>
+        <div class="item-head portal-item-head">
+          <div>Qty</div><div>Type</div><div>Manufacturer</div><div>Part number</div><div>Condition</div><div></div>
+        </div>
+        <div id="itemRows">
+          <div class="item-row portal-item-row">
+            <input type="number" name="qty" min="1" max="9999" value="1" placeholder="1" aria-label="Quantity">
+            <select name="equipment_type" aria-label="Equipment type">
+              <option value="">Equipment type…</option>
+              <option>PLC / CPU</option>
+              <option>HMI / operator panel</option>
+              <option>Drive / inverter</option>
+              <option>Servo drive / motor</option>
+              <option>I/O / communication module</option>
+              <option>Safety equipment</option>
+              <option>Control panel / cabinet</option>
+              <option>Machine / production line</option>
+              <option>Mixed spares / job lot</option>
+              <option>Other</option>
+            </select>
+            <input type="text" name="manufacturer" placeholder="Siemens" aria-label="Manufacturer" maxlength="80">
+            <input type="text" name="part" placeholder="6ES7 315-2AG10" aria-label="Part number" maxlength="120">
+            <select name="condition" aria-label="Condition">
+              <option value="">Condition…</option>
+              <option>New / unused</option>
+              <option>Removed working</option>
+              <option>Used - tested</option>
+              <option>Untested</option>
+              <option>Faulty / parts</option>
+              <option>Mixed / unknown</option>
+            </select>
+            <button type="button" class="item-remove" aria-label="Remove item">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-item" id="addItem">+ Add another item</button>
+        <p class="cond-key">Part numbers matter most. For complete panels or mixed lots, add a single row and describe the contents in the notes below.</p>
+      </fieldset>
+
+      <fieldset class="portal-section">
+        <legend><span>03</span> Sale and collection details</legend>
+        <div class="portal-fields two-col">
+          <div class="field">
+            <label for="s-seller-type">You are</label>
+            <select id="s-seller-type" name="seller_type">
+              <option>Business / company</option>
+              <option>Individual</option>
+              <option>Contractor / engineer</option>
+              <option>Liquidator / auctioneer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="s-urgency">Timescale</label>
+            <select id="s-urgency" name="urgency">
+              <option value="flexible">Flexible</option>
+              <option value="this-month">Looking to complete this month</option>
+              <option value="this-week">Need a decision this week</option>
+              <option value="urgent">Urgent clearance</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="s-expectation">Expected price, if known</label>
+            <div class="money-field"><span>£</span><input id="s-expectation" name="expected_price" type="number" min="0" step="1" placeholder="Optional"></div>
+          </div>
+          <div class="field">
+            <label for="s-postcode">Collection postcode / area</label>
+            <input id="s-postcode" name="postcode" type="text" autocomplete="postal-code" placeholder="e.g. PE1 or Peterborough" maxlength="100">
+          </div>
+          <div class="field">
+            <label for="s-logistics">How can the stock move?</label>
+            <select id="s-logistics" name="logistics">
+              <option value="collection">Automation Outlet collection required</option>
+              <option value="parcel">Can be parcelled and posted</option>
+              <option value="pallet">Can be palletised</option>
+              <option value="either">Collection or delivery possible</option>
+              <option value="site-removal">Requires site removal / dismantling</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="s-availability">Availability</label>
+            <select id="s-availability" name="availability">
+              <option>Available now</option>
+              <option>Available after decommissioning</option>
+              <option>Still installed / operating</option>
+              <option>Planning a future clearance</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="portal-section">
+        <legend><span>04</span> Your details</legend>
+        <div class="portal-fields two-col">
+          <div class="field">
+            <label for="s-name">Name</label>
+            <input id="s-name" name="name" type="text" autocomplete="name" required maxlength="120">
+          </div>
+          <div class="field">
+            <label for="s-company">Company</label>
+            <input id="s-company" name="company" type="text" autocomplete="organization" maxlength="160">
+          </div>
+          <div class="field">
+            <label for="s-phone">Phone</label>
+            <input id="s-phone" name="phone" type="tel" autocomplete="tel" required maxlength="50">
+          </div>
+          <div class="field">
+            <label for="s-email">Email</label>
+            <input id="s-email" name="email" type="email" autocomplete="email" required maxlength="200">
+          </div>
+        </div>
+        <div class="field">
+          <label for="s-notes">Background, quantities, removal details or anything that affects value</label>
+          <textarea id="s-notes" name="notes" maxlength="4000" placeholder="Example: Removed from a working packaging line during an upgrade. Around 30 modules plus two HMIs. Photos and a spreadsheet are available."></textarea>
+        </div>
+        <label class="consent-row">
+          <input id="s-owner" type="checkbox" required>
+          <span>I confirm that I own the equipment or am authorised to offer it for sale.</span>
+        </label>
+        <p class="form-note">After submitting, you will receive a reference and a WhatsApp button for sending photographs against the same enquiry.</p>
+        <button type="submit" class="btn big">Submit equipment for assessment</button>
+        <p class="form-status" id="sellStatus" role="status" aria-live="polite"></p>
+        <div id="sellSuccess" class="portal-success" hidden></div>
+
+        <p class="excel-link">
+          Large stock list? <a href="/Sell_to_Automation_Outlet.xlsx" download>Download our Excel form</a> and email it to info@automation-outlet.co.uk.
+        </p>
+      </fieldset>
+    </form>
+  </div>
+</section>

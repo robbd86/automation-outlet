@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Stock Manager | Automation Outlet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  body{min-height:100vh}
+  .admin-shell{max-width:1180px;margin:0 auto;padding:2rem 22px 4rem}
+  .admin-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+  .admin-head h1{font-size:clamp(2.1rem,6vw,3.5rem)}
+  .admin-head h1 span{color:var(--blue-bright)}
+  .admin-actions{display:flex;gap:.7rem;flex-wrap:wrap}
+  .admin-actions .btn{font-size:.95rem;padding:.65rem 1rem}
+  .admin-panel{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem}
+  .lock-panel{max-width:480px;margin:8vh auto 0}
+  .lock-panel h1{font-size:2.4rem;margin-bottom:.5rem}
+  .lock-panel p{color:var(--grey);margin-bottom:1.2rem}
+  .manager-grid{display:grid;grid-template-columns:minmax(320px,440px) 1fr;gap:1.2rem;align-items:start}
+  .product-form{max-width:none}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .form-grid .full{grid-column:1/-1}
+  .check-row{display:flex;align-items:center;gap:.55rem;margin:.4rem 0 1rem}
+  .check-row input{width:auto}
+  .form-buttons{display:flex;gap:.7rem;flex-wrap:wrap}
+  .form-buttons .btn{flex:1;text-align:center}
+  .image-preview{aspect-ratio:4/3;border:1px dashed var(--line);border-radius:10px;background:var(--navy-deep);display:grid;place-items:center;overflow:hidden;color:var(--grey);margin-bottom:1rem}
+  .image-preview img{width:100%;height:100%;object-fit:cover}
+  .admin-note{color:var(--grey);font-size:.84rem;margin-top:.45rem}
+  .admin-status{min-height:1.5em;margin-top:.9rem;font-weight:600;color:var(--blue-bright)}
+  .stock-admin-list{display:grid;gap:.8rem}
+  .admin-item{display:grid;grid-template-columns:92px 1fr auto;gap:1rem;align-items:center;background:var(--navy-card);border:1px solid var(--line);border-radius:12px;padding:.85rem}
+  .admin-thumb{width:92px;aspect-ratio:4/3;background:var(--navy-deep);border-radius:8px;overflow:hidden;display:grid;place-items:center;color:var(--grey);font-size:.72rem;text-align:center}
+  .admin-thumb img{width:100%;height:100%;object-fit:cover}
+  .admin-item h3{font-size:1.18rem;text-transform:none;margin-bottom:.2rem}
+  .admin-part{font-family:'IBM Plex Mono';font-size:.78rem;color:var(--blue-bright)}
+  .admin-meta{color:var(--grey);font-size:.84rem;margin-top:.25rem}
+  .admin-item-actions{display:flex;gap:.45rem;flex-direction:column}
+  .admin-item-actions button{white-space:nowrap}
+  .mini-btn{background:transparent;border:1px solid var(--line);color:var(--white);border-radius:8px;padding:.5rem .7rem;cursor:pointer;font:600 .84rem 'Barlow'}
+  .mini-btn:hover{border-color:var(--blue-bright)}
+  .mini-btn.danger{color:#ff9d9d}
+  .status-pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.1rem .45rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;margin-left:.4rem}
+  .status-pill.active{background:rgba(43,127,255,.18);color:var(--blue-bright)}
+  .status-pill.sold{color:#ff9d9d}
+  .status-pill.draft{color:var(--grey)}
+  .list-head{display:flex;justify-content:space-between;gap:1rem;align-items:center;margin-bottom:.9rem}
+  .list-head h2{font-size:1.8rem}
+  .list-head input{max-width:280px}
+  .hidden{display:none!important}
+  @media(max-width:900px){.manager-grid{grid-template-columns:1fr}}
+  @media(max-width:600px){
+    .admin-shell{padding:1.2rem 16px 3rem}
+    .form-grid{grid-template-columns:1fr}
+    .form-grid .full{grid-column:auto}
+    .admin-item{grid-template-columns:72px 1fr}
+    .admin-thumb{width:72px}
+    .admin-item-actions{grid-column:1/-1;flex-direction:row}
+    .admin-item-actions button{flex:1}
+    .list-head{align-items:stretch;flex-direction:column}
+    .list-head input{max-width:none}
+  }
+</style>
+</head>
+<body>
+<main class="admin-shell">
+  <section id="lockPanel" class="admin-panel lock-panel">
+    <div class="eyebrow">Private area</div>
+    <h1>Stock <span>manager</span></h1>
+    <p>Add products to the Automation Outlet website without editing code. Use the same private key as the acquisition deal desk.</p>
+    <form id="unlockForm">
+      <div class="field">
+        <label for="managerKey">Stock manager key</label>
+        <input id="managerKey" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn big" type="submit">Open stock manager</button>
+      <div class="admin-status" id="unlockStatus"></div>
+    </form>
+  </section>
+
+  <section id="managerPanel" class="hidden">
+    <div class="admin-head">
+      <div>
+        <div class="eyebrow">Automation Outlet</div>
+        <h1>Stock <span>manager</span></h1>
+      </div>
+      <div class="admin-actions">
+        <a class="btn ghost" href="/buy-stock.html" target="_blank" rel="noopener">View shop</a>
+        <button class="btn ghost" id="refreshBtn" type="button">Refresh</button>
+        <button class="btn" id="lockBtn" type="button">Lock</button>
+      </div>
+    </div>
+
+    <div class="manager-grid">
+      <section class="admin-panel">
+        <div class="list-head">
+          <h2 id="formHeading">Add stock item</h2>
+          <button class="mini-btn hidden" id="cancelEditBtn" type="button">Cancel edit</button>
+        </div>
+
+        <div class="image-preview" id="imagePreview">Image preview</div>
+
+        <form id="productForm" class="product-form">
+          <input id="issueNumber" type="hidden">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="title">Listing title</label>
+              <input id="title" maxlength="180" placeholder="Siemens SIMATIC S7-300 CPU 315-2 PN/DP" required>
+            </div>
+
+            <div class="field">
+              <label for="partNumber">Part number</label>
+              <input id="partNumber" maxlength="120" placeholder="6ES7315-2EH14-0AB0" required>
+            </div>
+
+            <div class="field">
+              <label for="brand">Brand</label>
+              <input id="brand" maxlength="80" list="brandOptions" placeholder="Siemens" required>
+              <datalist id="brandOptions">
+                <option>Siemens</option><option>Omron</option><option>Allen-Bradley</option>
+                <option>Mitsubishi</option><option>ABB</option><option>Lenze</option>
+                <option>Schneider Electric</option><option>Pilz</option><option>Phoenix Contact</option>
+              </datalist>
+            </div>
+
+            <div class="field">
+              <label for="category">Category</label>
+              <select id="category" required>
+                <option value="">Select category</option>
+                <option>PLC CPU</option>
+                <option>PLC I/O module</option>
+                <option>Communication module</option>
+                <option>HMI</option>
+                <option>Drive / inverter</option>
+                <option>Safety module</option>
+                <option>Power supply</option>
+                <option>Industrial PC</option>
+                <option>Sensor</option>
+                <option>Motor starter</option>
+                <option>Other automation</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="condition">Condition</label>
+              <select id="condition" required>
+                <option value="">Select condition</option>
+                <option>New sealed</option>
+                <option>New without box</option>
+                <option>Used - tested working</option>
+                <option>Used - powers up</option>
+                <option>Used - untested</option>
+                <option>For parts or repair</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="priceGbp">Price (£)</label>
+              <input id="priceGbp" type="number" min="0" step="0.01" placeholder="249.99" required>
+            </div>
+
+            <div class="field">
+              <label for="quantity">Quantity</label>
+              <input id="quantity" type="number" min="0" max="9999" step="1" value="1" required>
+            </div>
+
+            <div class="field">
+              <label for="status">Website status</label>
+              <select id="status">
+                <option value="active">Active - visible</option>
+                <option value="draft">Draft - hidden</option>
+                <option value="sold">Sold - hidden</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="sortOrder">Display order</label>
+              <input id="sortOrder" type="number" min="0" step="1" value="100">
+            </div>
+
+            <div class="field full">
+              <label for="imageUrl">Main image URL</label>
+              <input id="imageUrl" type="url" placeholder="https://i.ebayimg.com/images/g/.../s-l1600.jpg">
+              <p class="admin-note">Use a direct image address. On eBay, open the main photo and copy its image address.</p>
+            </div>
+
+            <div class="field full">
+              <label for="ebayUrl">eBay listing URL</label>
+              <input id="ebayUrl" type="url" placeholder="https://www.ebay.co.uk/itm/...">
+              <p class="admin-note">Leave blank for an enquiry-only item.</p>
+            </div>
+
+            <div class="field full">
+              <label for="description">Short description</label>
+              <textarea id="description" maxlength="2500" placeholder="Bench tested and confirmed working. Used condition with light cosmetic marks. Supplied exactly as pictured."></textarea>
+            </div>
+          </div>
+
+          <label class="check-row">
+            <input id="featured" type="checkbox">
+            <span>Feature this item at the top of the stock page</span>
+          </label>
+
+          <div class="form-buttons">
+            <button class="btn big" id="saveBtn" type="submit">Add item</button>
+            <button class="btn big ghost" id="resetBtn" type="button">Clear</button>
+          </div>
+          <div class="admin-status" id="formStatus"></div>
+        </form>
+      </section>
+
+      <section>
+        <div class="list-head">
+          <div>
+            <h2>Website stock</h2>
+            <p class="admin-note" id="itemCount">Loading…</p>
+          </div>
+          <input id="adminSearch" type="search" placeholder="Search stock…">
+        </div>
+        <div id="stockAdminList" class="stock-admin-list"></div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<script src="/stock-admin.js"></script>
+<script src="/stock-delete.js"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+const stockGrid = document.getElementById("stockGrid");
+const stockLoading = document.getElementById("stockLoading");
+const stockCount = document.getElementById("stockCount");
+const stockSearch = document.getElementById("stockSearch");
+const stockBrand = document.getElementById("stockBrand");
+const stockCategory = document.getElementById("stockCategory");
+const stockSort = document.getElementById("stockSort");
+let stockProducts = [];
+
+const gbp = new Intl.NumberFormat("en-GB", {
+  style: "currency",
+  currency: "GBP",
+});
+
+function uniqueValues(items, key) {
+  return [...new Set(items.map((item) => item[key]).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function addFilterOptions(select, values) {
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+}
+
+function placeholder(partNumber, brand) {
+  const wrap = document.createElement("div");
+  wrap.className = "stock-placeholder";
+  const strong = document.createElement("strong");
+  strong.textContent = brand || "Automation Outlet";
+  const span = document.createElement("span");
+  span.className = "mono";
+  span.textContent = partNumber || "Image coming soon";
+  wrap.append(strong, span);
+  return wrap;
+}
+
+function createProductCard(product) {
+  const article = document.createElement("article");
+  article.className = "stock-card";
+
+  const imageWrap = document.createElement("div");
+  imageWrap.className = "stock-image";
+
+  if (product.imageUrl) {
+    const image = document.createElement("img");
+    image.src = product.imageUrl;
+    image.alt = `${product.title} ${product.partNumber}`.trim();
+    image.loading = "lazy";
+    image.decoding = "async";
+    image.addEventListener("error", () => {
+      imageWrap.classList.add("no-image");
+      image.remove();
+      imageWrap.prepend(placeholder(product.partNumber, product.brand));
+    }, { once: true });
+    imageWrap.appendChild(image);
+  } else {
+    imageWrap.classList.add("no-image");
+    imageWrap.appendChild(placeholder(product.partNumber, product.brand));
+  }
+
+  const badges = document.createElement("div");
+  badges.className = "stock-badges";
+  const condition = document.createElement("span");
+  condition.className = "stock-badge";
+  condition.textContent = product.condition || "Condition stated";
+  badges.appendChild(condition);
+
+  if (product.featured) {
+    const featured = document.createElement("span");
+    featured.className = "stock-badge featured";
+    featured.textContent = "Featured";
+    badges.appendChild(featured);
+  }
+  imageWrap.appendChild(badges);
+
+  const content = document.createElement("div");
+  content.className = "stock-content";
+
+  const brand = document.createElement("div");
+  brand.className = "stock-brand";
+  brand.textContent = [product.brand, product.category].filter(Boolean).join(" · ");
+
+  const title = document.createElement("h3");
+  title.className = "stock-title";
+  title.textContent = product.title;
+
+  const part = document.createElement("div");
+  part.className = "stock-part";
+  part.textContent = product.partNumber;
+
+  const meta = document.createElement("div");
+  meta.className = "stock-meta";
+  meta.textContent = product.quantity > 1
+    ? `${product.quantity} available`
+    : "1 available";
+
+  const description = document.createElement("p");
+  description.className = "stock-desc";
+  description.textContent = product.description || "Contact us for full test details and condition photographs.";
+
+  const priceRow = document.createElement("div");
+  priceRow.className = "stock-price-row";
+  const price = document.createElement("div");
+  price.className = "stock-price";
+  price.textContent = gbp.format(Number(product.priceGbp || 0));
+  const vat = document.createElement("div");
+  vat.className = "stock-qty";
+  vat.textContent = "UK delivery available";
+  priceRow.append(price, vat);
+
+  const actions = document.createElement("div");
+  actions.className = "stock-actions";
+
+  const enquiryText = encodeURIComponent(
+    `Hi, I'm interested in ${product.partNumber} — ${product.title}. Is it still available?`
+  );
+  const enquiry = document.createElement("a");
+  enquiry.className = `btn ghost${product.ebayUrl ? "" : " only"}`;
+  enquiry.href = `https://wa.me/447849506371?text=${enquiryText}`;
+  enquiry.target = "_blank";
+  enquiry.rel = "noopener";
+  enquiry.textContent = "Enquire";
+
+  actions.appendChild(enquiry);
+
+  if (product.ebayUrl) {
+    const buy = document.createElement("a");
+    buy.className = "btn";
+    buy.href = product.ebayUrl;
+    buy.target = "_blank";
+    buy.rel = "noopener";
+    buy.textContent = "Buy on eBay";
+    actions.appendChild(buy);
+  }
+
+  content.append(brand, title, part, meta, description, priceRow, actions);
+  article.append(imageWrap, content);
+  return article;
+}
+
+function currentProducts() {
+  const query = stockSearch.value.trim().toLowerCase();
+  const brand = stockBrand.value;
+  const category = stockCategory.value;
+  const sort = stockSort.value;
+
+  const filtered = stockProducts.filter((product) => {
+    const haystack = [
+      product.title,
+      product.partNumber,
+      product.brand,
+      product.category,
+      product.condition,
+      product.description,
+    ].join(" ").toLowerCase();
+
+    return (!query || haystack.includes(query)) &&
+      (!brand || product.brand === brand) &&
+      (!category || product.category === category);
+  });
+
+  filtered.sort((a, b) => {
+    if (sort === "price-low") return Number(a.priceGbp) - Number(b.priceGbp);
+    if (sort === "price-high") return Number(b.priceGbp) - Number(a.priceGbp);
+    if (sort === "part") return String(a.partNumber).localeCompare(String(b.partNumber));
+    return Number(b.featured) - Number(a.featured) ||
+      Number(a.sortOrder || 100) - Number(b.sortOrder || 100);
+  });
+
+  return filtered;
+}
+
+function renderStock() {
+  const products = currentProducts();
+  stockGrid.replaceChildren();
+
+  stockCount.textContent = `${products.length} item${products.length === 1 ? "" : "s"} shown`;
+
+  if (!products.length) {
+    const empty = document.createElement("div");
+    empty.className = "stock-message";
+    empty.style.gridColumn = "1 / -1";
+    empty.innerHTML = stockProducts.length
+      ? "<strong>No matching stock.</strong> Try another part number, brand or category."
+      : "<strong>Fresh stock is being added.</strong> Send us the part number you need and we will check the shelf and our supplier network.";
+    stockGrid.appendChild(empty);
+    return;
+  }
+
+  products.forEach((product) => stockGrid.appendChild(createProductCard(product)));
+}
+
+async function loadStock() {
+  try {
+    const response = await fetch("/api/stock", {
+      headers: { Accept: "application/json" },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not load stock");
+
+    stockProducts = Array.isArray(data.products) ? data.products : [];
+    addFilterOptions(stockBrand, uniqueValues(stockProducts, "brand"));
+    addFilterOptions(stockCategory, uniqueValues(stockProducts, "category"));
+    renderStock();
+  } catch (error) {
+    stockCount.textContent = "Stock temporarily unavailable";
+    stockGrid.innerHTML = '<div class="stock-message" style="grid-column:1/-1"><strong>We could not load the stock list.</strong> Please use WhatsApp or the part request form and we will check availability directly.</div>';
+    console.error(error);
+  } finally {
+    stockLoading.hidden = true;
+  }
+}
+
+[stockSearch, stockBrand, stockCategory, stockSort].forEach((control) => {
+  control.addEventListener(control === stockSearch ? "input" : "change", renderStock);
+});
+
+loadStock();

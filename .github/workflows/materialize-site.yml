@@ -1,0 +1,51 @@
+name: Materialise new site
+
+on:
+  push:
+    branches:
+      - preview/new-site-launch
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  materialise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: preview/new-site-launch
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Normalise transferred bundle
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          folder = Path("bundle")
+          parts = sorted(folder.glob("part-*.b64"))
+          encoded = "".join(path.read_text(encoding="ascii") for path in parts)
+          encoded = "".join(encoded.split()).replace("=", "")
+          encoded += "=" * (-len(encoded) % 4)
+          for path in parts:
+              path.unlink()
+          (folder / "part-001.b64").write_text(encoded + "\n", encoding="ascii")
+          PY
+
+      - name: Unpack and validate production site
+        run: python3 materialize.py
+
+      - name: Commit production site
+        run: |
+          git config user.name "automation-outlet-migration"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Materialise production Automation Outlet site"
+          git push origin preview/new-site-launch
