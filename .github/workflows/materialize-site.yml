@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - preview/new-site-launch
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
