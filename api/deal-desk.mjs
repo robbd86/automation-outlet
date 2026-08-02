@@ -16,7 +16,16 @@ function clean(value, max = 500) {
 
 function money(value) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) / 100 : null;
+  return Number.isFinite(parsed) && parsed >= 0
+    ? Math.round(parsed * 100) / 100
+    : null;
+}
+
+function percent(value, fallback = null) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed)
+    ? Math.round(Math.max(0, Math.min(100, parsed)) * 100) / 100
+    : fallback;
 }
 
 function reference() {
@@ -99,12 +108,64 @@ function statusLabel(value) {
   }[value] || "New";
 }
 
+function offerModeLabel(value) {
+  return {
+    "three-options": "Three options",
+    cash: "Cash purchase",
+    selective: "Selective purchase",
+    managed: "Managed resale",
+    decline: "Polite decline",
+  }[value] || "Not generated";
+}
+
+function normaliseItemValuations(raw, itemCount) {
+  const rows = Array.isArray(raw) ? raw.slice(0, itemCount) : [];
+  return Array.from({ length: itemCount }, (_, index) => {
+    const value = rows[index] || {};
+    return {
+      selected: value.selected !== false,
+      estimatedResaleGbp: money(value.estimatedResaleGbp),
+      shippingGbp: money(value.shippingGbp),
+      testingGbp: money(value.testingGbp),
+      targetProfitGbp: money(value.targetProfitGbp),
+    };
+  });
+}
+
+function valuationCash(value, feesPercent) {
+  const resale = Number(value?.estimatedResaleGbp) || 0;
+  const fees = resale * (Number(feesPercent) || 0) / 100;
+  return Math.max(
+    0,
+    resale
+      - fees
+      - (Number(value?.shippingGbp) || 0)
+      - (Number(value?.testingGbp) || 0)
+      - (Number(value?.targetProfitGbp) || 0)
+  );
+}
+
+function quoteBlock(text) {
+  return clean(text, 5000)
+    .split("\n")
+    .map((line) => `> ${line}`)
+    .join("\n");
+}
+
 function renderIssue(data) {
   const admin = data.admin || {};
   const contact = data.contact || {};
-  const itemRows = (data.items || []).map((item, index) =>
-    `| ${index + 1} | ${item.quantity || 1} | ${item.equipmentType || "—"} | ${item.manufacturer || "—"} | ${item.partNumber || "—"} | ${item.condition || "—"} |`
-  ).join("\n");
+  const feesPercent = Number(admin.feesPercent) || 15.42;
+  const valuations = normaliseItemValuations(admin.itemValuations, data.items?.length || 0);
+  const itemRows = (data.items || []).map((item, index) => {
+    const valuation = valuations[index] || {};
+    const maxCash = valuationCash(valuation, feesPercent);
+    return `| ${index + 1} | ${valuation.selected === false ? "No" : "Yes"} | ${item.quantity || 1} | ${item.equipmentType || "—"} | ${item.manufacturer || "—"} | ${item.partNumber || "—"} | ${item.condition || "—"} | ${valuation.estimatedResaleGbp ? `£${Number(valuation.estimatedResaleGbp).toFixed(2)}` : "—"} | ${maxCash ? `£${maxCash.toFixed(2)}` : "—"} |`;
+  }).join("\n");
+  const offer = admin.offerDraft || {};
+  const savedResponse = offer.generatedAt
+    ? `\n## Saved seller response\n- **Mode:** ${offerModeLabel(offer.mode)}\n- **Generated:** ${offer.generatedAt}\n- **Subject:** ${offer.subject || "—"}\n\n### Email\n${quoteBlock(offer.emailText || "No email response saved.")}\n\n### WhatsApp\n${quoteBlock(offer.whatsappText || "No WhatsApp response saved.")}\n`
+    : "";
 
   return `# Seller enquiry ${data.reference}
 
@@ -123,10 +184,10 @@ function renderIssue(data) {
 - **Logistics:** ${data.logistics || "—"}
 - **Availability:** ${data.availability || "—"}
 
-## Equipment
-| # | Qty | Type | Manufacturer | Part number | Condition |
-|---|---:|---|---|---|---|
-${itemRows || "| 1 | — | — | — | — | — |"}
+## Equipment and valuation
+| # | Buy | Qty | Type | Manufacturer | Part number | Condition | Est. resale | Max cash |
+|---|---|---:|---|---|---|---|---:|---:|
+${itemRows || "| 1 | — | — | — | — | — | — | — | — |"}
 
 ## Seller notes
 ${data.notes || "No additional notes supplied."}
@@ -134,12 +195,14 @@ ${data.notes || "No additional notes supplied."}
 ## Deal desk
 - **Status:** ${statusLabel(admin.status)}
 - **Priority:** ${admin.priority || "normal"}
+- **Selling fees:** ${feesPercent}%
 - **Estimated resale:** ${admin.estimatedResaleGbp ? `£${Number(admin.estimatedResaleGbp).toFixed(2)}` : "—"}
 - **Recommended cash offer:** ${admin.recommendedOfferGbp ? `£${Number(admin.recommendedOfferGbp).toFixed(2)}` : "—"}
-- **Revenue share:** ${admin.revenueSharePercent ? `${Number(admin.revenueSharePercent)}% to seller` : "—"}
+- **Managed resale estimate:** ${admin.managedLowGbp || admin.managedHighGbp ? `${admin.managedLowGbp ? `£${Number(admin.managedLowGbp).toFixed(2)}` : "—"} to ${admin.managedHighGbp ? `£${Number(admin.managedHighGbp).toFixed(2)}` : "—"}` : "—"}
+- **Revenue share:** ${admin.revenueSharePercent ? `${Number(admin.revenueSharePercent)}% to seller of net proceeds` : "—"}
 - **Next follow-up:** ${admin.nextFollowUp || "—"}
 - **Internal notes:** ${admin.internalNotes || "—"}
-
+${savedResponse}
 Submitted ${data.submittedAt} through automation-outlet.co.uk.
 
 <!-- AO_ENQUIRY_B64:${encodeData(data)} -->`;
@@ -149,7 +212,7 @@ function normaliseSubmission(raw) {
   const contact = raw?.contact || {};
   const items = Array.isArray(raw?.items) ? raw.items.slice(0, 50) : [];
   const data = {
-    schema: 1,
+    schema: 2,
     reference: reference(),
     submittedAt: new Date().toISOString(),
     preference: clean(raw?.preference, 40) || "best-option",
@@ -178,11 +241,16 @@ function normaliseSubmission(raw) {
     admin: {
       status: "new",
       priority: raw?.urgency === "urgent" ? "high" : "normal",
+      feesPercent: 15.42,
+      itemValuations: [],
       estimatedResaleGbp: null,
       recommendedOfferGbp: null,
-      revenueSharePercent: null,
+      managedLowGbp: null,
+      managedHighGbp: null,
+      revenueSharePercent: 70,
       nextFollowUp: "",
       internalNotes: "",
+      offerDraft: null,
       updatedAt: null,
     },
   };
@@ -239,7 +307,9 @@ async function createEnquiry(request, response) {
   await ensureLabel("status:new", "4D94FF", "New acquisition enquiry");
 
   const first = data.items[0] || {};
-  const summary = [first.manufacturer, first.partNumber || first.equipmentType].filter(Boolean).join(" ");
+  const summary = [first.manufacturer, first.partNumber || first.equipmentType]
+    .filter(Boolean)
+    .join(" ");
   const issue = await github("/issues", {
     method: "POST",
     body: JSON.stringify({
@@ -274,23 +344,65 @@ async function listEnquiries(request, response) {
   return json(response, 200, { enquiries });
 }
 
-function mergeAdmin(current, update) {
+function updateMoney(update, key, current) {
+  return Object.prototype.hasOwnProperty.call(update || {}, key)
+    ? money(update[key])
+    : current ?? null;
+}
+
+function normaliseOfferDraft(raw, current) {
+  if (!raw || typeof raw !== "object") return current || null;
+  const allowedModes = new Set(["three-options", "cash", "selective", "managed", "decline"]);
+  const mode = clean(raw.mode, 30);
+  const subject = clean(raw.subject, 200);
+  const emailText = clean(raw.emailText, 5000);
+  const whatsappText = clean(raw.whatsappText, 2500);
+  const generatedAt = clean(raw.generatedAt, 40);
+  if (!mode && !subject && !emailText && !whatsappText && !generatedAt) return null;
+  return {
+    mode: allowedModes.has(mode) ? mode : "three-options",
+    subject,
+    emailText,
+    whatsappText,
+    generatedAt,
+  };
+}
+
+function mergeAdmin(current, update, itemCount) {
   const allowedStatuses = new Set([
     "new", "reviewing", "offer-ready", "offer-sent", "negotiating",
     "won", "consignment", "declined", "closed",
   ]);
   const status = clean(update?.status, 40);
+  const feesPercent = Object.prototype.hasOwnProperty.call(update || {}, "feesPercent")
+    ? percent(update.feesPercent, 15.42)
+    : percent(current?.feesPercent, 15.42);
   return {
     ...(current || {}),
     status: allowedStatuses.has(status) ? status : current?.status || "new",
     priority: ["low", "normal", "high", "urgent"].includes(clean(update?.priority, 20))
       ? clean(update.priority, 20)
       : current?.priority || "normal",
-    estimatedResaleGbp: money(update?.estimatedResaleGbp),
-    recommendedOfferGbp: money(update?.recommendedOfferGbp),
-    revenueSharePercent: Math.max(0, Math.min(100, Number(update?.revenueSharePercent) || 0)) || null,
-    nextFollowUp: clean(update?.nextFollowUp, 30),
-    internalNotes: clean(update?.internalNotes, 5000),
+    feesPercent,
+    itemValuations: Object.prototype.hasOwnProperty.call(update || {}, "itemValuations")
+      ? normaliseItemValuations(update.itemValuations, itemCount)
+      : normaliseItemValuations(current?.itemValuations, itemCount),
+    estimatedResaleGbp: updateMoney(update, "estimatedResaleGbp", current?.estimatedResaleGbp),
+    recommendedOfferGbp: updateMoney(update, "recommendedOfferGbp", current?.recommendedOfferGbp),
+    managedLowGbp: updateMoney(update, "managedLowGbp", current?.managedLowGbp),
+    managedHighGbp: updateMoney(update, "managedHighGbp", current?.managedHighGbp),
+    revenueSharePercent: Object.prototype.hasOwnProperty.call(update || {}, "revenueSharePercent")
+      ? percent(update.revenueSharePercent, null)
+      : percent(current?.revenueSharePercent, null),
+    nextFollowUp: Object.prototype.hasOwnProperty.call(update || {}, "nextFollowUp")
+      ? clean(update.nextFollowUp, 30)
+      : current?.nextFollowUp || "",
+    internalNotes: Object.prototype.hasOwnProperty.call(update || {}, "internalNotes")
+      ? clean(update.internalNotes, 5000)
+      : current?.internalNotes || "",
+    offerDraft: Object.prototype.hasOwnProperty.call(update || {}, "offerDraft")
+      ? normaliseOfferDraft(update.offerDraft, current?.offerDraft)
+      : current?.offerDraft || null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -313,7 +425,8 @@ async function updateEnquiry(request, response) {
   if (!data) return json(response, 404, { error: "Seller enquiry data not found" });
 
   const previousStatus = data.admin?.status || "new";
-  data.admin = mergeAdmin(data.admin, raw.admin || {});
+  data.schema = Math.max(2, Number(data.schema) || 1);
+  data.admin = mergeAdmin(data.admin, raw.admin || {}, data.items?.length || 0);
   const terminal = new Set(["won", "consignment", "declined", "closed"]);
   const state = terminal.has(data.admin.status) ? "closed" : "open";
 
@@ -326,10 +439,11 @@ async function updateEnquiry(request, response) {
     }),
   });
 
+  const offer = data.admin.offerDraft || {};
   await github(`/issues/${number}/comments`, {
     method: "POST",
     body: JSON.stringify({
-      body: `Deal desk update: **${statusLabel(previousStatus)} → ${statusLabel(data.admin.status)}**\n\nPriority: ${data.admin.priority}\nRecommended offer: ${data.admin.recommendedOfferGbp ? `£${Number(data.admin.recommendedOfferGbp).toFixed(2)}` : "not set"}\nNext follow-up: ${data.admin.nextFollowUp || "not set"}`,
+      body: `Deal desk update: **${statusLabel(previousStatus)} → ${statusLabel(data.admin.status)}**\n\nPriority: ${data.admin.priority}\nRecommended offer: ${data.admin.recommendedOfferGbp ? `£${Number(data.admin.recommendedOfferGbp).toFixed(2)}` : "not set"}\nManaged estimate: ${data.admin.managedLowGbp || data.admin.managedHighGbp ? `${data.admin.managedLowGbp ? `£${Number(data.admin.managedLowGbp).toFixed(2)}` : "—"} to ${data.admin.managedHighGbp ? `£${Number(data.admin.managedHighGbp).toFixed(2)}` : "—"}` : "not set"}\nOffer response: ${offer.generatedAt ? `${offerModeLabel(offer.mode)} generated ${offer.generatedAt}` : "not generated"}\nNext follow-up: ${data.admin.nextFollowUp || "not set"}`,
     }),
   }).catch((error) => console.warn("Could not add audit comment", error.message));
 
