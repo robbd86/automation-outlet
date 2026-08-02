@@ -3,8 +3,8 @@
   <div class="wrap">
     <div class="sec-head">
       <div class="portal-kicker">Automation Outlet seller portal</div>
-      <h2>Turn surplus into <span>cash or revenue</span></h2>
-      <p>Tell us what you have once. We will assess the strongest route: an immediate purchase, a selective offer, or managed resale for higher-value and slower-moving equipment.</p>
+      <h2>Choose speed, certainty or a <span>higher potential return</span></h2>
+      <p>Tell us what you have once. We will assess the equipment, likely demand and resale timescale, then recommend an immediate purchase, a selective offer or managed resale.</p>
     </div>
 
     <form id="sellForm" class="sell-form" novalidate>
@@ -15,15 +15,15 @@
         <div class="choice-grid route-grid">
           <label class="choice-card">
             <input type="radio" name="sale_route" value="best-option" checked>
-            <span><b>Recommend the best option</b><small>We compare cash purchase, selective purchase and managed resale.</small></span>
+            <span><b>Recommend the best route</b><small>We compare immediate purchase, selective purchase and managed resale for your particular stock.</small></span>
           </label>
           <label class="choice-card">
             <input type="radio" name="sale_route" value="cash">
-            <span><b>Immediate cash sale</b><small>Lower price, simple transaction and quick collection.</small></span>
+            <span><b>Immediate cash purchase</b><small>The fastest route. A trade-price offer with collection, testing, storage and resale risk transferred to us.</small></span>
           </label>
           <label class="choice-card">
             <input type="radio" name="sale_route" value="revenue-share">
-            <span><b>Revenue share / consignment</b><small>Potentially higher return when stock needs time, testing and marketing.</small></span>
+            <span><b>Managed resale / revenue share</b><small>Potentially a higher net return when valuable equipment needs time, testing and specialist marketing.</small></span>
           </label>
         </div>
       </fieldset>
@@ -89,8 +89,9 @@
             </select>
           </div>
           <div class="field">
-            <label for="s-expectation">Expected price, if known</label>
+            <label for="s-expectation">Expected trade price, if known</label>
             <div class="money-field"><span>£</span><input id="s-expectation" name="expected_price" type="number" min="0" step="1" placeholder="Optional"></div>
+            <small>Online asking prices can remain unsold for months. Enter the amount you would realistically accept for a straightforward trade transaction.</small>
           </div>
           <div class="field">
             <label for="s-postcode">Collection postcode / area</label>
@@ -139,14 +140,14 @@
           </div>
         </div>
         <div class="field">
-          <label for="s-notes">Background, quantities, removal details or anything that affects value</label>
-          <textarea id="s-notes" name="notes" maxlength="4000" placeholder="Example: Removed from a working packaging line during an upgrade. Around 30 modules plus two HMIs. Photos and a spreadsheet are available."></textarea>
+          <label for="s-notes">Background, why the stock is being sold, quantities, removal details or what matters most to you</label>
+          <textarea id="s-notes" name="notes" maxlength="4000" placeholder="Example: Removed from a working packaging line during an upgrade. Around 30 modules plus two HMIs. Fast collection is more important than achieving the highest possible return."></textarea>
         </div>
         <label class="consent-row">
           <input id="s-owner" type="checkbox" required>
           <span>I confirm that I own the equipment or am authorised to offer it for sale.</span>
         </label>
-        <p class="form-note">After submitting, you will receive a reference and a WhatsApp button for sending photographs against the same enquiry.</p>
+        <p class="form-note">Outright offers are commercial trade offers based on condition, demand, realistic resale timescale and the work and risk involved. After submitting, you will receive a reference and a WhatsApp button for sending photographs against the same enquiry.</p>
         <button type="submit" class="btn big">Submit equipment for assessment</button>
         <p class="form-status" id="sellStatus" role="status" aria-live="polite"></p>
         <div id="sellSuccess" class="portal-success" hidden></div>
