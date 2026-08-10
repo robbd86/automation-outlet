@@ -1,5 +1,15 @@
 {
   "framework": null,
   "buildCommand": "python3 build.py && python3 patch_stock.py && python3 release.py",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/stock/:slug",
+      "destination": "/api/product-page?slug=:slug"
+    },
+    {
+      "source": "/sitemap-stock.xml",
+      "destination": "/api/stock-sitemap"
+    }
+  ]
 }
