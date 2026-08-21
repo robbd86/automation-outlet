@@ -48,9 +48,17 @@ function formValue(id) {
   return document.getElementById(id).value.trim();
 }
 
-async function sendFormspreeFallback(payload) {
+async function sendFormspreeNotification(payload) {
+  const firstItem = payload.items?.[0] || {};
+  const leadSummary = [firstItem.manufacturer, firstItem.partNumber || firstItem.equipmentType]
+    .filter(Boolean)
+    .join(" ");
   const form = new FormData();
-  form.append("_subject", `Seller portal enquiry — ${payload.reference || "new submission"}`);
+  form.append(
+    "_subject",
+    `NEW AUTOMATION OUTLET LEAD — ${payload.reference || "new submission"}${leadSummary ? ` — ${leadSummary}` : ""}`
+  );
+  form.append("reference", payload.reference || "Pending");
   form.append("enquiry", "Selling surplus equipment");
   form.append("preferred_route", payload.preference);
   form.append("seller_type", payload.sellerType);
@@ -70,7 +78,7 @@ async function sendFormspreeFallback(payload) {
     body: form,
     headers: { Accept: "application/json" },
   });
-  if (!response.ok) throw new Error("Fallback submission failed");
+  if (!response.ok) throw new Error("Email notification failed");
 }
 
 const sellForm = document.getElementById("sellForm");
@@ -131,13 +139,19 @@ sellForm.addEventListener("submit", async (event) => {
     if (!response.ok) {
       if (response.status === 503 || response.status === 404) {
         usedFallback = true;
-        await sendFormspreeFallback(payload);
+        await sendFormspreeNotification(payload);
         reference = `AO-EMAIL-${Date.now().toString().slice(-6)}`;
       } else {
         throw new Error(data.error || "Submission could not be accepted");
       }
     } else {
       reference = data.reference;
+      payload.reference = reference;
+      try {
+        await sendFormspreeNotification(payload);
+      } catch (notificationError) {
+        console.warn("Seller enquiry saved but email notification failed", notificationError);
+      }
     }
 
     sellForm.reset();
