@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyer Stock Alerts | Automation Outlet</title>
+<meta name="description" content="Join Automation Outlet buyer alerts for surplus PLCs, HMIs, drives, servo equipment and industrial automation stock.">
+<meta name="robots" content="noindex, nofollow"><!-- Keep noindex until launch -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/portal.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
+    <nav class="nav-links">
+      <a href="/sell-surplus.html">Sell to us</a><a href="/buy-stock.html">Buy stock</a><a href="/obsolete-parts-sourcing.html">Obsolete parts</a><a href="/services.html">Services</a><a href="/contact.html">Contact</a>
+      <a href="/sell-surplus.html" class="btn">Get a quote</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="/sell-surplus.html">Sell to us</a><a href="/buy-stock.html">Buy stock</a><a href="/obsolete-parts-sourcing.html">Obsolete parts</a><a href="/services.html">Services</a><a href="/contact.html">Contact</a>
+    <a href="/sell-surplus.html" class="btn big">Get a quote</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero" style="padding:3.8rem 0 3rem">
+    <div class="wrap">
+      <div class="eyebrow">Buyer network &middot; early stock access</div>
+      <h1 style="font-size:clamp(2.2rem,6vw,3.9rem)">Get first look at <em>new automation stock</em></h1>
+      <p>Tell us what you buy and we can contact you when relevant PLCs, HMIs, drives, servo equipment and job lots come in &mdash; including stock that may never reach a public listing.</p>
+    </div>
+  </div>
+
+  <section class="quote seller-portal">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="portal-kicker">Automation Outlet buyer network</div>
+        <h2>Only hear about <span>stock you actually want</span></h2>
+        <p>This is not a general newsletter. Your preferences help us match incoming stock to the right buyers.</p>
+      </div>
+
+      <form id="buyerSignup" class="sell-form" novalidate>
+        <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="_subject" value="Buyer Network Signup — Automation Outlet">
+        <input type="hidden" name="signup_type" value="buyer-network">
+
+        <fieldset class="portal-section">
+          <legend><span>01</span> Your details</legend>
+          <div class="portal-fields two-col">
+            <div class="field"><label for="b-name">Name</label><input id="b-name" name="name" type="text" autocomplete="name" required maxlength="120"></div>
+            <div class="field"><label for="b-company">Company</label><input id="b-company" name="company" type="text" autocomplete="organization" maxlength="160"></div>
+            <div class="field"><label for="b-email">Email</label><input id="b-email" name="email" type="email" autocomplete="email" required maxlength="200"></div>
+            <div class="field"><label for="b-phone">Phone / WhatsApp <small>(optional)</small></label><input id="b-phone" name="phone" type="tel" autocomplete="tel" maxlength="50"></div>
+            <div class="field"><label for="b-type">You mainly buy as</label><select id="b-type" name="buyer_type"><option>End user / manufacturer</option><option>Controls / systems integrator</option><option>Maintenance / engineering company</option><option>Industrial reseller / dealer</option><option>Machine builder / OEM</option><option>Other</option></select></div>
+            <div class="field"><label for="b-volume">Typical requirement</label><select id="b-volume" name="buying_volume"><option>Individual replacement parts</option><option>Small quantities</option><option>Job lots / bulk stock</option><option>Both individual parts and bulk lots</option></select></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="portal-section">
+          <legend><span>02</span> What are you interested in?</legend>
+          <div class="choice-grid">
+            <label class="choice-card"><input type="checkbox" name="categories" value="PLC / CPU"><span><b>PLCs / CPUs</b><small>Processors, racks and controllers.</small></span></label>
+            <label class="choice-card"><input type="checkbox" name="categories" value="HMI"><span><b>HMIs</b><small>Operator panels and displays.</small></span></label>
+            <label class="choice-card"><input type="checkbox" name="categories" value="Drives"><span><b>Drives</b><small>VFDs, inverters and starters.</small></span></label>
+            <label class="choice-card"><input type="checkbox" name="categories" value="Servo"><span><b>Servo equipment</b><small>Servo drives, motors and feedback.</small></span></label>
+            <label class="choice-card"><input type="checkbox" name="categories" value="I/O"><span><b>I/O &amp; comms</b><small>Remote I/O, safety and networks.</small></span></label>
+            <label class="choice-card"><input type="checkbox" name="categories" value="Job lots"><span><b>Job lots</b><small>Mixed surplus and clearance stock.</small></span></label>
+          </div>
+          <div class="field" style="margin-top:1.2rem"><label for="b-brands">Preferred brands</label><input id="b-brands" name="brands" type="text" placeholder="e.g. Siemens, Allen-Bradley, ABB, Omron" maxlength="500"></div>
+          <div class="field"><label for="b-parts">Specific ranges or part numbers you regularly need <small>(optional)</small></label><textarea id="b-parts" name="wanted_parts" maxlength="2000" placeholder="e.g. S7-300 / S7-1500, 1756 ControlLogix, PowerFlex 525, ABB ACS580"></textarea></div>
+        </fieldset>
+
+        <fieldset class="portal-section">
+          <legend><span>03</span> Stock preferences</legend>
+          <div class="portal-fields two-col">
+            <div class="field"><label for="b-condition">Condition</label><select id="b-condition" name="condition"><option>New or used</option><option>New / unused only</option><option>Used tested is fine</option><option>Untested considered</option><option>Faulty / repair stock considered</option></select></div>
+            <div class="field"><label for="b-contact">Preferred contact</label><select id="b-contact" name="preferred_contact"><option>Email</option><option>WhatsApp</option><option>Phone</option><option>Email or WhatsApp</option></select></div>
+          </div>
+          <label class="consent-row"><input type="checkbox" name="consent" value="yes" required><span>I agree that Automation Outlet may contact me about relevant stock matching these preferences. I can opt out at any time.</span></label>
+          <p class="form-note">We will use these details only for relevant buyer matching and enquiries. See our <a href="/privacy.html">privacy notice</a>.</p>
+          <button type="submit" class="btn big">Join buyer network</button>
+          <p class="form-status" id="buyerStatus" role="status" aria-live="polite"></p>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p style="margin-top:.5rem">Industrial automation solutions &middot; Cambridgeshire, UK</p><p style="margin-top:.6rem">&#128241; <a href="https://wa.me/447849506371">07849 506371 (WhatsApp)</a> &nbsp;&middot;&nbsp; &#9993; <a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a></p></div><div class="foot-badges"><span>&#128222; Fast response</span><span>&#9993; No obligation</span><span>&#127468;&#127463; UK wide service</span></div></div>
+</footer>
+
+<script>
+const navToggle=document.getElementById('navToggle');const mobileMenu=document.getElementById('mobileMenu');navToggle.addEventListener('click',()=>{const open=mobileMenu.classList.toggle('open');navToggle.setAttribute('aria-expanded',open?'true':'false')});
+const form=document.getElementById('buyerSignup');const status=document.getElementById('buyerStatus');
+form.addEventListener('submit',async(e)=>{e.preventDefault();if(!form.reportValidity())return;const btn=form.querySelector('button[type=submit]');btn.disabled=true;status.style.color='';status.textContent='Submitting…';try{const r=await fetch('https://formspree.io/f/xqevvvll',{method:'POST',body:new FormData(form),headers:{Accept:'application/json'}});if(!r.ok)throw new Error();form.reset();status.style.color='var(--blue-bright)';status.textContent='Thanks — you are on the buyer network. We will only contact you when relevant stock comes in.'}catch(err){status.style.color='#ff9c9c';status.textContent='Something went wrong. Please email info@automation-outlet.co.uk and we will add you manually.'}finally{btn.disabled=false}});
+</script>
+</body>
+</html>
