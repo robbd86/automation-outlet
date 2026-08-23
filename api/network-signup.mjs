@@ -230,6 +230,18 @@ async function notifyFormspree(raw, signup) {
 function originAllowed(request) {
   const origin = clean(request.headers?.origin, 500);
   if (!origin) return true;
+
+  // Browser submissions are same-origin. Comparing Origin to Host safely supports
+  // Vercel branch aliases as well as production without having to enumerate every
+  // preview hostname in environment variables.
+  try {
+    const originUrl = new URL(origin);
+    const requestHost = clean(request.headers?.host || request.headers?.["x-forwarded-host"], 500).toLowerCase();
+    if (requestHost && originUrl.host.toLowerCase() === requestHost) return true;
+  } catch {
+    return false;
+  }
+
   const configured = clean(process.env.AO_ALLOWED_ORIGIN, 2000)
     .split(",")
     .map((item) => item.trim())
