@@ -13,11 +13,15 @@ The field names and select choices in the existing tables already match the webs
 
 ## Airtable personal access token
 
-Create the token at <https://airtable.com/create/tokens> with only:
+For the current preview integration test, the Airtable personal access token is configured with:
 
-- `data.records:write` — required to create and update records; Airtable performs the email match inside the upsert request
+- `data.records:read`
+- `data.records:write`
+- `schema.bases:read`
 
-Under **Access**, select only the intended **Automation Outlet Network** base. No schema, workspace, user or webhook scopes are needed.
+Under **Access**, allow **all current and future bases in My First Workspace** so the token can reach the verified Automation Outlet Network base used by the Vercel API route.
+
+The token itself remains server-side in Vercel as `AIRTABLE_ACCESS_TOKEN` and must never be exposed in HTML or browser JavaScript.
 
 ## Vercel environment variables
 
@@ -31,13 +35,13 @@ Add these to both **Preview** and **Production** in Vercel, then redeploy:
 | `AIRTABLE_SUPPLIERS_TABLE_ID` | The Suppliers table ID |
 | `FORMSPREE_NETWORK_ENDPOINT` | Optional; defaults to the existing `https://formspree.io/f/xqevvvll` endpoint |
 
-`AO_ALLOWED_ORIGIN` remains optional. It can contain a comma-separated list of extra allowed origins. The production domains and the current Vercel preview URL are accepted automatically.
+`AO_ALLOWED_ORIGIN` remains optional. It can contain a comma-separated list of extra allowed origins. The production domains and same-origin Vercel branch previews are accepted automatically.
 
 Environment-variable changes only apply to new Vercel deployments. After changing the Airtable token or IDs, trigger a fresh deployment of this feature branch before testing its preview alias.
 
 ## Preview test
 
-1. Add the four required Airtable variables to the Vercel Preview environment.
+1. Add the required Airtable variables to the Vercel Preview environment.
 2. Deploy this branch and open its Vercel preview.
 3. Submit one buyer test and one supplier test.
 4. Confirm the unchanged success messages appear.
