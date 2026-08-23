@@ -33,6 +33,8 @@ Add these to both **Preview** and **Production** in Vercel, then redeploy:
 
 `AO_ALLOWED_ORIGIN` remains optional. It can contain a comma-separated list of extra allowed origins. The production domains and the current Vercel preview URL are accepted automatically.
 
+Environment-variable changes only apply to new Vercel deployments. After changing the Airtable token or IDs, trigger a fresh deployment of this feature branch before testing its preview alias.
+
 ## Preview test
 
 1. Add the four required Airtable variables to the Vercel Preview environment.
