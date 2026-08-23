@@ -118,8 +118,6 @@ function airtableFields(signup) {
     Email: signup.email,
     "Phone / WhatsApp": signup.phone,
     Consent: true,
-    Status: "New",
-    "Signup Date": new Date().toISOString(),
   };
   if (signup.signupType === "buyer-network") {
     return {
@@ -134,7 +132,6 @@ function airtableFields(signup) {
       Source: "Website Buyer Alerts",
     };
   }
-  delete common.Brands;
   return {
     ...common,
     "Supplier Type": signup.supplierType,
@@ -157,6 +154,12 @@ function airtableSettings(signupType) {
   };
 }
 
+function airtableError(data, status) {
+  const error = new Error(data?.error?.message || `Airtable request failed (${status})`);
+  error.status = status >= 500 ? 502 : 500;
+  return error;
+}
+
 async function upsertAirtable(signup) {
   const { token, baseId, tableId } = airtableSettings(signup.signupType);
   if (!token || !baseId || !tableId) {
@@ -176,12 +179,33 @@ async function upsertAirtable(signup) {
     }),
   });
   const data = await result.json().catch(() => ({}));
-  if (!result.ok) {
-    const error = new Error(data?.error?.message || `Airtable request failed (${result.status})`);
-    error.status = result.status >= 500 ? 502 : 500;
-    throw error;
-  }
+  if (!result.ok) throw airtableError(data, result.status);
   return data;
+}
+
+async function initialiseCreatedRecord(signup, stored) {
+  const recordId = stored.createdRecords?.[0];
+  if (!recordId) return;
+
+  const { token, baseId, tableId } = airtableSettings(signup.signupType);
+  const result = await fetch(`${AIRTABLE_API}/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      records: [{
+        id: recordId,
+        fields: {
+          Status: "New",
+          "Signup Date": new Date().toISOString(),
+        },
+      }],
+    }),
+  });
+  const data = await result.json().catch(() => ({}));
+  if (!result.ok) throw airtableError(data, result.status);
 }
 
 async function notifyFormspree(raw, signup) {
@@ -235,6 +259,7 @@ export default async function handler(request, response) {
 
   try {
     const stored = await upsertAirtable(signup);
+    await initialiseCreatedRecord(signup, stored);
     await notifyFormspree(raw, signup);
     return json(response, 200, {
       ok: true,
