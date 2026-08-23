@@ -155,15 +155,22 @@ function airtableSettings(signupType) {
 }
 
 function airtableError(data, status) {
-  const error = new Error(data?.error?.message || `Airtable request failed (${status})`);
+  const error = new Error(data?.error?.message || data?.error?.type || `Airtable request failed (${status})`);
   error.status = status >= 500 ? 502 : 500;
+  error.airtableStatus = status;
+  error.airtableType = data?.error?.type || "";
   return error;
 }
 
 async function upsertAirtable(signup) {
   const { token, baseId, tableId } = airtableSettings(signup.signupType);
   if (!token || !baseId || !tableId) {
-    const error = new Error("Network signup storage is not configured");
+    const missing = [
+      !token && "AIRTABLE_ACCESS_TOKEN",
+      !baseId && "AIRTABLE_BASE_ID",
+      !tableId && (signup.signupType === "buyer-network" ? "AIRTABLE_BUYERS_TABLE_ID" : "AIRTABLE_SUPPLIERS_TABLE_ID"),
+    ].filter(Boolean).join(", ");
+    const error = new Error(`Network signup storage is not configured${missing ? `: missing ${missing}` : ""}`);
     error.status = 503;
     throw error;
   }
@@ -231,23 +238,34 @@ function originAllowed(request) {
   const origin = clean(request.headers?.origin, 500);
   if (!origin) return true;
 
-  // Browser submissions are same-origin. Comparing Origin to Host safely supports
-  // Vercel branch aliases as well as production without having to enumerate every
-  // preview hostname in environment variables.
+  let originUrl;
   try {
-    const originUrl = new URL(origin);
-    const requestHost = clean(request.headers?.host || request.headers?.["x-forwarded-host"], 500).toLowerCase();
-    if (requestHost && originUrl.host.toLowerCase() === requestHost) return true;
+    originUrl = new URL(origin);
   } catch {
     return false;
   }
+
+  const requestHosts = [request.headers?.host, request.headers?.["x-forwarded-host"]]
+    .map((value) => clean(value, 500).toLowerCase())
+    .filter(Boolean);
+  if (requestHosts.includes(originUrl.host.toLowerCase())) return true;
 
   const configured = clean(process.env.AO_ALLOWED_ORIGIN, 2000)
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
   const defaults = ["https://automation-outlet.co.uk", "https://www.automation-outlet.co.uk"];
-  if (process.env.VERCEL_URL) defaults.push(`https://${process.env.VERCEL_URL}`);
+  for (const host of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
+    const value = clean(host, 500);
+    if (value) defaults.push(`https://${value}`);
+  }
+
+  // Preview aliases can differ from VERCEL_URL. They are safe to allow here because
+  // this route only accepts validated writes, never reads or exposes Airtable data.
+  if (process.env.VERCEL_ENV === "preview" && originUrl.protocol === "https:" && originUrl.hostname.endsWith(".vercel.app")) {
+    return true;
+  }
+
   return [...configured, ...defaults].includes(origin);
 }
 
@@ -280,9 +298,11 @@ export default async function handler(request, response) {
     });
   } catch (error) {
     console.error("Network signup error", error.message);
+    const preview = process.env.VERCEL_ENV === "preview";
     return json(response, error.status || 500, {
       ok: false,
-      error: error.status === 503 ? error.message : "We could not save your signup. Please try again.",
+      error: preview ? error.message : (error.status === 503 ? "Network signup storage is not configured" : "We could not save your signup. Please try again."),
+      ...(preview && error.airtableStatus ? { airtableStatus: error.airtableStatus, airtableType: error.airtableType } : {}),
     });
   }
 }
