@@ -48,7 +48,13 @@ function formValue(id) {
   return document.getElementById(id).value.trim();
 }
 
-async function sendFormspreeNotification(payload) {
+function emailFallbackReference() {
+  const stamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `AO-EMAIL-${stamp}-${random}`;
+}
+
+async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy") {
   const firstItem = payload.items?.[0] || {};
   const leadSummary = [firstItem.manufacturer, firstItem.partNumber || firstItem.equipmentType]
     .filter(Boolean)
@@ -59,6 +65,7 @@ async function sendFormspreeNotification(payload) {
     `NEW AUTOMATION OUTLET LEAD — ${payload.reference || "new submission"}${leadSummary ? ` — ${leadSummary}` : ""}`
   );
   form.append("reference", payload.reference || "Pending");
+  form.append("capture_route", captureRoute);
   form.append("enquiry", "Selling surplus equipment");
   form.append("preferred_route", payload.preference);
   form.append("seller_type", payload.sellerType);
@@ -78,7 +85,7 @@ async function sendFormspreeNotification(payload) {
     body: form,
     headers: { Accept: "application/json" },
   });
-  if (!response.ok) throw new Error("Email notification failed");
+  if (!response.ok) throw new Error("Backup capture failed");
 }
 
 const sellForm = document.getElementById("sellForm");
@@ -128,29 +135,46 @@ sellForm.addEventListener("submit", async (event) => {
 
   let reference = "";
   let usedFallback = false;
+  let primaryFailure = null;
+
   try {
     sellStatus.textContent = "Creating your Automation Outlet enquiry…";
-    const response = await fetch("/api/deal-desk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      if (response.status === 503 || response.status === 404) {
-        usedFallback = true;
-        await sendFormspreeNotification(payload);
-        reference = `AO-EMAIL-${Date.now().toString().slice(-6)}`;
+
+    try {
+      const response = await fetch("/api/deal-desk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          const validationError = new Error(data.error || "Submission could not be accepted");
+          validationError.noFallback = true;
+          throw validationError;
+        }
+        primaryFailure = new Error(data.error || `Deal desk unavailable (${response.status})`);
       } else {
-        throw new Error(data.error || "Submission could not be accepted");
+        reference = data.reference;
       }
+    } catch (error) {
+      if (error.noFallback) throw error;
+      primaryFailure = error;
+    }
+
+    if (primaryFailure) {
+      usedFallback = true;
+      reference = emailFallbackReference();
+      payload.reference = reference;
+      await sendFormspreeNotification(payload, "backup-only");
+      console.warn("Deal desk unavailable; seller lead captured by backup", primaryFailure.message);
     } else {
-      reference = data.reference;
       payload.reference = reference;
       try {
-        await sendFormspreeNotification(payload);
+        await sendFormspreeNotification(payload, "deal-desk-copy");
       } catch (notificationError) {
-        console.warn("Seller enquiry saved but email notification failed", notificationError);
+        console.warn("Seller enquiry saved but backup copy failed", notificationError);
       }
     }
 
@@ -165,7 +189,7 @@ sellForm.addEventListener("submit", async (event) => {
     );
     sellStatus.style.color = "var(--blue-bright)";
     sellStatus.textContent = usedFallback
-      ? "Thanks — your details have been emailed successfully."
+      ? "Thanks — your enquiry has been received and safely captured."
       : "Thanks — your enquiry is now in our assessment queue.";
     sellSuccess.hidden = false;
     sellSuccess.innerHTML = `
