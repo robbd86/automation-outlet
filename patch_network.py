@@ -8,6 +8,7 @@ so these additions are applied afterwards rather than hand-editing generated HTM
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+ADMIN_PAGES = {"stock-admin.html", "deal-desk.html"}
 
 
 def insert_once(path: Path, needle: str, insertion: str, marker: str) -> None:
@@ -22,7 +23,33 @@ def insert_once(path: Path, needle: str, insertion: str, marker: str) -> None:
     print(f"patched network links: {path.name}")
 
 
+def patch_stock_alert_nav() -> None:
+    """Put Stock Alerts in both desktop and mobile navigation on public pages."""
+    needle = '>Buy stock</a><a href="/obsolete-parts-sourcing.html"'
+    replacement = '>Buy stock</a><a href="/buyer-alerts.html">Stock Alerts</a><a href="/obsolete-parts-sourcing.html"'
+    for path in ROOT.glob("*.html"):
+        if path.name in ADMIN_PAGES:
+            continue
+        html = path.read_text(encoding="utf-8")
+        if '/buyer-alerts.html">Stock Alerts</a>' in html:
+            continue
+        if needle not in html:
+            continue
+        html = html.replace(needle, replacement)
+        path.write_text(html, encoding="utf-8")
+        print(f"patched Stock Alerts nav: {path.name}")
+
+
 def patch_home() -> None:
+    path = ROOT / "index.html"
+    html = path.read_text(encoding="utf-8")
+    old_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Buy tested stock</a></div>'
+    new_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Buy tested stock</a><a href="/buyer-alerts.html" class="btn big ghost">Stock alerts</a></div>'
+    if old_ctas in html:
+        html = html.replace(old_ctas, new_ctas, 1)
+        path.write_text(html, encoding="utf-8")
+        print("patched homepage Stock Alerts hero CTA")
+
     block = '''<section style="padding:2.8rem 0">
   <div class="wrap">
     <div class="sec-head">
@@ -44,7 +71,7 @@ def patch_home() -> None:
   </div>
 </section>'''
     needle = '<section class="quote" style="padding:3.2rem 0">\n  <div class="wrap">\n    <div class="sec-head"><h2>Not sure where to <span>start?</span></h2>'
-    insert_once(ROOT / "index.html", needle, block, '/buyer-alerts.html')
+    insert_once(path, needle, block, '/buyer-alerts.html')
 
 
 def patch_buy() -> None:
@@ -82,6 +109,7 @@ def main() -> None:
     patch_home()
     patch_buy()
     patch_sell()
+    patch_stock_alert_nav()
 
 
 if __name__ == "__main__":
