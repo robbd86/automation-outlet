@@ -11,6 +11,7 @@ const SIGNUP_CONFIG = {
       categories: ["PLC / CPU", "HMI", "Drives", "Servo", "I/O", "Job lots"],
       condition: ["New or used", "New / unused only", "Used tested is fine", "Untested considered", "Faulty / repair stock considered"],
       preferred_contact: ["Email", "WhatsApp", "Phone", "Email or WhatsApp"],
+      spend_band: ["Under £500", "£500–£2,000", "£2,000–£5,000", "£5,000–£15,000", "£15,000+", "Depends on the stock"],
     },
   },
   "supplier-network": {
@@ -82,6 +83,8 @@ export function normaliseSignup(raw) {
       wantedParts: clean(raw?.wanted_parts, 2000),
       condition: allowedValue(clean(raw?.condition, 100), config.allowed.condition),
       preferredContact: allowedValue(clean(raw?.preferred_contact, 50), config.allowed.preferred_contact),
+      countryRegion: clean(raw?.country_region, 160),
+      spendBand: allowedValue(clean(raw?.spend_band, 80), config.allowed.spend_band),
     });
   } else {
     Object.assign(signup, {
@@ -102,7 +105,7 @@ export function validateSignup(signup) {
   if (!signup.name) return "Name is required";
   if (!isEmail(signup.email)) return "A valid email is required";
   if (!signup.consent) return "Consent is required";
-  if (signup.signupType === "buyer-network" && (!signup.buyerType || !signup.buyingVolume || !signup.condition || !signup.preferredContact)) {
+  if (signup.signupType === "buyer-network" && (!signup.buyerType || !signup.buyingVolume || !signup.condition || !signup.preferredContact || !signup.spendBand)) {
     return "One or more buyer selections are invalid";
   }
   if (signup.signupType === "supplier-network" && (!signup.supplierType || !signup.frequency || !signup.preferredRoute)) {
@@ -129,6 +132,8 @@ function airtableFields(signup) {
       "Wanted Parts / Ranges": signup.wantedParts,
       Condition: signup.condition,
       "Preferred Contact": signup.preferredContact,
+      "Country / Region": signup.countryRegion,
+      "Typical Opportunity Size": signup.spendBand,
       Source: "Website Buyer Alerts",
     };
   }
@@ -260,8 +265,6 @@ function originAllowed(request) {
     if (value) defaults.push(`https://${value}`);
   }
 
-  // Preview aliases can differ from VERCEL_URL. They are safe to allow here because
-  // this route only accepts validated writes, never reads or exposes Airtable data.
   if (process.env.VERCEL_ENV === "preview" && originUrl.protocol === "https:" && originUrl.hostname.endsWith(".vercel.app")) {
     return true;
   }

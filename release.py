@@ -38,11 +38,13 @@ def update_sitemap() -> None:
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")
+    additions = []
+    if "/buyer-alerts.html" not in text:
+        additions.append('  <url><loc>https://www.automation-outlet.co.uk/buyer-alerts.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
     if "/privacy.html" not in text:
-        text = text.replace(
-            "</urlset>",
-            '  <url><loc>https://www.automation-outlet.co.uk/privacy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>\n</urlset>',
-        )
+        additions.append('  <url><loc>https://www.automation-outlet.co.uk/privacy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>')
+    if additions:
+        text = text.replace("</urlset>", "\n".join(additions) + "\n</urlset>")
         path.write_text(text, encoding="utf-8")
 
 

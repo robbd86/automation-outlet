@@ -27,13 +27,13 @@ def patch_home() -> None:
   <div class="wrap">
     <div class="sec-head">
       <h2>Join the Automation Outlet <span>network</span></h2>
-      <p>Tell us whether you buy automation equipment, come across surplus stock, or both.</p>
+      <p>Turn a one-off visit into an ongoing connection &mdash; whether you buy automation equipment, come across surplus stock, or both.</p>
     </div>
     <div class="paths" style="margin:0">
       <div class="path">
-        <h3>Buyer <span>stock alerts</span></h3>
-        <p>Tell us the brands and equipment you buy. We can contact you when matching PLCs, HMIs, drives and job lots come in &mdash; often before a public listing.</p>
-        <a class="link" href="/buyer-alerts.html">Get stock alerts &rarr;</a>
+        <h3>AO <span>Stock Alerts</span></h3>
+        <p>Tell us the brands, equipment and deal sizes you buy. We can contact you when matching PLCs, HMIs, drives and job lots become available &mdash; often before a public listing.</p>
+        <a class="link" href="/buyer-alerts.html">Join AO Stock Alerts &rarr;</a>
       </div>
       <div class="path">
         <h3>Supplier <span>network</span></h3>
@@ -51,11 +51,12 @@ def patch_buy() -> None:
     block = '''<section class="quote" style="padding:3rem 0">
   <div class="wrap">
     <div class="sec-head">
+      <div class="eyebrow">AO Stock Alerts</div>
       <h2>Want first look at <span>incoming stock?</span></h2>
-      <p>Join our buyer network, tell us the brands and equipment you need, and we can contact you when relevant stock arrives.</p>
+      <p>Tell us the manufacturers, equipment and deal sizes you buy. We can put matching surplus stock in front of you when it arrives, including selected opportunities before wider marketing.</p>
     </div>
-    <a href="/buyer-alerts.html" class="btn big">Get stock alerts</a>
-    <p class="services-note" style="margin-top:1rem">No general newsletter &mdash; just relevant automation stock matching your preferences.</p>
+    <a href="/buyer-alerts.html" class="btn big">Join AO Stock Alerts</a>
+    <p class="services-note" style="margin-top:1rem">No general newsletter &mdash; just relevant automation stock matched to your buying profile.</p>
   </div>
 </section>'''
     needle = '<section style="padding:3.2rem 0"><div class="wrap"><div class="sec-head"><h2>Why buy <span>from us</span></h2>'
