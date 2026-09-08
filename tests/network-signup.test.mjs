@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import handler, { normaliseSignup, validateSignup } from "../api/network-signup.mjs";
 
-test("normalises a valid buyer signup and preserves multiple categories", () => {
+test("normalises a valid buyer signup and preserves matching preferences", () => {
   const signup = normaliseSignup({
     signup_type: "buyer-network",
     name: "  Test Buyer  ",
@@ -13,11 +13,15 @@ test("normalises a valid buyer signup and preserves multiple categories", () => 
     categories: ["PLC / CPU", "Drives", "Drives"],
     condition: "Used tested is fine",
     preferred_contact: "Email",
+    country_region: "United Kingdom",
+    spend_band: "£2,000–£5,000",
   });
   assert.equal(validateSignup(signup), "");
   assert.equal(signup.name, "Test Buyer");
   assert.equal(signup.email, "buyer@example.com");
   assert.deepEqual(signup.categories, ["PLC / CPU", "Drives"]);
+  assert.equal(signup.countryRegion, "United Kingdom");
+  assert.equal(signup.spendBand, "£2,000–£5,000");
 });
 
 test("normalises a valid supplier signup", () => {
@@ -45,10 +49,27 @@ test("rejects invalid signup types, email addresses and missing consent", () => 
     buying_volume: "Small quantities",
     condition: "New or used",
     preferred_contact: "Email",
+    spend_band: "Depends on the stock",
   });
   assert.equal(validateSignup(signup), "A valid email is required");
   signup.email = "test@example.com";
   assert.equal(validateSignup(signup), "Consent is required");
+});
+
+test("rejects an invalid buyer opportunity size", () => {
+  const signup = normaliseSignup({
+    signup_type: "buyer-network",
+    name: "Test Buyer",
+    email: "test@example.com",
+    consent: "yes",
+    buyer_type: "End user / manufacturer",
+    buying_volume: "Small quantities",
+    condition: "New or used",
+    preferred_contact: "Email",
+    spend_band: "£1,000,000 only",
+  });
+  assert.equal(signup.spendBand, "");
+  assert.equal(validateSignup(signup), "One or more buyer selections are invalid");
 });
 
 test("drops select values that are not present in the Airtable schema", () => {
@@ -89,6 +110,8 @@ function buyerBody(overrides = {}) {
     categories: ["PLC / CPU"],
     condition: "Used tested is fine",
     preferred_contact: "Email",
+    country_region: "United Kingdom",
+    spend_band: "Depends on the stock",
     ...overrides,
   };
 }
@@ -125,6 +148,8 @@ test("new contacts get initial status and signup date after the email upsert", a
   const upsertBody = JSON.parse(calls[0].options.body);
   assert.deepEqual(upsertBody.performUpsert, { fieldsToMergeOn: ["Email"] });
   assert.equal(upsertBody.records[0].fields.Email, "buyer@example.com");
+  assert.equal(upsertBody.records[0].fields["Country / Region"], "United Kingdom");
+  assert.equal(upsertBody.records[0].fields["Typical Opportunity Size"], "Depends on the stock");
   assert.equal(Object.hasOwn(upsertBody.records[0].fields, "Status"), false);
   assert.equal(Object.hasOwn(upsertBody.records[0].fields, "Signup Date"), false);
 
@@ -153,7 +178,7 @@ test("existing contacts update preferences without resetting status or signup da
     await handler({
       method: "POST",
       headers: {},
-      body: buyerBody({ company: "Updated Company", categories: ["PLC / CPU", "Drives"] }),
+      body: buyerBody({ company: "Updated Company", categories: ["PLC / CPU", "Drives"], spend_band: "£5,000–£15,000" }),
     }, response);
   } finally {
     globalThis.fetch = originalFetch;
@@ -166,6 +191,7 @@ test("existing contacts update preferences without resetting status or signup da
   const upsertBody = JSON.parse(calls[0].options.body);
   assert.equal(upsertBody.records[0].fields.Company, "Updated Company");
   assert.deepEqual(upsertBody.records[0].fields.Categories, ["PLC / CPU", "Drives"]);
+  assert.equal(upsertBody.records[0].fields["Typical Opportunity Size"], "£5,000–£15,000");
   assert.equal(Object.hasOwn(upsertBody.records[0].fields, "Status"), false);
   assert.equal(Object.hasOwn(upsertBody.records[0].fields, "Signup Date"), false);
   assert.equal(calls[1].url, "https://formspree.io/f/xqevvvll");
