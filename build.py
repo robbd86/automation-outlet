@@ -40,7 +40,7 @@ def nav_html(active):
     <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
     <nav class="nav-links">
       {links}
-      <a href="/sell-surplus.html" class="btn">Get a quote</a>
+      <a href="/sell-surplus.html" class="btn">Get a surplus offer</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -48,7 +48,7 @@ def nav_html(active):
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     {mob}
-    <a href="/sell-surplus.html" class="btn big">Get a quote</a>
+    <a href="/sell-surplus.html" class="btn big">Get a surplus offer</a>
   </nav>
 </header>'''
 
@@ -133,7 +133,7 @@ def hero(eyebrow, h1, intro, ctas, note=""):
     btns = "".join(
         f'<a href="{h}" class="btn big{" ghost" if i else ""}"{" target=_blank rel=noopener" if h.startswith("http") else ""}>{l}</a>'
         for i, (l, h) in enumerate(ctas))
-    n = f'<p class="hero-note">{note}</p>' if note else ""
+    n = f'<div class="hero-note">{note}</div>' if note else ""
     return f'''<div class="hero" style="padding:3.8rem 0 3.2rem">
   <div class="wrap">
     <div class="eyebrow">{eyebrow}</div>
@@ -204,14 +204,14 @@ home_body = (
     + hero("Industrial Automation Solutions &middot; UK Wide",
            "Cash paid for <em>surplus PLCs, HMIs, drives</em> &amp; control panels",
            "We buy and sell new, used and surplus industrial automation equipment across the UK &mdash; from a single item to a full plant takeout. Engineer-run, honestly priced, collected free.",
-           [("Sell your surplus", "/sell-surplus.html"), ("Buy tested stock", "/buy-stock.html")],
-           "<b>Fast &amp; easy:</b> send a few photos or a list &mdash; we'll take it from there.")
+           [("Sell your surplus", "/sell-surplus.html"), ("Browse stock", "/buy-stock.html")],
+           '''<form action="/buy-stock.html#stock" method="get" role="search" style="margin-top:1rem"><label for="homePartSearch">Looking for a part?</label><div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem"><input id="homePartSearch" name="q" type="search" placeholder="Enter a part number or description" style="flex:1;min-width:0;max-width:30rem" required><button class="btn" type="submit">Search stock</button></div></form>''')
     + cards([
         ("Selling <span>surplus?</span>",
          "Decommissioned panels, spares-store clear-outs, obsolete stock or end-of-project surplus. Fair offers on real market value, quotes often same day, free UK collection.",
          "List your items", "/sell-surplus.html"),
         ("Buying <span>parts?</span>",
-         "Tested, working PLCs, HMIs and drives at a fraction of list price &mdash; every unit bench-checked by a time-served controls engineer before it's listed.",
+         "New, used and surplus PLCs, HMIs and drives. Check each listing for its condition, test status and what is included.",
          "Browse our stock", "/buy-stock.html"),
     ])
     + TRUST
@@ -256,12 +256,12 @@ page("sell-surplus",
 
 # ---- BUY STOCK ----
 buy_body = (
-    hero("Buy &middot; tested &amp; ready",
-         "Buy <em>tested</em> automation parts",
+    hero("Buy &middot; new, used &amp; surplus",
+         "Buy <em>automation</em> parts",
          "Every PLC, HMI and drive we sell is powered up and function-tested by a controls engineer before it's listed &mdash; so you know what you're getting. Obsolete and hard-to-find parts a speciality.",
          [("View stock on eBay", "https://www.ebay.co.uk"), ("Ask us to source a part", "/obsolete-parts-sourcing.html")])
     + steps([
-        ("TESTED", "Bench-checked before listing", "Powered up and function-tested, with condition described honestly &mdash; including anything we couldn't test and why."),
+        ("CONDITION", "Know what you are buying", "Each listing states its condition and test status. Untested and parts-or-repair equipment is labelled separately from tested working stock."),
         ("PRICED", "A fraction of list", "Surplus and used kit at sensible money, without OEM lead times or new-build pricing."),
         ("OBSOLETE", "The stuff nobody stocks", "Legacy processors, discontinued HMIs and end-of-life drives &mdash; the parts that keep older lines running."),
     ], "Why buy <span>from us</span>")
@@ -272,7 +272,7 @@ buy_body = (
 )
 page("buy-stock",
      "Buy Used &amp; Surplus PLCs, HMIs and Drives UK | Automation Outlet",
-     "Buy bench-tested used and surplus industrial automation parts &mdash; PLCs, HMIs, drives. Obsolete and hard-to-find parts a speciality. UK despatch.",
+     "Buy new, used and surplus industrial automation parts &mdash; PLCs, HMIs, drives. Obsolete and hard-to-find parts a speciality. UK despatch.",
      buy_body, wa_text="Hi%2C%20I%27m%20looking%20for%20a%20part")
 
 # ---- SERVICES hub ----
