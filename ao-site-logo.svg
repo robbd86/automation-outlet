@@ -1,51 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 190" role="img" aria-labelledby="title desc">
-  <title id="title">Automation Outlet</title>
-  <desc id="desc">Automation Outlet industrial automation solutions logo</desc>
-  <defs>
-    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#19E4F2"/>
-      <stop offset="0.48" stop-color="#12A8FF"/>
-      <stop offset="1" stop-color="#1269F4"/>
-    </linearGradient>
-    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#16B6FF"/>
-      <stop offset="1" stop-color="#1267E9"/>
-    </linearGradient>
-    <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1357AD"/>
-      <stop offset="1" stop-color="#061D4A"/>
-    </linearGradient>
-  </defs>
-  <rect width="980" height="190" rx="14" fill="#fff"/>
-  <path d="M0 0h104L0 104z" fill="#0E76EA"/>
-  <path d="M0 0h58L0 58z" fill="#082C69"/>
-  <path d="M980 190h-104l104-104z" fill="#0E76EA"/>
-  <path d="M980 190h-58l58-58z" fill="#082C69"/>
-  <g opacity="0.72" fill="none" stroke="#6E849F" stroke-width="2">
-    <path d="M0 124h38l18-18h22"/><circle cx="81" cy="106" r="4"/>
-    <path d="M0 148h55l17-17h24"/><circle cx="99" cy="131" r="4"/>
-    <path d="M980 59h-38l-18 18h-22"/><circle cx="899" cy="77" r="4"/>
-    <path d="M980 35h-55l-17 17h-24"/><circle cx="881" cy="52" r="4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 250" role="img" aria-labelledby="title desc">
+<title id="title">Automation Outlet</title><desc id="desc">Automation Outlet industrial automation solutions logo</desc>
+<defs>
+  <linearGradient id="cyanA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19E7F3"/><stop offset=".45" stop-color="#10B9FF"/><stop offset="1" stop-color="#1474F4"/></linearGradient>
+  <linearGradient id="autoBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#19B8FF"/><stop offset=".5" stop-color="#148EF7"/><stop offset="1" stop-color="#0C61DC"/></linearGradient>
+  <linearGradient id="outletNavy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#135AAD"/><stop offset="1" stop-color="#031E4D"/></linearGradient>
+</defs>
+<rect x="1.5" y="1.5" width="1197" height="247" rx="14" fill="#fff" stroke="#E6ECF4" stroke-width="3"/>
+<path d="M0 0h170L0 170z" fill="#13A7F9"/><path d="M0 0h92L0 92z" fill="#092E69"/>
+<path d="M1200 250h-170l170-170z" fill="#138EF7"/><path d="M1200 250h-92l92-92z" fill="#082B66"/>
+<g fill="none" stroke="#8DA0B4" stroke-width="3" opacity=".8">
+  <path d="M0 150h54l23-23h30"/><circle cx="111" cy="127" r="5" stroke="#138EF7"/>
+  <path d="M0 186h78l20-20h27"/><circle cx="130" cy="166" r="5" stroke="#138EF7"/>
+  <path d="M1200 82h-60l-22 22h-32"/><circle cx="1080" cy="104" r="5" stroke="#138EF7"/>
+  <path d="M1200 121h-85l-22 22h-28"/><circle cx="1059" cy="143" r="5" stroke="#138EF7"/>
+</g>
+<g transform="translate(86 33)">
+  <g transform="translate(176 92)" fill="#117EF1">
+    <circle r="72" fill="url(#autoBlue)"/>
+    <rect x="-12" y="-97" width="24" height="36" rx="4"/><rect x="-12" y="61" width="24" height="36" rx="4"/>
+    <rect x="61" y="-12" width="36" height="24" rx="4"/><rect x="-97" y="-12" width="36" height="24" rx="4"/>
+    <rect x="-12" y="-97" width="24" height="36" rx="4" transform="rotate(45)"/><rect x="-12" y="61" width="24" height="36" rx="4" transform="rotate(45)"/>
+    <rect x="61" y="-12" width="36" height="24" rx="4" transform="rotate(45)"/><rect x="-97" y="-12" width="36" height="24" rx="4" transform="rotate(45)"/>
+    <circle r="38" fill="#fff"/>
   </g>
-  <g transform="translate(80 30)">
-    <g transform="translate(108 65)">
-      <circle r="48" fill="url(#blue)"/>
-      <g fill="#137EF3">
-        <rect x="-8" y="-65" width="16" height="25" rx="3"/>
-        <rect x="-8" y="40" width="16" height="25" rx="3"/>
-        <rect x="40" y="-8" width="25" height="16" rx="3"/>
-        <rect x="-65" y="-8" width="25" height="16" rx="3"/>
-        <rect x="-8" y="-65" width="16" height="25" rx="3" transform="rotate(45)"/>
-        <rect x="-8" y="40" width="16" height="25" rx="3" transform="rotate(45)"/>
-        <rect x="40" y="-8" width="25" height="16" rx="3" transform="rotate(45)"/>
-        <rect x="-65" y="-8" width="25" height="16" rx="3" transform="rotate(45)"/>
-      </g>
-      <circle r="23" fill="#fff"/>
-    </g>
-    <text x="0" y="126" font-family="Arial Black,Arial,sans-serif" font-size="122" font-weight="900" fill="url(#cyan)">A</text>
-  </g>
-  <line x1="270" y1="34" x2="270" y2="156" stroke="#AEB8C4" stroke-width="3"/>
-  <text x="300" y="85" font-family="Arial Black,Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="-2" fill="url(#blue)">AUTOMATION</text>
-  <text x="300" y="145" font-family="Arial Black,Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="-2" fill="url(#navy)">OUTLET</text>
-  <text x="602" y="143" font-family="Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="6" fill="#0A326B">INDUSTRIAL AUTOMATION</text>
+  <path d="M5 178L78 6h53l76 172h-49l-16-39H69l-15 39H5zm81-80h40L106 48 86 98z" fill="url(#cyanA)"/>
+</g>
+<line x1="352" y1="32" x2="352" y2="211" stroke="#A9B4C1" stroke-width="4"/>
+<g font-family="Arial Black,Arial,sans-serif" font-weight="900">
+  <text x="388" y="109" font-size="86" letter-spacing="-4" fill="url(#autoBlue)">AUTOMATION</text>
+  <text x="388" y="184" font-size="98" letter-spacing="-4" fill="url(#outletNavy)">OUTLET</text>
+</g>
+<text x="391" y="220" font-family="Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="7" fill="#0A326B">INDUSTRIAL AUTOMATION SOLUTIONS</text>
 </svg>
