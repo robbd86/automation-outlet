@@ -34,18 +34,21 @@ def clean_html() -> None:
 
 
 def update_sitemap() -> None:
-    path = ROOT / "sitemap.xml"
-    if not path.exists():
-        return
-    text = path.read_text(encoding="utf-8")
-    additions = []
-    if "/buyer-alerts.html" not in text:
-        additions.append('  <url><loc>https://www.automation-outlet.co.uk/buyer-alerts.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
-    if "/privacy.html" not in text:
-        additions.append('  <url><loc>https://www.automation-outlet.co.uk/privacy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>')
-    if additions:
-        text = text.replace("</urlset>", "\n".join(additions) + "\n</urlset>")
-        path.write_text(text, encoding="utf-8")
+    # Generate from the public pages produced by this build, even on a clean checkout.
+    urls = []
+    for page in sorted(ROOT.glob("*.html")):
+        if page.name in ADMIN_PAGES:
+            continue
+        text = page.read_text(encoding="utf-8")
+        if re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex', text, re.I):
+            continue
+        route = "" if page.name == "index.html" else page.name
+        urls.append(f"  <url><loc>https://www.automation-outlet.co.uk/{route}</loc></url>")
+    (ROOT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(urls) + "\n</urlset>\n", encoding="utf-8"
+    )
 
 
 def main() -> None:
@@ -56,3 +59,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
