@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 190" role="img" aria-labelledby="title desc">
+  <title id="title">Automation Outlet</title>
+  <desc id="desc">Automation Outlet industrial automation solutions logo</desc>
+  <defs>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#19E4F2"/>
+      <stop offset="0.48" stop-color="#12A8FF"/>
+      <stop offset="1" stop-color="#1269F4"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16B6FF"/>
+      <stop offset="1" stop-color="#1267E9"/>
+    </linearGradient>
+    <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1357AD"/>
+      <stop offset="1" stop-color="#061D4A"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="190" rx="14" fill="#fff"/>
+  <path d="M0 0h104L0 104z" fill="#0E76EA"/>
+  <path d="M0 0h58L0 58z" fill="#082C69"/>
+  <path d="M980 190h-104l104-104z" fill="#0E76EA"/>
+  <path d="M980 190h-58l58-58z" fill="#082C69"/>
+  <g opacity="0.72" fill="none" stroke="#6E849F" stroke-width="2">
+    <path d="M0 124h38l18-18h22"/><circle cx="81" cy="106" r="4"/>
+    <path d="M0 148h55l17-17h24"/><circle cx="99" cy="131" r="4"/>
+    <path d="M980 59h-38l-18 18h-22"/><circle cx="899" cy="77" r="4"/>
+    <path d="M980 35h-55l-17 17h-24"/><circle cx="881" cy="52" r="4"/>
+  </g>
+  <g transform="translate(80 30)">
+    <g transform="translate(108 65)">
+      <circle r="48" fill="url(#blue)"/>
+      <g fill="#137EF3">
+        <rect x="-8" y="-65" width="16" height="25" rx="3"/>
+        <rect x="-8" y="40" width="16" height="25" rx="3"/>
+        <rect x="40" y="-8" width="25" height="16" rx="3"/>
+        <rect x="-65" y="-8" width="25" height="16" rx="3"/>
+        <rect x="-8" y="-65" width="16" height="25" rx="3" transform="rotate(45)"/>
+        <rect x="-8" y="40" width="16" height="25" rx="3" transform="rotate(45)"/>
+        <rect x="40" y="-8" width="25" height="16" rx="3" transform="rotate(45)"/>
+        <rect x="-65" y="-8" width="25" height="16" rx="3" transform="rotate(45)"/>
+      </g>
+      <circle r="23" fill="#fff"/>
+    </g>
+    <text x="0" y="126" font-family="Arial Black,Arial,sans-serif" font-size="122" font-weight="900" fill="url(#cyan)">A</text>
+  </g>
+  <line x1="270" y1="34" x2="270" y2="156" stroke="#AEB8C4" stroke-width="3"/>
+  <text x="300" y="85" font-family="Arial Black,Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="-2" fill="url(#blue)">AUTOMATION</text>
+  <text x="300" y="145" font-family="Arial Black,Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="-2" fill="url(#navy)">OUTLET</text>
+  <text x="602" y="143" font-family="Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="6" fill="#0A326B">INDUSTRIAL AUTOMATION</text>
+</svg>
