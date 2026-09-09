@@ -43,8 +43,8 @@ def patch_stock_alert_nav() -> None:
 def patch_home() -> None:
     path = ROOT / "index.html"
     html = path.read_text(encoding="utf-8")
-    old_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Buy tested stock</a></div>'
-    new_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Buy tested stock</a><a href="/buyer-alerts.html" class="btn big ghost">Stock alerts</a></div>'
+    old_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a></div>'
+    new_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a><a href="/buyer-alerts.html" class="btn big ghost">Stock alerts</a></div>'
     if old_ctas in html:
         html = html.replace(old_ctas, new_ctas, 1)
         path.write_text(html, encoding="utf-8")
@@ -114,3 +114,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -1,51 +1,39 @@
-name: Materialise new site
+name: Validate website
 
 on:
   push:
-    branches:
-      - preview/new-site-launch
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  materialise:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: preview/new-site-launch
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Normalise transferred bundle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build production pages
+        run: |
+          python3 build.py
+          python3 patch_stock.py
+          python3 patch_network.py
+          python3 release.py
+      - name: Test API and catalogue behaviour
+        run: node --test tests/*.test.mjs
+      - name: Validate public sitemap
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-
-          folder = Path("bundle")
-          parts = sorted(folder.glob("part-*.b64"))
-          encoded = "".join(path.read_text(encoding="ascii") for path in parts)
-          encoded = "".join(encoded.split()).replace("=", "")
-          encoded += "=" * (-len(encoded) % 4)
-          for path in parts:
-              path.unlink()
-          (folder / "part-001.b64").write_text(encoded + "\n", encoding="ascii")
+          import xml.etree.ElementTree as ET
+          urls = [node.text for node in ET.parse("sitemap.xml").findall(".//{*}loc")]
+          assert "https://www.automation-outlet.co.uk/" in urls
+          assert "https://www.automation-outlet.co.uk/buy-stock.html" in urls
+          assert not any("stock-admin" in url or "deal-desk" in url for url in urls)
           PY
-
-      - name: Unpack and validate production site
-        run: python3 materialize.py
-
-      - name: Commit production site
-        run: |
-          git config user.name "automation-outlet-migration"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "Materialise production Automation Outlet site"
-          git push origin preview/new-site-launch

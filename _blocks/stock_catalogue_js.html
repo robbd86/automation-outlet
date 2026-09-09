@@ -6,6 +6,11 @@ const stockBrand = document.getElementById("stockBrand");
 const stockCategory = document.getElementById("stockCategory");
 const stockSort = document.getElementById("stockSort");
 let stockProducts = [];
+stockSearch.value = new URLSearchParams(window.location.search).get("q") || "";
+
+function normaliseSearch(value) {
+  return String(value || "").toLowerCase().replace(/[\s\-–—]+/g, "");
+}
 
 const gbp = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -158,7 +163,10 @@ function currentProducts() {
       product.description,
     ].join(" ").toLowerCase();
 
-    return (!query || haystack.includes(query)) &&
+    const compactQuery = normaliseSearch(query);
+    const matchesPart = compactQuery && [product.partNumber, product.title]
+      .some(value => normaliseSearch(value).includes(compactQuery));
+    return (!query || haystack.includes(query) || matchesPart) &&
       (!brand || product.brand === brand) &&
       (!category || product.category === category);
   });
@@ -187,6 +195,17 @@ function renderStock() {
     empty.innerHTML = stockProducts.length
       ? "<strong>No matching stock.</strong> Try another part number, brand or category."
       : "<strong>Fresh stock is being added.</strong> Send us the part number you need and we will check the shelf and our supplier network.";
+    const source = document.createElement("a");
+    source.className = "btn";
+    source.href = "https://wa.me/447849506371?text=" + encodeURIComponent(
+      "Hi, can you source this automation part: " + stockSearch.value.trim()
+    );
+    source.textContent = "Ask us to source this part";
+    source.target = "_blank";
+    source.rel = "noopener";
+    const line = document.createElement("p");
+    line.appendChild(source);
+    empty.appendChild(line);
     stockGrid.appendChild(empty);
     return;
   }
