@@ -51,20 +51,19 @@ if marker not in css:
 }
 .logo.logo-image img{
   display:block;
-  width:248px;
+  width:310px;
   height:auto;
-  border-radius:7px;
-  box-shadow:0 0 0 1px rgba(77,148,255,.16),0 8px 24px rgba(0,0,0,.18);
+  border-radius:8px;
 }
 footer .logo.logo-image img{
-  width:310px;
+  width:440px;
   max-width:100%;
 }
 @media(max-width:720px){
-  .logo.logo-image img{width:220px}
+  .logo.logo-image img{width:260px}
 }
 @media(max-width:390px){
-  .logo.logo-image img{width:196px}
+  .logo.logo-image img{width:238px}
 }
 '''
     css_path.write_text(css, encoding='utf-8')
