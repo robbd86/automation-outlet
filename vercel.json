@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "buildCommand": "python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 release.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py",
+  "buildCommand": "python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 release.py && python3 patch_conversion.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py",
   "outputDirectory": ".",
   "rewrites": [
     {
