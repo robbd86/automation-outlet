@@ -4,6 +4,14 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/parts",
+      "destination": "/api/catalogue?collection=all"
+    },
+    {
+      "source": "/parts/:collection",
+      "destination": "/api/catalogue?collection=:collection"
+    },
+    {
       "source": "/stock/:slug",
       "destination": "/api/product-page?slug=:slug"
     },

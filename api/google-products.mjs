@@ -1,3 +1,4 @@
+import { publicProducts } from "../lib/shop.mjs";
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
 const STOCK_LABEL = "stock-item";
@@ -96,7 +97,7 @@ export default async function handler(request, response) {
       return response.status(405).send("Method not allowed");
     }
 
-    const products = (await listProducts()).filter((product) =>
+    const products = publicProducts(await listProducts()).filter((product) =>
       product &&
       product.status === "active" &&
       Number(product.quantity) > 0 &&

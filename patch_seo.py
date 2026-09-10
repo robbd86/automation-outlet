@@ -7,6 +7,7 @@ conversion behaviour while targeting the queries already gaining impressions.
 
 from pathlib import Path
 import re
+import json
 
 ROOT = Path(__file__).resolve().parent
 
@@ -136,9 +137,50 @@ def patch_buy_page() -> None:
     print("patched: buyer SEO")
 
 
+def patch_buyer_discovery() -> None:
+    path = ROOT / "index.html"
+    html = path.read_text(encoding="utf-8")
+    html = patch_head(html,
+        "Used &amp; Surplus PLCs, HMIs &amp; Drives UK | Automation Outlet",
+        "Buy and sell new, used and surplus industrial automation parts in the UK. Browse Siemens, Allen-Bradley and Omron PLCs, I/O and drives by part number.")
+    html = replace_tag_content(html, r'<h1[^>]*>.*?</h1>',
+        '<h1 style="font-size:clamp(2.2rem,6vw,3.9rem)">Buy &amp; sell <em>surplus PLCs, HMIs &amp; drives</em></h1>', "homepage heading")
+    html = html.replace(
+        '<a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a>',
+        '<a href="/buy-stock.html" class="btn big">Browse stock</a><a href="/sell-surplus.html" class="btn big ghost">Sell your surplus</a>')
+    org = {"@context":"https://schema.org", "@type":"Organization", "@id":"https://www.automation-outlet.co.uk/#organization",
+           "name":"Automation Outlet", "url":"https://www.automation-outlet.co.uk/", "logo":"https://www.automation-outlet.co.uk/ao-site-logo.svg",
+           "email":"info@automation-outlet.co.uk", "telephone":"+447849506371"}
+    if 'id="ao-organization"' not in html:
+        html = html.replace('</head>', '<script id="ao-organization" type="application/ld+json">'+json.dumps(org)+'</script>\n</head>')
+    path.write_text(html, encoding="utf-8")
+
+    links = [('All current parts','/parts'),('Siemens','/parts/siemens'),('Allen-Bradley','/parts/allen-bradley'),
+             ('Omron','/parts/omron'),('PLC processors','/parts/plc-processors'),('PLC I/O modules','/parts/plc-io-modules'),('Drives &amp; inverters','/parts/drives-inverters')]
+    navigation = '<nav aria-label="Browse parts by brand or type" style="display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0">'+''.join(
+        f'<a href="{url}" style="padding:.5rem .8rem;border:1px solid var(--line);border-radius:8px">{label}</a>' for label,url in links)+'</nav>'
+    section = '<section id="browse-parts" style="padding:2rem 0"><div class="wrap"><h2>Shop by brand or equipment type</h2><p style="color:var(--grey);margin-top:.6rem">Browse current stock, check the complete part number and open a listing for condition and buying details.</p>'+navigation+'</div></section>'
+    for name in ('index.html','buy-stock.html'):
+        path=ROOT/name
+        html=path.read_text(encoding='utf-8')
+        if 'id="browse-parts"' not in html:
+            marker='<section id="home-featured-stock"' if name=='index.html' else '<section id="stock"'
+            if marker not in html: raise RuntimeError(f'Missing stock section in {name}')
+            html=html.replace(marker,section+marker,1)
+        path.write_text(html,encoding='utf-8')
+    for path in ROOT.glob('*.html'):
+        if path.name in ('stock-admin.html','deal-desk.html'): continue
+        html=path.read_text(encoding='utf-8')
+        if 'id="parts-footer-link"' not in html:
+            html=html.replace('</footer>','<div class="wrap" id="parts-footer-link" style="padding-top:1rem"><a href="/parts">Browse industrial automation parts for sale</a></div></footer>',1)
+        path.write_text(html,encoding='utf-8')
+    print('patched: buyer discovery and organisation data')
+
+
 def main() -> None:
     patch_sell_page()
     patch_buy_page()
+    patch_buyer_discovery()
 
 
 if __name__ == "__main__":

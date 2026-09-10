@@ -22,10 +22,12 @@ jobs:
           node-version: "22"
       - name: Build production pages
         run: |
-          python3 build.py
-          python3 patch_stock.py
-          python3 patch_network.py
-          python3 release.py
+          python3 - <<'PY'
+          import json, shlex, subprocess
+          from pathlib import Path
+          for command in json.loads(Path('vercel.json').read_text())['buildCommand'].split(' && '):
+              subprocess.run(shlex.split(command), check=True)
+          PY
       - name: Test API and catalogue behaviour
         run: node --test tests/*.test.mjs
       - name: Validate public sitemap

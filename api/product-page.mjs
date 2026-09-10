@@ -1,52 +1,7 @@
-const API_VERSION = "2022-11-28";
-const DEFAULT_REPO = "robbd86/automation-outlet-site";
-const STOCK_LABEL = "stock-item";
-const MARKER_RE = /<!-- AO_STOCK_B64:([A-Za-z0-9+/=]+) -->/;
+import { listProducts } from "../lib/stock-read.mjs";
+import { header, menuScript, browseLinks, money, publicProducts, available, productCard, shopCss } from "../lib/shop.mjs";
 const SITE = "https://www.automation-outlet.co.uk";
 const WA = "447849506371";
-
-function githubSettings() {
-  return {
-    token: process.env.AO_GITHUB_TOKEN,
-    repo: process.env.AO_GITHUB_REPO || DEFAULT_REPO,
-  };
-}
-
-async function github(path) {
-  const { token, repo } = githubSettings();
-  if (!token) {
-    const error = new Error("Stock catalogue is not configured");
-    error.status = 503;
-    throw error;
-  }
-
-  const response = await fetch(`https://api.github.com/repos/${repo}${path}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": API_VERSION,
-      "User-Agent": "automation-outlet-product-pages",
-    },
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(data.message || `GitHub request failed (${response.status})`);
-    error.status = response.status;
-    throw error;
-  }
-  return data;
-}
-
-function decodeData(body) {
-  const match = String(body || "").match(MARKER_RE);
-  if (!match) return null;
-  try {
-    return JSON.parse(Buffer.from(match[1], "base64").toString("utf8"));
-  } catch {
-    return null;
-  }
-}
 
 function slugify(value) {
   return String(value || "")
@@ -78,25 +33,10 @@ function text(value, max = 160) {
 
 function conditionSchema(condition) {
   const value = String(condition || "").toLowerCase();
+  if (/parts|repair|faulty|damaged/.test(value)) return "https://schema.org/DamagedCondition";
   if (value.includes("refurb")) return "https://schema.org/RefurbishedCondition";
   if (value.includes("new")) return "https://schema.org/NewCondition";
   return "https://schema.org/UsedCondition";
-}
-
-async function listProducts() {
-  const products = [];
-  for (let page = 1; page <= 10; page += 1) {
-    const issues = await github(
-      `/issues?state=all&labels=${encodeURIComponent(STOCK_LABEL)}&per_page=100&page=${page}&sort=updated&direction=desc`
-    );
-    for (const issue of issues) {
-      if (issue.pull_request) continue;
-      const product = decodeData(issue.body);
-      if (product) products.push({ ...product, issueState: issue.state });
-    }
-    if (issues.length < 100) break;
-  }
-  return products;
 }
 
 function availability(product) {
@@ -105,7 +45,7 @@ function availability(product) {
 
 function findProduct(products, requestedSlug) {
   const matches = products.filter((product) => {
-    if (product.status === "draft") return false;
+    if (!["active", "sold"].includes(product.status)) return false;
     return productSlug(product) === requestedSlug || String(product.id || "") === requestedSlug;
   });
 
@@ -121,10 +61,11 @@ function notFound(response) {
   response.setHeader("Content-Type", "text/html; charset=utf-8");
   response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   response.setHeader("X-Robots-Tag", "noindex, follow");
-  return response.status(404).send(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stock item not found | Automation Outlet</title><link rel="stylesheet" href="/styles.css"></head><body><main><section style="padding:5rem 0"><div class="wrap"><h1>Stock item not found</h1><p style="color:var(--grey);max-width:680px">This item may have moved or the link may be incorrect.</p><p style="margin-top:1.5rem"><a class="btn" href="/buy-stock.html">Browse current stock</a></p></div></section></main></body></html>`);
+  return response.status(404).send(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stock item not found | Automation Outlet</title><link rel="stylesheet" href="/styles.css"></head><body><main><section style="padding:5rem 0"><div class="wrap"><h1>Stock item not found</h1><p style="color:var(--grey);max-width:680px">This item may have moved or the link may be incorrect.</p><p style="margin-top:1.5rem"><a class="btn" href="/buy-stock.html">Browse current stock</a></p></div></section></main>
+</body></html>`);
 }
 
-function renderPage(product) {
+export function renderPage(product, products = []) {
   const slug = productSlug(product);
   const canonical = `${SITE}/stock/${slug}`;
   const inStock = availability(product);
@@ -135,7 +76,7 @@ function renderPage(product) {
     product.description || `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`,
     158
   );
-  const price = Number(product.priceGbp || 0).toFixed(2);
+  const price = money(product);
   const quantity = Math.max(0, Number.parseInt(product.quantity, 10) || 0);
   const descriptionHtml = html(product.description || "Contact us for full test details and condition photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
@@ -154,15 +95,15 @@ function renderPage(product) {
     brand: { "@type": "Brand", name: brand },
     description: metaDescription,
     ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
-    offers: {
+    ...(price ? { offers: {
       "@type": "Offer",
       url: canonical,
       priceCurrency: "GBP",
       price,
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: conditionSchema(product.condition),
-      seller: { "@type": "Organization", name: "Automation Outlet" },
-    },
+      seller: { "@type": "Organization", name: "Automation Outlet", url: SITE },
+    }} : {}),
   };
 
   const breadcrumbSchema = {
@@ -197,21 +138,14 @@ ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl
 <script type="application/ld+json">${JSON.stringify(productSchema).replace(/</g, "\\u003c")}</script>
 <script type="application/ld+json">${JSON.stringify(breadcrumbSchema).replace(/</g, "\\u003c")}</script>
 <style>
+${shopCss}
 .product-page{padding:2.3rem 0 4rem}.crumbs{font-family:'IBM Plex Mono';font-size:.76rem;color:var(--grey);margin-bottom:1.4rem}.crumbs a{color:var(--blue-bright)}
 .product-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.85fr);gap:2rem;align-items:start}.product-photo{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:320px;display:grid;place-items:center}.product-photo img{width:100%;height:auto;display:block}.product-photo .fallback{text-align:center;padding:3rem 1rem;color:var(--grey)}.product-photo .fallback strong{display:block;color:var(--white);font-family:'Barlow Condensed';font-size:2rem}.product-kicker{font-family:'IBM Plex Mono';font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-bright)}.product-part{font-family:'IBM Plex Mono';font-size:1.05rem;color:var(--white);margin:.55rem 0}.product-status{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.35rem .7rem;font-family:'IBM Plex Mono';font-size:.72rem;margin:.4rem 0 1rem}.product-status.live{background:rgba(43,127,255,.12);color:var(--blue-bright)}.product-status.sold{color:var(--grey)}.product-price{font-family:'Barlow Condensed';font-size:2.4rem;font-weight:800;margin:1rem 0 .25rem}.product-meta{color:var(--grey);margin-bottom:1.2rem}.product-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin:1.25rem 0}.product-copy{margin-top:1.4rem;padding-top:1.4rem;border-top:1px solid var(--line);color:var(--grey);line-height:1.65}.product-copy strong{color:var(--white)}.product-note{margin-top:1rem;padding:1rem;background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);color:var(--grey)}
 @media(max-width:820px){.product-grid{grid-template-columns:1fr}.product-photo{min-height:220px}}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap nav">
-    <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
-    <nav class="nav-links">
-      <a href="/sell-surplus.html">Sell to us</a><a href="/buy-stock.html" style="color:var(--white)">Buy stock</a><a href="/obsolete-parts-sourcing.html">Obsolete parts</a><a href="/services.html">Services</a><a href="/contact.html">Contact</a>
-      <a href="/sell-surplus.html" class="btn">Get a quote</a>
-    </nav>
-  </div>
-</header>
+${header()}
 <main class="product-page">
   <div class="wrap">
     <div class="crumbs"><a href="/">Home</a> / <a href="/buy-stock.html">Current stock</a> / ${html(part)}</div>
@@ -224,8 +158,9 @@ ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl
         <h1>${html(title)}</h1>
         <div class="product-part">Part number: ${html(part)}</div>
         <div class="product-status ${statusClass}">${html(statusLabel)}</div>
-        <div class="product-price">£${html(price)}</div>
-        <div class="product-meta">${html(product.condition || "Condition stated")} · UK delivery available</div>
+        <div class="product-price">${price ? "£"+html(price) : "Enquire for price"}</div>
+        <div class="product-meta">${html(product.condition || "Condition stated")}</div>
+        <p class="product-meta">Check the linked listing for delivery or collection options, charges and the final checkout total.</p>
         <div class="product-actions">
           ${primaryAction}
           <a class="btn big ghost" href="https://wa.me/${WA}?text=${waText}" target="_blank" rel="noopener">Enquire on WhatsApp</a>
@@ -234,6 +169,8 @@ ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl
         <div class="product-copy"><strong>Product details</strong><br><br>${descriptionHtml}</div>
       </article>
     </div>
+    <section style="padding:2rem 0"><h2>Explore more automation spares</h2>${browseLinks()}
+    <div class="shop-grid">${publicProducts(products).filter(p=>available(p)&&productSlug(p)!==slug&&(p.brand===product.brand||p.category===product.category)).slice(0,3).map(productCard).join('')}</div></section>
   </div>
 </main>
 <footer>
@@ -242,6 +179,7 @@ ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl
   </div>
   <div class="wrap" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.82rem;color:var(--grey)"><a href="/privacy.html">Privacy notice</a></div>
 </footer>
+${menuScript}
 </body>
 </html>`;
 }
@@ -268,7 +206,7 @@ export default async function handler(request, response) {
 
     response.setHeader("Content-Type", "text/html; charset=utf-8");
     response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-    return response.status(200).send(renderPage(product));
+    return response.status(200).send(renderPage(product, products));
   } catch (error) {
     console.error("Product page error", error);
     response.setHeader("Content-Type", "text/html; charset=utf-8");

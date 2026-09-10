@@ -1,3 +1,4 @@
+import { collections } from "../lib/shop.mjs";
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
 const STOCK_LABEL = "stock-item";
@@ -77,7 +78,7 @@ async function listProducts() {
     for (const issue of issues) {
       if (issue.pull_request) continue;
       const product = decodeData(issue.body);
-      if (product && product.status !== "draft") products.push(product);
+      if (product && ["active", "sold"].includes(product.status)) products.push(product);
     }
     if (issues.length < 100) break;
   }
@@ -103,7 +104,7 @@ function renderSitemap(products) {
     })
     .join("\n");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${Object.keys(collections).map(key => `  <url><loc>${SITE}/parts${key === "all" ? "" : "/" + key}</loc></url>`).join("\n")}\n${urls}\n</urlset>\n`;
 }
 
 export default async function handler(request, response) {

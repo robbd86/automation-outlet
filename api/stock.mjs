@@ -203,7 +203,12 @@ async function listProducts(request, response) {
     return sendJson(response, 401, { error: "Invalid stock manager key" });
   }
 
-  const issues = await github(`/issues?state=all&labels=${encodeURIComponent(STOCK_LABEL)}&per_page=100&sort=updated&direction=desc`);
+  const issues = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const batch = await github(`/issues?state=all&labels=${encodeURIComponent(STOCK_LABEL)}&per_page=100&page=${page}&sort=updated&direction=desc`);
+    issues.push(...batch);
+    if (batch.length < 100) break;
+  }
   const products = issues
     .filter((issue) => !issue.pull_request)
     .map((issue) => {
