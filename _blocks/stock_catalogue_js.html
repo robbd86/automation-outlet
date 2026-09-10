@@ -12,6 +12,18 @@ function normaliseSearch(value) {
   return String(value || "").toLowerCase().replace(/[\s\-–—]+/g, "");
 }
 
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+}
+
+function productSlug(product) {
+  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+}
+
 const gbp = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
@@ -91,7 +103,10 @@ function createProductCard(product) {
 
   const title = document.createElement("h3");
   title.className = "stock-title";
-  title.textContent = product.title;
+  const titleLink = document.createElement("a");
+  titleLink.href = `/stock/${productSlug(product)}`;
+  titleLink.textContent = product.title;
+  title.appendChild(titleLink);
 
   const part = document.createElement("div");
   part.className = "stock-part";
