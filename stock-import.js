@@ -224,7 +224,8 @@
     const text = `${raw || ""} ${title}`.toLowerCase();
     if (/for parts|repair|spares|not working|faulty/.test(text)) return "For parts or repair";
     if (/new sealed|factory sealed|sealed box|brand new sealed/.test(text)) return "New sealed";
-    if (/new without box|new no box|new other|opened box|open box|unused/.test(text)) return "New without box";
+    if (/new opened box|opened box|open box/.test(text)) return "New opened box";
+    if (/new without box|new no box|new other|unused/.test(text)) return "New without box";
     if (/bench tested|tested working|tested & working|tested and working|pulled from working|working machinery|fully working/.test(text)) return "Used - tested working";
     if (/powers up|power up tested|power-up/.test(text)) return "Used - powers up";
     if (/\bnew\b|brand new/.test(text)) return "New without box";
@@ -285,7 +286,9 @@
           ? "Used item; no additional test status is stated in the imported eBay report."
           : condition === "For parts or repair"
             ? "Sold for parts or repair."
-            : "Condition as stated in the listing.";
+            : condition === "New opened box"
+              ? "New and unused item with original packaging opened."
+              : "Condition as stated in the listing.";
     return `${title}. ${conditionText}${ebayUrl ? " Full listing details and photographs are available via the linked eBay listing." : ""}`;
   }
 
