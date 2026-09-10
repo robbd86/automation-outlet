@@ -214,6 +214,7 @@ home_body = (
          "New, used and surplus PLCs, HMIs and drives. Check each listing for its condition, test status and what is included.",
          "Browse our stock", "/buy-stock.html"),
     ])
+    + BLOCK('home_featured')
     + TRUST
     + cards([
         ("Obsolete <span>part?</span>",
