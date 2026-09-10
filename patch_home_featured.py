@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add a compact three-item Star Buys section to the generated homepage."""
+"""Add a compact three-item Star Buys section to the generated homepage.\n\nHomepage only: no stock records are edited by this patch.\n"""
 
 from pathlib import Path
 
