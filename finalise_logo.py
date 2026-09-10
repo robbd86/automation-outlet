@@ -44,3 +44,10 @@ if isinstance(logo_data, str):
             changed += 1
 
 print(f"Updated {changed} HTML pages to use {replacement}")
+
+# Keep the approved artwork inside the sticky header at every screen width.
+css_path = ROOT / "styles.css"
+css_text = css_path.read_text(encoding="utf-8")
+marker = "/* AO HEADER SPACING */"
+css_text = css_text.split(marker)[0].rstrip()
+css_path.write_text(css_text + "\n/* AO HEADER SPACING */\nheader{background:var(--navy-deep)}\nheader .nav{height:auto;min-height:82px;gap:32px;padding-top:10px;padding-bottom:10px}\nheader .logo.logo-image{min-width:0;flex:0 1 280px}\nheader .logo.logo-image img{width:280px;max-width:100%;height:auto;max-height:62px;object-fit:contain}\nheader .nav-links{gap:18px;flex-shrink:0}\nheader .nav-links a{white-space:nowrap}\nheader .nav-toggle{flex-shrink:0;min-width:44px;min-height:44px;align-items:center;justify-content:center}\n@media(max-width:1119px){\n  header .nav-links{display:none}\n  header .nav-toggle{display:flex}\n}\n@media(min-width:1120px){\n  header .mobile-menu{display:none}\n}\n@media(max-width:640px){\n  header .nav{min-height:72px;gap:20px;padding-top:8px;padding-bottom:8px}\n  header .logo.logo-image{flex-basis:260px}\n  header .logo.logo-image img{width:260px;max-height:56px}\n}\nheader .mobile-menu{max-height:calc(100dvh - 82px);overflow-y:auto}\n" + "\n", encoding="utf-8")
