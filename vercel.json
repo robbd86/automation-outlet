@@ -20,6 +20,10 @@
       "destination": "/api/stock-sitemap"
     },
     {
+      "source": "/google-products.xml",
+      "destination": "/api/google-products-xml"
+    },
+    {
       "source": "/google-products.txt",
       "destination": "/api/google-products"
     }
