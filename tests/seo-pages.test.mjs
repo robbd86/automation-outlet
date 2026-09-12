@@ -25,7 +25,7 @@ test('product price and condition schema agree with displayed data',()=>{
  const page=renderPage({...part,condition:'For parts or repair'});
  assert.equal(schemas(page)[0].offers.itemCondition,'https://schema.org/DamagedCondition');
  const unknown=renderPage({...part,priceGbp:null});assert.match(unknown,/Enquire for price/);assert.equal(schemas(unknown)[0].offers,undefined);
- assert.match(page,/id="navToggle"/);assert.match(page,/id="mobileMenu"/);assert.match(page,/final checkout total/);
+ assert.match(page,/id="navToggle"/);assert.match(page,/id="mobileMenu"/);assert.match(page,/Add to basket/);assert.match(page,/No VAT added/);
 });
 test('stock reader paginates and catalogue failures remain 503',async()=>{
  const original=global.fetch;const token=process.env.AO_GITHUB_TOKEN;process.env.AO_GITHUB_TOKEN='test-only';let calls=0;
