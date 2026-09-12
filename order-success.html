@@ -44,10 +44,10 @@ async function verify(){
   message.textContent="Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
   if(data.webhookAcknowledged){
    badge.textContent="✓ Payment + webhook verified";
-   detail.textContent="The signed Stripe webhook was acknowledged successfully. Sandbox stock remains unchanged by design.";
+   detail.textContent=data.stockAction==="reduced"?"The signed Stripe webhook was acknowledged and the sandbox inventory reservation is now committed to the order.":"The signed Stripe webhook was acknowledged successfully.";
   }else{
    badge.textContent="✓ Stripe payment verified";
-   detail.textContent="Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. Sandbox stock remains unchanged.";
+   detail.textContent="Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. The inventory reservation remains held until the payment event is processed or the test session expires.";
   }
   try{localStorage.removeItem("aoCartV1");}catch{}
  }catch(error){
