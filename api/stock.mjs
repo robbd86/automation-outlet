@@ -101,6 +101,13 @@ function normaliseProduct(raw, existing = null) {
   const status = allowedStatuses.has(requestedStatus)
     ? requestedStatus
     : existing?.status || "draft";
+  const allowedDeliveryModes = new Set(["parcel", "quote"]);
+  const requestedDeliveryMode = clean(raw?.deliveryMode, 20);
+  const deliveryMode = allowedDeliveryModes.has(requestedDeliveryMode)
+    ? requestedDeliveryMode
+    : allowedDeliveryModes.has(existing?.deliveryMode)
+      ? existing.deliveryMode
+      : "quote";
 
   return {
     schema: 1,
@@ -118,6 +125,7 @@ function normaliseProduct(raw, existing = null) {
     ebayUrl: clean(raw?.ebayUrl ?? existing?.ebayUrl, 1200),
     description: clean(raw?.description ?? existing?.description, 2500),
     featured: Boolean(raw?.featured),
+    deliveryMode,
     status,
     sortOrder: positiveInt(raw?.sortOrder ?? existing?.sortOrder, 100, 100000),
   };
