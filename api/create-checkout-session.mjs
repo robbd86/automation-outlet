@@ -64,7 +64,7 @@ export default async function handler(request, response) {
 
     const params = new URLSearchParams();
     add(params, "mode", "payment");
-    add(params, "ui_mode", "hosted");
+    add(params, "ui_mode", "hosted_page");
     add(params, "submit_type", "pay");
     add(params, "customer_creation", "always");
     add(params, "billing_address_collection", "auto");
