@@ -117,11 +117,12 @@ test("sandbox checkout gives free UK shipping from £250 product subtotal", asyn
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeBody = "";
+  const freeProduct = { ...product, priceGbp: 250, quantity: 1 };
+  const comments = [];
   try {
     global.fetch = async (url, options = {}) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor({ ...product, priceGbp: 250, quantity: 1 })] };
-      }
+      const git = githubMock(url, options, freeProduct, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) {
         stripeBody = String(options.body || "");
         return { ok: true, status: 200, json: async () => ({ id: "cs_test_free", url: "https://checkout.stripe.com/c/pay/cs_test_free" }) };
@@ -151,11 +152,12 @@ test("sandbox checkout blocks products that require a delivery quote", async () 
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeCalled = false;
+  const quoteProduct = { ...product, deliveryMode: "quote" };
+  const comments = [];
   try {
-    global.fetch = async (url) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor({ ...product, deliveryMode: "quote" })] };
-      }
+    global.fetch = async (url, options = {}) => {
+      const git = githubMock(url, options, quoteProduct, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) stripeCalled = true;
       throw new Error("Unexpected fetch: " + url);
     };
