@@ -56,6 +56,7 @@
           partNumber: button.dataset.part,
           brand: button.dataset.brand,
           price: Number(button.dataset.price || 0),
+          deliveryMode: button.dataset.delivery || "quote",
           imageUrl: button.dataset.image || "",
           url: button.dataset.url || location.pathname,
         }, quantity);

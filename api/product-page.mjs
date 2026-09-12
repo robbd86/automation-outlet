@@ -88,13 +88,17 @@ export function renderPage(product, products = []) {
   const cleanDescription = shopDescription(product.description, fallbackDescription);
   const metaDescription = text(cleanDescription, 158);
   const price = money(product);
+  const onlineCheckout = product.deliveryMode === "parcel";
+  const deliverySummary = onlineCheckout ? "UK delivery £7.95 · free over £250" : "Delivery quote required";
   const descriptionHtml = html(cleanDescription || "Contact us for test details, serial confirmation or additional photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
   const statusLabel = inStock ? "In stock – UK" : "Sold / currently unavailable";
   const statusClass = inStock ? "live" : "sold";
-  const primaryAction = inStock && price
-    ? `<button class="btn big add-basket" type="button" data-add-to-cart data-id="${html(slug)}" data-title="${html(title)}" data-part="${html(part)}" data-brand="${html(brand)}" data-price="${html(price)}" data-image="${html(product.imageUrl || "")}" data-url="/stock/${html(slug)}" data-quantity-target="#productQty">Add to basket</button>`
-    : `<a class="btn big" href="/obsolete-parts-sourcing.html">Ask us to source one</a>`;
+  const primaryAction = !inStock
+    ? `<a class="btn big" href="/obsolete-parts-sourcing.html">Ask us to source one</a>`
+    : price && onlineCheckout
+      ? `<button class="btn big add-basket" type="button" data-add-to-cart data-id="${html(slug)}" data-title="${html(title)}" data-part="${html(part)}" data-brand="${html(brand)}" data-price="${html(price)}" data-delivery="parcel" data-image="${html(product.imageUrl || "")}" data-url="/stock/${html(slug)}" data-quantity-target="#productQty">Add to basket</button>`
+      : `<a class="btn big" href="/contact.html?part=${encodeURIComponent(part)}">Request delivery quote</a>`;
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -175,18 +179,18 @@ ${header()}
         <div class="product-price">${price ? "£"+html(price) : "Enquire for price"}</div>
         ${price ? '<div class="vat-note">No VAT added to this price.</div>' : ''}
         <div class="condition-box"><span>Condition</span><strong>${html(product.condition || "Condition stated")}</strong><span>Location</span><strong>United Kingdom</strong></div>
-        <div class="stock-line">${inStock ? '<b>Available now.</b> Dispatch timing confirmed with your order.' : 'This exact unit is not currently available.'}</div>
-        ${inStock && price ? `<div class="purchase-row"><div class="qty-wrap"><label for="productQty">Quantity</label><div class="qty-control"><button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button><input id="productQty" type="number" min="1" max="99" value="1" inputmode="numeric"><button type="button" id="qtyPlus" aria-label="Increase quantity">+</button></div></div>${primaryAction}</div>` : `<div class="product-actions">${primaryAction}</div>`}
+        <div class="stock-line">${inStock ? `<b>Available now.</b> ${html(deliverySummary)}.` : 'This exact unit is not currently available.'}</div>
+        ${inStock && price && onlineCheckout ? `<div class="purchase-row"><div class="qty-wrap"><label for="productQty">Quantity</label><div class="qty-control"><button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button><input id="productQty" type="number" min="1" max="99" value="1" inputmode="numeric"><button type="button" id="qtyPlus" aria-label="Increase quantity">+</button></div></div>${primaryAction}</div>` : `<div class="product-actions">${primaryAction}</div>`}
         <div class="secondary-actions"><a class="btn ghost" href="/contact.html?part=${encodeURIComponent(part)}">Request trade price</a><a class="btn ghost" href="https://wa.me/${WA}?text=${waText}" target="_blank" rel="noopener">Make an enquiry</a></div>
-        <div class="trust-grid"><div class="trust-item"><b>UK based</b>Cambridgeshire stock network</div><div class="trust-item"><b>Worldwide shipping</b>Quoted for your destination</div><div class="trust-item"><b>Secure ordering</b>Basket ready for checkout</div><div class="trust-item"><b>Industrial specialist</b>Exact part-number focus</div></div>
+        <div class="trust-grid"><div class="trust-item"><b>UK based</b>Cambridgeshire stock network</div><div class="trust-item"><b>UK delivery</b>${onlineCheckout ? "£7.95 · free over £250" : "Quoted before payment"}</div><div class="trust-item"><b>Ordering</b>${onlineCheckout ? "Basket and card checkout eligible" : "Delivery quote required"}</div><div class="trust-item"><b>Industrial specialist</b>Exact part-number focus</div></div>
         ${!inStock ? `<div class="product-note"><strong>This unit is no longer available.</strong> Send us the exact part number and we can check incoming stock and our supplier network.</div>` : ""}
       </article>
     </div>
     <div class="detail-sections">
       <details open><summary>Product details</summary><div class="detail-body">${descriptionHtml}</div></details>
       <details><summary>Condition &amp; stock</summary><div class="detail-body"><strong>${html(product.condition || "Condition stated")}</strong><br>Supplied as described and pictured. Ask if you require serial-number, seal or packaging photographs before ordering.</div></details>
-      <details><summary>Delivery &amp; worldwide shipping</summary><div class="detail-body">UK and international delivery can be arranged. Dispatch timing and final carriage cost are confirmed for the order, particularly for multi-quantity and seller-held consignment stock.</div></details>
-      <details><summary>Payment &amp; trade orders</summary><div class="detail-body">Add the item to your basket to prepare an order. Trade buyers can request a pro-forma invoice or quantity price. Card checkout will connect to the same basket flow.</div></details>
+      <details><summary>Delivery &amp; worldwide shipping</summary><div class="detail-body">${onlineCheckout ? "<strong>UK parcel delivery:</strong> £7.95, or free when the product subtotal reaches £250. UK shipping address is collected securely at checkout." : "<strong>Delivery quote required:</strong> this item is large, heavy, awkward or otherwise unsuitable for automatic parcel checkout. Contact Automation Outlet for carriage before payment."}<br>International delivery is quoted separately.</div></details>
+      <details><summary>Payment &amp; trade orders</summary><div class="detail-body">${onlineCheckout ? "This item is eligible for Automation Outlet basket and card checkout. Trade buyers can also request a pro-forma invoice or quantity price." : "Card checkout is disabled for this item until delivery has been agreed. Request a delivery/trade quote and we will confirm the total before payment."}</div></details>
     </div>
     <section style="padding:2.5rem 0 0"><h2>Related automation spares</h2><div class="shop-grid" style="margin-top:1rem">${publicProducts(products).filter(p=>available(p)&&productSlug(p)!==slug&&(p.brand===product.brand||p.category===product.category)).slice(0,4).map(productCard).join('')}</div></section>
     <section style="padding:2rem 0 0"><h2>Browse more stock</h2>${browseLinks()}</section>

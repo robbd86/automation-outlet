@@ -347,6 +347,8 @@ async function listSandboxOrders(request, response) {
         created: session.created,
         status: session.status,
         paymentStatus: session.payment_status,
+        productSubtotal: Number(session.amount_subtotal) || 0,
+        shippingAmount: Number(session.total_details?.amount_shipping) || 0,
         amountTotal: Number(session.amount_total) || 0,
         currency: session.currency || "gbp",
         customer: safeOrderCustomer(session),
