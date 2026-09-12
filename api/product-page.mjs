@@ -72,12 +72,11 @@ export function renderPage(product, products = []) {
   const part = text(product.partNumber, 120);
   const brand = text(product.brand, 80);
   const title = text(product.title, 180) || `${brand} ${part}`;
-  const metaDescription = text(
-    product.description || `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`,
-    158
-  );
+  const fallbackDescription = `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`;
+  const cleanDescription = shopDescription(product.description, fallbackDescription);
+  const metaDescription = text(cleanDescription, 158);
   const price = money(product);
-  const descriptionHtml = html(product.description || "Contact us for full test details and condition photographs.").replace(/\n/g, "<br>");
+  const descriptionHtml = html(cleanDescription || "Contact us for test details, serial confirmation or additional photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
   const statusLabel = inStock ? "In stock – UK" : "Sold / currently unavailable";
   const statusClass = inStock ? "live" : "sold";
