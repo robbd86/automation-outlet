@@ -32,7 +32,7 @@
 <button class="btn big" id="stripeCheckoutBtn" type="button" hidden>Secure checkout · Stripe sandbox</button>
 <div id="checkoutStatus" class="summary-note" aria-live="polite"></div>
 <a class="btn big ghost" id="proformaBtn" href="#">Request pro-forma / bank transfer</a><a class="btn big ghost" href="/contact.html">Ask a question first</a>
-<p class="summary-note">No VAT is added. Eligible UK parcel orders cost £7.95 delivery, or delivery is free when the product subtotal reaches £250. Large, heavy or awkward items require a delivery quote. International delivery is quoted separately. Sandbox card checkout is available only through the private test link while Stripe is being commissioned.</p></aside></div>
+<p class="summary-note">No VAT is added. Eligible UK parcel orders cost £7.95 delivery, or delivery is free when the product subtotal reaches £250. Large, heavy or awkward items require a delivery quote. International delivery is quoted separately. Sandbox checkout remains private. Live checkout is disabled for customers; the live £1 commissioning route requires the private AO order manager key.</p></aside></div>
 </div></main>
 <footer><div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p>Industrial automation solutions · Cambridgeshire, UK</p></div></div></footer>
 <script src="/shop-cart.js"></script>
@@ -64,30 +64,39 @@ function render(){
  const deliveryText=shipping===null?"Delivery: quote required":shipping===0?"UK delivery: FREE":"UK delivery: "+gbp.format(shipping);
  const msg="Hi Rob, I'd like a pro-forma invoice / bank transfer details for the following Automation Outlet order:\n\n"+summary+"\n\nProduct subtotal: "+gbp.format(subtotal)+"\n"+deliveryText+"\nOrder total before any quoted carriage: "+gbp.format(orderTotal)+"\n\nPlease confirm availability.";
  document.getElementById("proformaBtn").href="https://wa.me/447849506371?text="+encodeURIComponent(msg);
- if(stripeTest&&checkoutBtn){
+ if((stripeTest||stripeLiveTest)&&checkoutBtn){
   checkoutBtn.disabled=!items.length||!allParcel;
   if(items.length&&!allParcel) checkoutStatus.textContent="One or more items require a delivery quote, so card checkout is disabled for this basket.";
  }
 }
 const params=new URLSearchParams(location.search);
 const stripeTest=params.get("stripe_test")==="1";
+const stripeLiveTest=params.get("stripe_live_test")==="1";
 const checkoutBtn=document.getElementById("stripeCheckoutBtn");
 const checkoutStatus=document.getElementById("checkoutStatus");
-if(stripeTest){
+if(stripeTest||stripeLiveTest){
  checkoutBtn.hidden=false;
- if(params.get("cancelled")==="1") checkoutStatus.textContent="Stripe sandbox checkout was cancelled. Your basket has not changed.";
+ checkoutBtn.textContent=stripeLiveTest?"Secure live £1 commissioning checkout":"Secure checkout · Stripe sandbox";
+ if(params.get("cancelled")==="1") checkoutStatus.textContent=stripeLiveTest?"Live commissioning checkout was cancelled. Your basket has not changed.":"Stripe sandbox checkout was cancelled. Your basket has not changed.";
  checkoutBtn.addEventListener("click",async()=>{
   const items=window.AOCart?.read()||[];
   if(!items.length){checkoutStatus.textContent="Your basket is empty.";return;}
-  checkoutBtn.disabled=true; checkoutBtn.textContent="Opening secure checkout…"; checkoutStatus.textContent="Checking live AO price and stock before redirecting to Stripe…";
+  let managerKey="";
+  if(stripeLiveTest){
+   managerKey=prompt("Enter the AO order manager key to start the real £1 commissioning payment:")||"";
+   if(!managerKey){checkoutStatus.textContent="Live commissioning cancelled — no key entered.";return;}
+  }
+  checkoutBtn.disabled=true; checkoutBtn.textContent="Opening secure checkout…"; checkoutStatus.textContent="Checking current AO price and stock before redirecting to Stripe…";
   try{
-   const response=await fetch("/api/create-checkout-session",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({items:items.map(i=>({id:i.id,quantity:i.quantity}))})});
+   const headers={"Content-Type":"application/json","Accept":"application/json"};
+   if(stripeLiveTest) headers["x-deal-desk-key"]=managerKey;
+   const response=await fetch("/api/create-checkout-session",{method:"POST",headers,body:JSON.stringify({items:items.map(i=>({id:i.id,quantity:i.quantity})),checkoutMode:stripeLiveTest?"live_commissioning":"sandbox"})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok||!data.url) throw new Error(data.error||"Could not start checkout.");
    location.assign(data.url);
   }catch(error){
    checkoutStatus.textContent=error.message||"Could not start Stripe Checkout.";
-   checkoutBtn.disabled=false; checkoutBtn.textContent="Secure checkout · Stripe sandbox";
+   checkoutBtn.disabled=false; checkoutBtn.textContent=stripeLiveTest?"Secure live £1 commissioning checkout":"Secure checkout · Stripe sandbox";
   }
  });
 }
