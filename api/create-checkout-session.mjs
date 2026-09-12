@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { appendInventoryEvent, listInventoryEvents, newReservationId, reservationIsAllocated } from "../lib/inventory-ledger.mjs";
 import { listProducts } from "../lib/stock-read.mjs";
 import { available, money, productSlug, publicProducts } from "../lib/shop.mjs";
@@ -12,6 +13,12 @@ function parseBody(request) {
   if (!request.body) return {};
   if (typeof request.body === "object") return request.body;
   try { return JSON.parse(request.body); } catch { return {}; }
+}
+
+function secureEqual(left, right) {
+  const a = Buffer.from(String(left || ""));
+  const b = Buffer.from(String(right || ""));
+  return a.length === b.length && a.length > 0 && timingSafeEqual(a, b);
 }
 
 function siteOrigin(request) {
@@ -31,14 +38,30 @@ export default async function handler(request, response) {
     return json(response, 405, { error: "Method not allowed" });
   }
 
-  const secret = process.env.STRIPE_SECRET_KEY || "";
-  if (!secret) return json(response, 503, { error: "Stripe sandbox is not configured for this environment." });
-  if (!secret.startsWith("sk_test_")) {
-    return json(response, 503, { error: "Sandbox checkout is locked because the configured Stripe key is not a test key." });
+  const body = parseBody(request);
+  const liveCommissioning = body.checkoutMode === "live_commissioning";
+  const environment = liveCommissioning ? "live" : "sandbox";
+
+  if (liveCommissioning) {
+    const managerKey = process.env.AO_DEAL_DESK_KEY || "";
+    const suppliedKey = request.headers["x-deal-desk-key"] || "";
+    if (!secureEqual(suppliedKey, managerKey)) {
+      return json(response, 401, { error: "Live commissioning checkout requires the private AO order manager key." });
+    }
+  }
+
+  const secret = liveCommissioning
+    ? (process.env.STRIPE_LIVE_SECRET_KEY || "")
+    : (process.env.STRIPE_SECRET_KEY || "");
+
+  if (liveCommissioning && !secret.startsWith("sk_live_")) {
+    return json(response, 503, { error: "Stripe live checkout is not configured." });
+  }
+  if (!liveCommissioning && !secret.startsWith("sk_test_")) {
+    return json(response, 503, { error: "Stripe sandbox checkout is not configured." });
   }
 
   try {
-    const body = parseBody(request);
     const requested = Array.isArray(body.items) ? body.items : [];
     if (!requested.length) return json(response, 400, { error: "Your basket is empty." });
     if (requested.length > 20) return json(response, 400, { error: "Too many basket lines." });
@@ -69,8 +92,22 @@ export default async function handler(request, response) {
       lines.push({ product, quantity, unitAmount });
     }
 
-    const shippingPence = subtotalPence >= 25000 ? 0 : 795;
-    const shippingName = shippingPence === 0 ? "Free UK delivery" : "UK standard delivery";
+    if (liveCommissioning) {
+      const [line] = lines;
+      const allowed =
+        lines.length === 1 &&
+        line.quantity === 1 &&
+        line.unitAmount === 100 &&
+        /^TEST\s*£?1$/i.test(String(line.product.partNumber || "").trim());
+      if (!allowed) {
+        return json(response, 403, { error: "Live commissioning is locked to the single £1 AO test item." });
+      }
+    }
+
+    const shippingPence = liveCommissioning ? 0 : (subtotalPence >= 25000 ? 0 : 795);
+    const shippingName = liveCommissioning
+      ? "Commissioning test — no delivery"
+      : (shippingPence === 0 ? "Free UK delivery" : "UK standard delivery");
 
     const reservationId = newReservationId();
     const expiresAtMs = Date.now() + (31 * 60 * 1000);
@@ -80,12 +117,14 @@ export default async function handler(request, response) {
       partNumber: product.partNumber,
       quantity,
     }));
+
     await appendInventoryEvent({
       kind: "reserve",
       reservationId,
       expiresAt,
       items: reservationItems,
     });
+
     const allocationEvents = await listInventoryEvents();
     const baseQuantities = new Map(products.map((product) => [product.id, product.baseQuantity ?? product.quantity]));
     if (!reservationIsAllocated(baseQuantities, allocationEvents, reservationId)) {
@@ -114,8 +153,10 @@ export default async function handler(request, response) {
     add(params, "expires_at", Math.floor(expiresAtMs / 1000));
 
     const origin = siteOrigin(request);
-    add(params, "success_url", `${origin}/order-success.html?session_id={CHECKOUT_SESSION_ID}&sandbox=1`);
-    add(params, "cancel_url", `${origin}/cart.html?stripe_test=1&cancelled=1`);
+    const successQuery = liveCommissioning ? "live_test=1" : "sandbox=1";
+    const cancelQuery = liveCommissioning ? "stripe_live_test=1" : "stripe_test=1";
+    add(params, "success_url", `${origin}/order-success.html?session_id={CHECKOUT_SESSION_ID}&${successQuery}`);
+    add(params, "cancel_url", `${origin}/cart.html?${cancelQuery}&cancelled=1`);
 
     lines.forEach(({ product, quantity, unitAmount }, index) => {
       const prefix = `line_items[${index}]`;
@@ -131,14 +172,15 @@ export default async function handler(request, response) {
       add(params, `${prefix}[price_data][product_data][metadata][part_number]`, product.partNumber);
     });
 
-    add(params, "metadata[ao_environment]", "sandbox");
+    add(params, "metadata[ao_environment]", environment);
     add(params, "metadata[ao_line_count]", lines.length);
-    add(params, "metadata[ao_delivery_mode]", "uk_parcel");
+    add(params, "metadata[ao_delivery_mode]", liveCommissioning ? "commissioning" : "uk_parcel");
     add(params, "metadata[ao_product_subtotal_pence]", subtotalPence);
     add(params, "metadata[ao_shipping_pence]", shippingPence);
     add(params, "metadata[ao_reservation_id]", reservationId);
     add(params, "metadata[ao_stock_action]", "reserved");
     add(params, "metadata[ao_order_status]", "payment_pending");
+    if (liveCommissioning) add(params, "metadata[ao_commissioning]", "true");
 
     const stripe = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -152,13 +194,19 @@ export default async function handler(request, response) {
     const data = await stripe.json().catch(() => ({}));
     if (!stripe.ok || !data.url) {
       await appendInventoryEvent({ kind: "release", reservationId, items: reservationItems }).catch(() => {});
-      console.error("Stripe Checkout session creation failed", stripe.status, data?.error?.type, data?.error?.code);
+      console.error("Stripe Checkout session creation failed", environment, stripe.status, data?.error?.type, data?.error?.code);
       return json(response, 502, { error: data?.error?.message || "Stripe could not create the checkout session." });
     }
 
-    return json(response, 200, { url: data.url, sessionId: data.id, sandbox: true });
+    return json(response, 200, {
+      url: data.url,
+      sessionId: data.id,
+      sandbox: !liveCommissioning,
+      live: liveCommissioning,
+      commissioning: liveCommissioning,
+    });
   } catch (error) {
-    console.error("Sandbox checkout error", error?.message || error);
+    console.error("Stripe checkout error", environment, error?.message || error);
     return json(response, error?.status === 503 ? 503 : 500, { error: "Could not start Stripe Checkout." });
   }
 }
