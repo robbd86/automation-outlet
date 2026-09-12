@@ -210,7 +210,7 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
   let orderIssue = null;
   global.fetch = async (url, options = {}) => {
     const value = String(url);
-    if (value.includes("api.github.com") && value.includes("/issues/162/comments")) {
+    if (value.includes("api.github.com") && value.includes("/issues/1/comments")) {
       if (options.method === "POST") {
         const payload = JSON.parse(options.body);
         const comment = { id: 11, body: payload.body };
