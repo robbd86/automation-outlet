@@ -45,6 +45,7 @@ export default async function handler(request, response) {
     const products = publicProducts(await listProducts());
     const bySlug = new Map(products.map((product) => [productSlug(product), product]));
     const lines = [];
+    let subtotalPence = 0;
 
     for (const item of requested) {
       const id = String(item?.id || "").trim();
@@ -53,14 +54,22 @@ export default async function handler(request, response) {
       if (!product || !available(product)) {
         return json(response, 409, { error: `One of the items in your basket is no longer available: ${id || "unknown item"}.` });
       }
+      if (product.deliveryMode !== "parcel") {
+        return json(response, 409, { error: `${product.partNumber} requires a delivery quote and cannot use automatic card checkout.` });
+      }
       const unit = money(product);
       if (!unit) return json(response, 409, { error: `A current price is not available for ${product.partNumber}.` });
       const stock = Math.max(0, Number.parseInt(product.quantity, 10) || 0);
       if (quantity > stock) {
         return json(response, 409, { error: `Only ${stock} unit${stock === 1 ? "" : "s"} of ${product.partNumber} are currently available.` });
       }
-      lines.push({ product, quantity, unitAmount: Math.round(Number(unit) * 100) });
+      const unitAmount = Math.round(Number(unit) * 100);
+      subtotalPence += unitAmount * quantity;
+      lines.push({ product, quantity, unitAmount });
     }
+
+    const shippingPence = subtotalPence >= 25000 ? 0 : 795;
+    const shippingName = shippingPence === 0 ? "Free UK delivery" : "UK standard delivery";
 
     const params = new URLSearchParams();
     add(params, "mode", "payment");
@@ -70,6 +79,14 @@ export default async function handler(request, response) {
     add(params, "billing_address_collection", "auto");
     add(params, "phone_number_collection[enabled]", "true");
     add(params, "shipping_address_collection[allowed_countries][0]", "GB");
+    add(params, "shipping_options[0][shipping_rate_data][type]", "fixed_amount");
+    add(params, "shipping_options[0][shipping_rate_data][fixed_amount][amount]", shippingPence);
+    add(params, "shipping_options[0][shipping_rate_data][fixed_amount][currency]", "gbp");
+    add(params, "shipping_options[0][shipping_rate_data][display_name]", shippingName);
+    add(params, "shipping_options[0][shipping_rate_data][delivery_estimate][minimum][unit]", "business_day");
+    add(params, "shipping_options[0][shipping_rate_data][delivery_estimate][minimum][value]", 2);
+    add(params, "shipping_options[0][shipping_rate_data][delivery_estimate][maximum][unit]", "business_day");
+    add(params, "shipping_options[0][shipping_rate_data][delivery_estimate][maximum][value]", 4);
     add(params, "allow_promotion_codes", "false");
     add(params, "automatic_tax[enabled]", "false");
 
@@ -93,6 +110,9 @@ export default async function handler(request, response) {
 
     add(params, "metadata[ao_environment]", "sandbox");
     add(params, "metadata[ao_line_count]", lines.length);
+    add(params, "metadata[ao_delivery_mode]", "uk_parcel");
+    add(params, "metadata[ao_product_subtotal_pence]", subtotalPence);
+    add(params, "metadata[ao_shipping_pence]", shippingPence);
 
     const stripe = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
