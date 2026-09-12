@@ -27,7 +27,7 @@ test("verifies paid Stripe sandbox sessions server-side", async () => {
         amount_total: 15665,
         currency: "gbp",
         customer_details: { email: "buyer@example.com", name: "Buyer" },
-        metadata: { ao_webhook_status: "paid_test_acknowledged_v1", ao_stock_action: "unchanged" },
+        metadata: { ao_webhook_status: "paid_test_acknowledged_v2", ao_stock_action: "reduced", ao_order_status: "awaiting_dispatch" },
         line_items: { data: [{ description: "Siemens 6ES7-TEST", quantity: 1, amount_total: 15665, currency: "gbp" }] },
       }),
     });
@@ -38,7 +38,8 @@ test("verifies paid Stripe sandbox sessions server-side", async () => {
     assert.equal(response.body.amountTotal, 15665);
     assert.equal(response.body.items[0].quantity, 1);
     assert.equal(response.body.webhookAcknowledged, true);
-    assert.equal(response.body.stockAction, "unchanged");
+    assert.equal(response.body.stockAction, "reduced");
+    assert.equal(response.body.orderStatus, "awaiting_dispatch");
   } finally {
     global.fetch = oldFetch;
     if (oldStripe === undefined) delete process.env.STRIPE_SECRET_KEY; else process.env.STRIPE_SECRET_KEY = oldStripe;
