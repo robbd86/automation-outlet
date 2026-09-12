@@ -27,17 +27,28 @@
 const p=new URLSearchParams(location.search),id=p.get("session_id");
 const badge=document.getElementById("badge"),heading=document.getElementById("heading"),message=document.getElementById("message"),detail=document.getElementById("detail"),session=document.getElementById("session");
 if(id) session.textContent="Sandbox session: "+id;
+const sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
+async function verify(){
+ const response=await fetch("/api/verify-checkout-session?session_id="+encodeURIComponent(id),{headers:{Accept:"application/json"},cache:"no-store"});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.paid) throw new Error(data.error||"Stripe has not marked this payment as paid.");
+ return data;
+}
 (async()=>{
  if(!id){heading.textContent="Payment could not be verified";message.textContent="No Stripe Checkout Session was supplied.";return;}
  try{
-  const response=await fetch("/api/verify-checkout-session?session_id="+encodeURIComponent(id),{headers:{Accept:"application/json"}});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok||!data.paid) throw new Error(data.error||"Stripe has not marked this payment as paid.");
-  badge.textContent="✓ Stripe payment verified";
-  heading.textContent="Test payment completed";
+  let data=await verify();
+  for(let attempt=0;attempt<4&&!data.webhookAcknowledged;attempt+=1){await sleep(900);data=await verify();}
   const amount=new Intl.NumberFormat("en-GB",{style:"currency",currency:String(data.currency||"GBP").toUpperCase()}).format((Number(data.amountTotal)||0)/100);
+  heading.textContent="Test payment completed";
   message.textContent="Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
-  detail.textContent="The checkout and server-side payment verification are working. The next commissioning step is a signed Stripe webhook before live orders can reduce stock automatically.";
+  if(data.webhookAcknowledged){
+   badge.textContent="✓ Payment + webhook verified";
+   detail.textContent="The signed Stripe webhook was acknowledged successfully. Sandbox stock remains unchanged by design.";
+  }else{
+   badge.textContent="✓ Stripe payment verified";
+   detail.textContent="Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. Sandbox stock remains unchanged.";
+  }
   try{localStorage.removeItem("aoCartV1");}catch{}
  }catch(error){
   badge.textContent="Payment verification pending";
