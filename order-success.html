@@ -16,17 +16,36 @@
 <body>
 <header><div class="wrap nav"><a href="/" class="logo logo-image"><img src="/ao-site-logo.svg" width="280" height="59" alt="Automation Outlet"></a></div></header>
 <main class="success"><div class="wrap"><section class="success-card">
-<div class="success-badge">✓ Stripe sandbox return</div>
-<h1>Test payment completed</h1>
-<p>Stripe has returned you to Automation Outlet after the sandbox checkout. This is a test flow only: no real money has been taken and no live stock will be fulfilled from this page.</p>
-<p>The next commissioning step is the Stripe webhook. That server-to-server confirmation is what we will use before a live order is treated as paid and stock is reduced.</p>
+<div class="success-badge" id="badge">Stripe sandbox return</div>
+<h1 id="heading">Verifying test payment…</h1>
+<p id="message">Automation Outlet is checking this Checkout Session directly with Stripe before confirming the result.</p>
+<p id="detail">This is a sandbox flow only: no real money is taken and no live stock will be fulfilled.</p>
 <div class="session" id="session"></div>
 <div class="actions"><a class="btn" href="/buy-stock.html">Continue shopping</a><a class="btn ghost" href="/cart.html?stripe_test=1">Back to test basket</a></div>
 </section></div></main>
 <script>
 const p=new URLSearchParams(location.search),id=p.get("session_id");
-if(id) document.getElementById("session").textContent="Sandbox session: "+id;
-if(p.get("sandbox")==="1") try{localStorage.removeItem("aoCartV1");}catch{}
+const badge=document.getElementById("badge"),heading=document.getElementById("heading"),message=document.getElementById("message"),detail=document.getElementById("detail"),session=document.getElementById("session");
+if(id) session.textContent="Sandbox session: "+id;
+(async()=>{
+ if(!id){heading.textContent="Payment could not be verified";message.textContent="No Stripe Checkout Session was supplied.";return;}
+ try{
+  const response=await fetch("/api/verify-checkout-session?session_id="+encodeURIComponent(id),{headers:{Accept:"application/json"}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||!data.paid) throw new Error(data.error||"Stripe has not marked this payment as paid.");
+  badge.textContent="✓ Stripe payment verified";
+  heading.textContent="Test payment completed";
+  const amount=new Intl.NumberFormat("en-GB",{style:"currency",currency:String(data.currency||"GBP").toUpperCase()}).format((Number(data.amountTotal)||0)/100);
+  message.textContent="Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
+  detail.textContent="The checkout and server-side payment verification are working. The next commissioning step is a signed Stripe webhook before live orders can reduce stock automatically.";
+  try{localStorage.removeItem("aoCartV1");}catch{}
+ }catch(error){
+  badge.textContent="Payment verification pending";
+  heading.textContent="Payment not yet verified";
+  message.textContent=error.message||"Automation Outlet could not verify this Stripe payment.";
+  detail.textContent="Your basket has been left unchanged. This sandbox page will not treat the order as paid unless Stripe confirms it server-side.";
+ }
+})();
 </script>
 </body>
 </html>
