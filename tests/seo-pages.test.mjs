@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import catalogue, {renderCatalogue} from '../api/catalogue.mjs';
 import {renderPage} from '../api/product-page.mjs';
 import {listProducts} from '../lib/stock-read.mjs';
-const part={id:'unit-1',brand:'Siemens',partNumber:'6ES7-TEST',title:'Siemens PLC I/O',category:'PLC I/O module',condition:'Used',priceGbp:15,quantity:1,status:'active',issueState:'open',updatedAt:'2026-09-10',ebayUrl:'https://www.ebay.co.uk/itm/123'};
+const part={id:'unit-1',brand:'Siemens',partNumber:'6ES7-TEST',title:'Siemens PLC I/O',category:'PLC I/O module',condition:'Used',priceGbp:15,quantity:1,status:'active',deliveryMode:'parcel',issueState:'open',updatedAt:'2026-09-10',ebayUrl:'https://www.ebay.co.uk/itm/123'};
 function schemas(page){return [...page.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));}
 test('category HTML includes crawlable active products only, one URL per part',()=>{
  const page=renderCatalogue('siemens',[part,{...part,id:'older',updatedAt:'2025-01-01',priceGbp:9},{...part,partNumber:'DRAFT',status:'draft'},{...part,partNumber:'SOLD',status:'sold'},{...part,partNumber:'CLOSED',issueState:'closed'},{...part,brand:'Omron'}]);
