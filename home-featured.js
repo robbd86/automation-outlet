@@ -90,7 +90,7 @@
     const condition = el(
       "div",
       "home-featured-condition",
-      [product.condition, Number(product.quantity) > 1 ? `${product.quantity} available` : "1 available"]
+      [product.condition, "In stock – UK"]
         .filter(Boolean)
         .join(" · ")
     );
@@ -102,21 +102,13 @@
     bottom.append(price, view);
 
     const secondary = el("div", "home-featured-secondary");
-    if (product.ebayUrl) {
-      const ebay = el("a", "home-featured-link", "Buy on eBay");
-      ebay.href = product.ebayUrl;
-      ebay.target = "_blank";
-      ebay.rel = "noopener nofollow sponsored";
-      secondary.appendChild(ebay);
-    } else {
-      const enquiry = el("a", "home-featured-link", "Enquire");
-      enquiry.href = "https://wa.me/447849506371?text=" + encodeURIComponent(
-        `Hi, I'm interested in ${product.partNumber} — ${product.title}. Is it still available?`
-      );
-      enquiry.target = "_blank";
-      enquiry.rel = "noopener";
-      secondary.appendChild(enquiry);
-    }
+    const enquiry = el("a", "home-featured-link", "Enquire");
+    enquiry.href = "https://wa.me/447849506371?text=" + encodeURIComponent(
+      `Hi, I'm interested in ${product.partNumber} — ${product.title}. Is it still available?`
+    );
+    enquiry.target = "_blank";
+    enquiry.rel = "noopener";
+    secondary.appendChild(enquiry);
 
     body.append(meta, title, part, condition, bottom, secondary);
     article.append(imageLink, body);
