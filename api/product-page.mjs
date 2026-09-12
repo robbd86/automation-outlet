@@ -31,6 +31,18 @@ function text(value, max = 160) {
     .slice(0, max);
 }
 
+function shopDescription(value, fallback = "") {
+  return String(value || fallback || "")
+    .replace(/Full listing details and photographs are available via the linked eBay listing\.?/gi, "")
+    .replace(/Full details (?:are )?available (?:on|via) eBay\.?/gi, "")
+    .replace(/See (?:the )?eBay listing for (?:full )?details(?: and photographs)?\.?/gi, "")
+    .replace(/in the imported eBay report/gi, "")
+    .replace(/Condition as stated in the listing\./gi, "Condition stated above.")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:])/g, "$1")
+    .trim();
+}
+
 function conditionSchema(condition) {
   const value = String(condition || "").toLowerCase();
   if (/parts|repair|faulty|damaged/.test(value)) return "https://schema.org/DamagedCondition";
