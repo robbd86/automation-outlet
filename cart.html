@@ -29,8 +29,10 @@
 <div class="eyebrow">Automation Outlet shop</div><h1>Your basket</h1><p class="cart-sub">Review quantities before requesting a trade invoice or continuing to checkout.</p>
 <div class="cart-layout"><div id="cartList" class="cart-list"></div>
 <aside class="summary"><h2>Order summary</h2><div class="summary-row"><span>Items</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total</span><strong id="cartTotal">£0.00</strong></div>
-<a class="btn big" id="proformaBtn" href="#">Request pro-forma / bank transfer</a><a class="btn big ghost" href="/contact.html">Ask a question first</a>
-<p class="summary-note">No VAT is added to the displayed product prices. Delivery is confirmed for the order. Secure card checkout will use this same basket once payment processing is connected.</p></aside></div>
+<button class="btn big" id="stripeCheckoutBtn" type="button" hidden>Secure checkout · Stripe sandbox</button>
+<div id="checkoutStatus" class="summary-note" aria-live="polite"></div>
+<a class="btn big ghost" id="proformaBtn" href="#">Request pro-forma / bank transfer</a><a class="btn big ghost" href="/contact.html">Ask a question first</a>
+<p class="summary-note">No VAT is added to the displayed product prices. Delivery is confirmed for the order. Sandbox checkout is available only through the private test link while Stripe is being commissioned.</p></aside></div>
 </div></main>
 <footer><div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p>Industrial automation solutions · Cambridgeshire, UK</p></div></div></footer>
 <script src="/shop-cart.js"></script>
@@ -55,6 +57,28 @@ function render(){
  const summary=items.map(i=>i.quantity+" x "+i.brand+" "+i.partNumber+" @ "+gbp.format(Number(i.price)||0)).join("\n");
  const msg="Hi Rob, I'd like a pro-forma invoice / bank transfer details for the following Automation Outlet order:\n\n"+summary+"\n\nBasket total: "+gbp.format(total)+"\n\nPlease confirm delivery cost and availability.";
  document.getElementById("proformaBtn").href="https://wa.me/447849506371?text="+encodeURIComponent(msg);
+}
+const params=new URLSearchParams(location.search);
+const stripeTest=params.get("stripe_test")==="1";
+const checkoutBtn=document.getElementById("stripeCheckoutBtn");
+const checkoutStatus=document.getElementById("checkoutStatus");
+if(stripeTest){
+ checkoutBtn.hidden=false;
+ if(params.get("cancelled")==="1") checkoutStatus.textContent="Stripe sandbox checkout was cancelled. Your basket has not changed.";
+ checkoutBtn.addEventListener("click",async()=>{
+  const items=window.AOCart?.read()||[];
+  if(!items.length){checkoutStatus.textContent="Your basket is empty.";return;}
+  checkoutBtn.disabled=true; checkoutBtn.textContent="Opening secure checkout…"; checkoutStatus.textContent="Checking live AO price and stock before redirecting to Stripe…";
+  try{
+   const response=await fetch("/api/create-checkout-session",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({items:items.map(i=>({id:i.id,quantity:i.quantity}))})});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok||!data.url) throw new Error(data.error||"Could not start checkout.");
+   location.assign(data.url);
+  }catch(error){
+   checkoutStatus.textContent=error.message||"Could not start Stripe Checkout.";
+   checkoutBtn.disabled=false; checkoutBtn.textContent="Secure checkout · Stripe sandbox";
+  }
+ });
 }
 window.addEventListener("ao-cart-change",render); document.addEventListener("DOMContentLoaded",render);
 </script>
