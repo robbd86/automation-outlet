@@ -112,8 +112,7 @@ async function processPaidCheckout(event, channel, secret) {
     if (isAcknowledged(session, acknowledgement)) {
       return json(200, {
         received: true,
-        sandbox: !isLive,
-        live: isLive,
+        ...(isLive ? { live: true, sandbox: false } : { sandbox: true }),
         duplicate: true,
         stockChanged: Boolean(reservationId),
       });
@@ -167,8 +166,7 @@ async function processPaidCheckout(event, channel, secret) {
 
     return json(200, {
       received: true,
-      sandbox: !isLive,
-      live: isLive,
+      ...(isLive ? { live: true, sandbox: false } : { sandbox: true }),
       recorded: true,
       stockChanged: Boolean(reservationId),
       notificationCreated: Boolean(orderIssue?.number),
@@ -223,7 +221,7 @@ export default {
     }
 
     const isLive = channel === "live";
-    if (Boolean(event.livemode) !== isLive || event.account || event.context) {
+    if (event.livemode !== isLive || event.account || event.context) {
       return json(400, { error: `Only own-account ${isLive ? "live" : "sandbox"} events are accepted.` });
     }
 
