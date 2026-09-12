@@ -77,13 +77,12 @@ export function renderPage(product, products = []) {
     158
   );
   const price = money(product);
-  const quantity = Math.max(0, Number.parseInt(product.quantity, 10) || 0);
   const descriptionHtml = html(product.description || "Contact us for full test details and condition photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
-  const statusLabel = inStock ? (quantity > 1 ? `${quantity} available` : "In stock") : "Sold / currently unavailable";
+  const statusLabel = inStock ? "In stock – UK" : "Sold / currently unavailable";
   const statusClass = inStock ? "live" : "sold";
-  const primaryAction = inStock && product.ebayUrl
-    ? `<a class="btn big" href="${html(product.ebayUrl)}" target="_blank" rel="noopener nofollow sponsored">Buy on eBay</a>`
+  const primaryAction = inStock && price
+    ? `<button class="btn big add-basket" type="button" data-add-to-cart data-id="${html(slug)}" data-title="${html(title)}" data-part="${html(part)}" data-brand="${html(brand)}" data-price="${html(price)}" data-image="${html(product.imageUrl || "")}" data-url="/stock/${html(slug)}" data-quantity-target="#productQty">Add to basket</button>`
     : `<a class="btn big" href="/obsolete-parts-sourcing.html">Ask us to source one</a>`;
 
   const productSchema = {
@@ -139,9 +138,12 @@ ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl
 <script type="application/ld+json">${JSON.stringify(breadcrumbSchema).replace(/</g, "\\u003c")}</script>
 <style>
 ${shopCss}
-.product-page{padding:2.3rem 0 4rem}.crumbs{font-family:'IBM Plex Mono';font-size:.76rem;color:var(--grey);margin-bottom:1.4rem}.crumbs a{color:var(--blue-bright)}
-.product-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.85fr);gap:2rem;align-items:start}.product-photo{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:320px;display:grid;place-items:center}.product-photo img{width:100%;height:auto;display:block}.product-photo .fallback{text-align:center;padding:3rem 1rem;color:var(--grey)}.product-photo .fallback strong{display:block;color:var(--white);font-family:'Barlow Condensed';font-size:2rem}.product-kicker{font-family:'IBM Plex Mono';font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-bright)}.product-part{font-family:'IBM Plex Mono';font-size:1.05rem;color:var(--white);margin:.55rem 0}.product-status{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.35rem .7rem;font-family:'IBM Plex Mono';font-size:.72rem;margin:.4rem 0 1rem}.product-status.live{background:rgba(43,127,255,.12);color:var(--blue-bright)}.product-status.sold{color:var(--grey)}.product-price{font-family:'Barlow Condensed';font-size:2.4rem;font-weight:800;margin:1rem 0 .25rem}.product-meta{color:var(--grey);margin-bottom:1.2rem}.product-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin:1.25rem 0}.product-copy{margin-top:1.4rem;padding-top:1.4rem;border-top:1px solid var(--line);color:var(--grey);line-height:1.65}.product-copy strong{color:var(--white)}.product-note{margin-top:1rem;padding:1rem;background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);color:var(--grey)}
-@media(max-width:820px){.product-grid{grid-template-columns:1fr}.product-photo{min-height:220px}}
+.product-page{padding:1.6rem 0 4rem}.crumbs{font-family:'IBM Plex Mono';font-size:.74rem;color:var(--grey);margin-bottom:1.2rem}.crumbs a{color:var(--blue-bright)}
+.product-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:2.4rem;align-items:start}.gallery-panel{min-width:0}.product-photo{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-height:520px;display:grid;place-items:center}.product-photo img{width:100%;max-height:620px;object-fit:contain;display:block}.product-photo .fallback{text-align:center;padding:4rem 1rem;color:#6b7584}.product-photo .fallback strong{display:block;color:#17233a;font-family:'Barlow Condensed';font-size:2.2rem}.photo-caption{margin-top:.7rem;color:var(--grey);font-size:.78rem}
+.buy-panel{position:sticky;top:152px;background:linear-gradient(180deg,var(--navy-card),#0b1b35);border:1px solid var(--line);border-radius:16px;padding:1.55rem;box-shadow:0 22px 60px rgba(0,0,0,.22)}.product-kicker{font-family:'IBM Plex Mono';font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--blue-bright)}.buy-panel h1{text-transform:none;font-size:clamp(2rem,3vw,3rem);line-height:1.02;margin:.45rem 0 .55rem}.product-part{font-family:'IBM Plex Mono';font-size:1rem;color:var(--white);overflow-wrap:anywhere}.product-status{display:inline-flex;align-items:center;gap:.45rem;border:1px solid rgba(107,226,153,.3);border-radius:999px;padding:.36rem .7rem;font-family:'IBM Plex Mono';font-size:.72rem;margin:1rem 0 .8rem}.product-status.live{background:rgba(55,199,115,.1);color:#8fe3b1}.product-status.sold{border-color:var(--line);color:var(--grey)}.product-price{font-family:'Barlow Condensed';font-size:3rem;font-weight:800;line-height:1;margin:.5rem 0 .2rem}.vat-note{font-size:.86rem;color:var(--grey);margin-bottom:1rem}.condition-box{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;padding:.9rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:.92rem}.condition-box span{color:var(--grey)}.condition-box strong{color:var(--white)}.stock-line{margin:.9rem 0;color:var(--grey);font-size:.9rem}.stock-line b{color:#8fe3b1}.purchase-row{display:grid;grid-template-columns:132px 1fr;gap:.7rem;align-items:end;margin-top:1rem}.qty-wrap label{font-size:.78rem;color:var(--grey)}.qty-control{display:grid;grid-template-columns:40px 1fr 40px;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:48px}.qty-control button{border:0;background:rgba(255,255,255,.04);color:var(--white);font-size:1.2rem;cursor:pointer}.qty-control input{border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;text-align:center;padding:.5rem;background:transparent}.add-basket{width:100%;height:48px;padding:.6rem 1rem}.product-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin:1rem 0}.secondary-actions{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:.7rem}.secondary-actions .btn{padding:.72rem .7rem;text-align:center;font-size:.95rem}.text-action{display:block;text-align:center;margin-top:.8rem;font-size:.84rem;color:var(--grey)}.trust-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-top:1.1rem}.trust-item{padding:.68rem .72rem;background:rgba(255,255,255,.025);border:1px solid rgba(77,148,255,.12);border-radius:9px;font-size:.8rem;color:var(--grey)}.trust-item b{display:block;color:var(--white);font-size:.84rem}
+.detail-sections{margin-top:2rem;display:grid;gap:.7rem}.detail-sections details{background:var(--navy-card);border:1px solid var(--line);border-radius:12px;padding:0 1rem}.detail-sections summary{cursor:pointer;list-style:none;font-weight:700;padding:1rem 0}.detail-sections summary::-webkit-details-marker{display:none}.detail-sections summary:after{content:'+';float:right;color:var(--blue-bright)}.detail-sections details[open] summary:after{content:'–'}.detail-body{border-top:1px solid var(--line);padding:1rem 0 1.2rem;color:var(--grey);line-height:1.7}.detail-body strong{color:var(--white)}.product-note{margin-top:1rem;padding:1rem;background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);color:var(--grey)}
+@media(max-width:900px){.product-layout{grid-template-columns:1fr;gap:1.25rem}.product-photo{min-height:360px}.buy-panel{position:static}.purchase-row{grid-template-columns:120px 1fr}}
+@media(max-width:640px){.product-page{padding-top:.9rem;padding-bottom:1.2rem}.crumbs{font-size:.68rem;margin-bottom:.8rem}.product-photo{min-height:260px;border-radius:12px}.product-photo img{max-height:360px}.buy-panel{padding:1.1rem;border-radius:12px}.buy-panel h1{font-size:2rem}.product-price{font-size:2.65rem}.purchase-row{grid-template-columns:108px 1fr}.secondary-actions{grid-template-columns:1fr}.trust-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -149,28 +151,35 @@ ${header()}
 <main class="product-page">
   <div class="wrap">
     <div class="crumbs"><a href="/">Home</a> / <a href="/buy-stock.html">Current stock</a> / ${html(part)}</div>
-    <div class="product-grid">
-      <div class="product-photo">
-        ${product.imageUrl ? `<img src="${html(product.imageUrl)}" alt="${html(`${brand} ${part} ${title}`)}">` : `<div class="fallback"><strong>${html(brand)}</strong><span>${html(part)}</span></div>`}
+    <div class="product-layout">
+      <div class="gallery-panel">
+        <div class="product-photo">${product.imageUrl ? `<img src="${html(product.imageUrl)}" alt="${html(`${brand} ${part} ${title}`)}">` : `<div class="fallback"><strong>${html(brand)}</strong><span>${html(part)}</span></div>`}</div>
+        <div class="photo-caption">Actual stock image where supplied. Confirm the complete part number and revision before ordering.</div>
       </div>
-      <article>
+      <article class="buy-panel">
         <div class="product-kicker">${html(brand)} · ${html(product.category || "Industrial automation")}</div>
         <h1>${html(title)}</h1>
-        <div class="product-part">Part number: ${html(part)}</div>
-        <div class="product-status ${statusClass}">${html(statusLabel)}</div>
+        <div class="product-part">${html(part)}</div>
+        <div class="product-status ${statusClass}">${inStock ? "● " : ""}${html(statusLabel)}</div>
         <div class="product-price">${price ? "£"+html(price) : "Enquire for price"}</div>
-        <div class="product-meta">${html(product.condition || "Condition stated")}</div>
-        <p class="product-meta">Check the linked listing for delivery or collection options, charges and the final checkout total.</p>
-        <div class="product-actions">
-          ${primaryAction}
-          <a class="btn big ghost" href="https://wa.me/${WA}?text=${waText}" target="_blank" rel="noopener">Enquire on WhatsApp</a>
-        </div>
-        ${!inStock ? `<div class="product-note"><strong>This unit is no longer available.</strong> The page remains live so you can send us the exact part number and we can check our incoming stock and supplier network.</div>` : ""}
-        <div class="product-copy"><strong>Product details</strong><br><br>${descriptionHtml}</div>
+        ${price ? '<div class="vat-note">No VAT added to this price.</div>' : ''}
+        <div class="condition-box"><span>Condition</span><strong>${html(product.condition || "Condition stated")}</strong><span>Location</span><strong>United Kingdom</strong></div>
+        <div class="stock-line">${inStock ? '<b>Available now.</b> Dispatch timing confirmed with your order.' : 'This exact unit is not currently available.'}</div>
+        ${inStock && price ? `<div class="purchase-row"><div class="qty-wrap"><label for="productQty">Quantity</label><div class="qty-control"><button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button><input id="productQty" type="number" min="1" max="99" value="1" inputmode="numeric"><button type="button" id="qtyPlus" aria-label="Increase quantity">+</button></div></div>${primaryAction}</div>` : `<div class="product-actions">${primaryAction}</div>`}
+        <div class="secondary-actions"><a class="btn ghost" href="/contact.html?part=${encodeURIComponent(part)}">Request trade price</a><a class="btn ghost" href="https://wa.me/${WA}?text=${waText}" target="_blank" rel="noopener">Make an enquiry</a></div>
+        ${inStock && product.ebayUrl ? `<a class="text-action" href="${html(product.ebayUrl)}" target="_blank" rel="noopener nofollow sponsored">Prefer eBay? View listing ↗</a>` : ""}
+        <div class="trust-grid"><div class="trust-item"><b>UK based</b>Cambridgeshire stock network</div><div class="trust-item"><b>Worldwide shipping</b>Quoted for your destination</div><div class="trust-item"><b>Secure ordering</b>Basket ready for checkout</div><div class="trust-item"><b>Industrial specialist</b>Exact part-number focus</div></div>
+        ${!inStock ? `<div class="product-note"><strong>This unit is no longer available.</strong> Send us the exact part number and we can check incoming stock and our supplier network.</div>` : ""}
       </article>
     </div>
-    <section style="padding:2rem 0"><h2>Explore more automation spares</h2>${browseLinks()}
-    <div class="shop-grid">${publicProducts(products).filter(p=>available(p)&&productSlug(p)!==slug&&(p.brand===product.brand||p.category===product.category)).slice(0,3).map(productCard).join('')}</div></section>
+    <div class="detail-sections">
+      <details open><summary>Product details</summary><div class="detail-body">${descriptionHtml}</div></details>
+      <details><summary>Condition &amp; stock</summary><div class="detail-body"><strong>${html(product.condition || "Condition stated")}</strong><br>Supplied as described and pictured. Ask if you require serial-number, seal or packaging photographs before ordering.</div></details>
+      <details><summary>Delivery &amp; worldwide shipping</summary><div class="detail-body">UK and international delivery can be arranged. Dispatch timing and final carriage cost are confirmed for the order, particularly for multi-quantity and seller-held consignment stock.</div></details>
+      <details><summary>Payment &amp; trade orders</summary><div class="detail-body">Add the item to your basket to prepare an order. Trade buyers can request a pro-forma invoice or quantity price. Card checkout will connect to the same basket flow.</div></details>
+    </div>
+    <section style="padding:2.5rem 0 0"><h2>Related automation spares</h2><div class="shop-grid" style="margin-top:1rem">${publicProducts(products).filter(p=>available(p)&&productSlug(p)!==slug&&(p.brand===product.brand||p.category===product.category)).slice(0,4).map(productCard).join('')}</div></section>
+    <section style="padding:2rem 0 0"><h2>Browse more stock</h2>${browseLinks()}</section>
   </div>
 </main>
 <footer>
@@ -180,6 +189,7 @@ ${header()}
   <div class="wrap" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.82rem;color:var(--grey)"><a href="/privacy.html">Privacy notice</a></div>
 </footer>
 ${menuScript}
+<script>const q=document.getElementById('productQty');document.getElementById('qtyMinus')?.addEventListener('click',()=>q.value=Math.max(1,Number(q.value||1)-1));document.getElementById('qtyPlus')?.addEventListener('click',()=>q.value=Math.min(99,Number(q.value||1)+1));</script>
 </body>
 </html>`;
 }

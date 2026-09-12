@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basket | Automation Outlet</title>
+<meta name="robots" content="noindex,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.cart-head{position:sticky;top:0;z-index:50;background:rgba(6,14,31,.97);border-bottom:1px solid var(--line)}
+.cart-nav{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.cart-nav img{display:block;max-width:250px}.cart-page{padding:2rem 0 4rem}.cart-page h1{font-size:clamp(2.4rem,6vw,4rem)}
+.cart-sub{color:var(--grey);margin:.6rem 0 1.5rem}.cart-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:1.3rem;align-items:start}
+.cart-list{display:grid;gap:.8rem}.cart-item{display:grid;grid-template-columns:110px 1fr auto;gap:1rem;align-items:center;background:var(--navy-card);border:1px solid var(--line);border-radius:14px;padding:1rem}
+.cart-thumb{width:110px;height:92px;background:#fff;border-radius:9px;overflow:hidden;display:grid;place-items:center;color:#66758a}.cart-thumb img{width:100%;height:100%;object-fit:contain}
+.cart-item h2{font-size:1.3rem;text-transform:none;line-height:1.15}.cart-part{font-family:'IBM Plex Mono';font-size:.75rem;color:var(--blue-bright);margin:.3rem 0}.cart-meta{color:var(--grey);font-size:.84rem}
+.cart-side{text-align:right}.line-price{font:800 1.45rem 'Barlow Condensed';margin-bottom:.5rem}.qty{display:flex;align-items:center;justify-content:flex-end;gap:.35rem}.qty button{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--white);cursor:pointer}.qty span{min-width:28px;text-align:center}.remove{border:0;background:none;color:#ff9d9d;cursor:pointer;margin-top:.5rem}
+.summary{position:sticky;top:88px;background:linear-gradient(180deg,var(--navy-card),#0b1b35);border:1px solid var(--line);border-radius:14px;padding:1.2rem}.summary h2{font-size:1.7rem}.summary-row{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--line);color:var(--grey)}.summary-row.total{color:var(--white);border-bottom:0}.summary-row.total strong{font:800 1.8rem 'Barlow Condensed'}.summary .btn{display:block;width:100%;text-align:center;margin-top:.65rem}.summary-note{font-size:.8rem;color:var(--grey);margin-top:.85rem;line-height:1.5}.empty{padding:2rem;background:var(--navy-card);border:1px solid var(--line);border-radius:14px;color:var(--grey)}
+@media(max-width:850px){.cart-layout{grid-template-columns:1fr}.summary{position:static}}
+@media(max-width:600px){.cart-nav{min-height:58px}.cart-nav img{max-width:185px}.cart-nav .btn{padding:.55rem .75rem;font-size:.9rem}.cart-page{padding-top:1.2rem}.cart-item{grid-template-columns:76px 1fr}.cart-thumb{width:76px;height:70px}.cart-side{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;text-align:left;border-top:1px solid var(--line);padding-top:.75rem}.qty{justify-content:flex-start}.remove{margin-top:0}}
+</style>
+</head>
+<body>
+<header class="cart-head"><div class="wrap cart-nav"><a href="/" aria-label="Automation Outlet home"><img src="/ao-site-logo.svg" alt="Automation Outlet" width="280" height="59"></a><a class="btn ghost" href="/buy-stock.html">Continue shopping</a></div></header>
+<main class="cart-page"><div class="wrap">
+<div class="eyebrow">Automation Outlet shop</div><h1>Your basket</h1><p class="cart-sub">Review quantities before requesting a trade invoice or continuing to checkout.</p>
+<div class="cart-layout"><div id="cartList" class="cart-list"></div>
+<aside class="summary"><h2>Order summary</h2><div class="summary-row"><span>Items</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total</span><strong id="cartTotal">£0.00</strong></div>
+<a class="btn big" id="proformaBtn" href="#">Request pro-forma / bank transfer</a><a class="btn big ghost" href="/contact.html">Ask a question first</a>
+<p class="summary-note">No VAT is added to the displayed product prices. Delivery is confirmed for the order. Secure card checkout will use this same basket once payment processing is connected.</p></aside></div>
+</div></main>
+<footer><div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p>Industrial automation solutions · Cambridgeshire, UK</p></div></div></footer>
+<script src="/shop-cart.js"></script>
+<script>
+const gbp=new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"});
+const list=document.getElementById("cartList");
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){
+ const items=window.AOCart?.read()||[]; list.innerHTML="";
+ if(!items.length) list.innerHTML='<div class="empty"><h2>Your basket is empty</h2><p style="margin:.7rem 0 1.2rem">Browse current stock and add a part to prepare your order.</p><a class="btn" href="/buy-stock.html">Browse stock</a></div>';
+ let total=0,count=0;
+ items.forEach(item=>{
+  const qty=Math.max(1,Number(item.quantity)||1), line=(Number(item.price)||0)*qty; total+=line; count+=qty;
+  const article=document.createElement("article"); article.className="cart-item";
+  article.innerHTML='<div class="cart-thumb">'+(item.imageUrl?'<img src="'+esc(item.imageUrl)+'" alt="'+esc(item.partNumber)+'">':'No image')+'</div><div><h2><a href="'+esc(item.url||"#")+'">'+esc(item.title||item.partNumber)+'</a></h2><div class="cart-part">'+esc(item.partNumber)+'</div><div class="cart-meta">'+esc(item.brand)+' · UK stock</div></div><div class="cart-side"><div><div class="line-price">'+gbp.format(line)+'</div><div class="qty"><button type="button" data-minus aria-label="Decrease">−</button><span>'+qty+'</span><button type="button" data-plus aria-label="Increase">+</button></div></div><button class="remove" type="button">Remove</button></div>';
+  article.querySelector("[data-minus]").onclick=()=>window.AOCart.update(item.id,qty-1);
+  article.querySelector("[data-plus]").onclick=()=>window.AOCart.update(item.id,qty+1);
+  article.querySelector(".remove").onclick=()=>window.AOCart.remove(item.id);
+  list.appendChild(article);
+ });
+ document.getElementById("itemCount").textContent=String(count); document.getElementById("cartTotal").textContent=gbp.format(total);
+ const summary=items.map(i=>i.quantity+" x "+i.brand+" "+i.partNumber+" @ "+gbp.format(Number(i.price)||0)).join("\n");
+ const msg="Hi Rob, I'd like a pro-forma invoice / bank transfer details for the following Automation Outlet order:\n\n"+summary+"\n\nBasket total: "+gbp.format(total)+"\n\nPlease confirm delivery cost and availability.";
+ document.getElementById("proformaBtn").href="https://wa.me/447849506371?text="+encodeURIComponent(msg);
+}
+window.addEventListener("ao-cart-change",render); document.addEventListener("DOMContentLoaded",render);
+</script>
+</body></html>
