@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { appendInventoryEvent, listInventoryEvents, reservationStates } from "../lib/inventory-ledger.mjs";
-import { createOrFindOrderNotification } from "../lib/order-notification.mjs";
+import { createOrFindOrderNotification, orderRepoName } from "../lib/order-notification.mjs";
 
 const MAX_BODY_BYTES = 1024 * 1024;
 const LEGACY_ACKNOWLEDGEMENT = Object.freeze({
@@ -144,7 +144,10 @@ export default {
       }
 
       const body = new URLSearchParams(Object.entries(acknowledgement).map(([key, value]) => [`metadata[${key}]`, value]));
-      if (orderIssue?.number) body.set("metadata[ao_order_issue]", String(orderIssue.number));
+      if (orderIssue?.number) {
+        body.set("metadata[ao_order_issue]", String(orderIssue.number));
+        body.set("metadata[ao_order_repo]", orderRepoName());
+      }
       const updated = await stripeRequest(session.id, secret, {
         method: "POST",
         headers: {
