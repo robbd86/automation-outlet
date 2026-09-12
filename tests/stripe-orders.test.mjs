@@ -1,6 +1,6 @@
 import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import orders from "../api/orders.mjs";
+import dealDesk from "../api/deal-desk.mjs";
 
 function responseCapture() {
   return {
@@ -29,14 +29,14 @@ afterEach(() => {
 
 test("requires the private manager key", async () => {
   const response = responseCapture();
-  await orders({ method: "GET", headers: {}, query: {} }, response);
+  await dealDesk({ method: "GET", headers: {}, query: { view: "orders" } }, response);
   assert.equal(response.code, 401);
 });
 
 test("fails closed when a live Stripe key is configured", async () => {
   process.env.STRIPE_SECRET_KEY = "sk_live_never_here";
   const response = responseCapture();
-  await orders({ method: "GET", headers: { "x-deal-desk-key": "private-test-key" }, query: {} }, response);
+  await dealDesk({ method: "GET", headers: { "x-deal-desk-key": "private-test-key" }, query: { view: "orders" } }, response);
   assert.equal(response.code, 503);
 });
 
@@ -82,7 +82,7 @@ test("returns only AO sandbox Checkout Sessions with safe order fields", async (
     };
   };
   const response = responseCapture();
-  await orders({ method: "GET", headers: { "x-deal-desk-key": "private-test-key" }, query: {} }, response);
+  await dealDesk({ method: "GET", headers: { "x-deal-desk-key": "private-test-key" }, query: { view: "orders" } }, response);
   assert.equal(response.code, 200);
   assert.equal(response.body.orders.length, 1);
   const order = response.body.orders[0];
