@@ -65,6 +65,7 @@ function productPayload() {
     priceGbp: el("priceGbp").value,
     quantity: el("quantity").value,
     status: el("status").value,
+    deliveryMode: el("deliveryMode").value,
     sortOrder: el("sortOrder").value,
     imageUrl: el("imageUrl").value,
     ebayUrl: el("ebayUrl").value,
@@ -79,6 +80,7 @@ function clearForm() {
   el("quantity").value = "1";
   el("sortOrder").value = "100";
   el("status").value = "active";
+  el("deliveryMode").value = "quote";
   el("formHeading").textContent = "Add stock item";
   el("saveBtn").textContent = "Add item";
   el("cancelEditBtn").classList.add("hidden");
@@ -105,7 +107,7 @@ function updatePreview() {
 function editProduct(product) {
   const fields = [
     "title", "partNumber", "brand", "category", "condition",
-    "priceGbp", "quantity", "status", "sortOrder",
+    "priceGbp", "quantity", "status", "deliveryMode", "sortOrder",
     "imageUrl", "ebayUrl", "description",
   ];
   fields.forEach((field) => {
@@ -162,7 +164,8 @@ function createAdminItem(product) {
 
   const meta = document.createElement("div");
   meta.className = "admin-meta";
-  meta.textContent = `${product.brand} · ${product.category} · ${gbp.format(Number(product.priceGbp || 0))} · Qty ${product.quantity}`;
+  const delivery = product.deliveryMode === "parcel" ? "UK parcel checkout" : "Delivery quote";
+  meta.textContent = `${product.brand} · ${product.category} · ${gbp.format(Number(product.priceGbp || 0))} · Qty ${product.quantity} · ${delivery}`;
 
   info.append(title, part, meta);
 
