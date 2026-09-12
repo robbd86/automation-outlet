@@ -36,7 +36,7 @@ test('stock reader paginates and catalogue failures remain 503',async()=>{
   global.fetch=async(url)=>{
    const value=String(url);
    if(value.includes('/issues?')) return {ok:true,json:async()=>++calls===1?Array(100).fill(issue):[issue]};
-   if(value.includes('/issues/162/comments')) return {ok:true,json:async()=>[]};
+   if(value.includes('/issues/1/comments')) return {ok:true,json:async()=>[]};
    throw new Error('Unexpected fetch: '+url);
   };
   assert.equal((await listProducts()).length,101);assert.equal(calls,2);
