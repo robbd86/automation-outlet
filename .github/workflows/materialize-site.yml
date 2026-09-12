@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Install locked dependencies
+        run: npm ci
       - name: Build production pages
         run: |
           python3 - <<'PY'
