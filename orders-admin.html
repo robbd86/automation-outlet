@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Sandbox Orders | Automation Outlet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+body{min-height:100vh}.orders-shell{max-width:1180px;margin:0 auto;padding:2rem 22px 4rem}.orders-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.4rem}.orders-head h1{font-size:clamp(2.2rem,6vw,3.8rem)}.orders-head h1 span{color:var(--blue-bright)}.orders-actions{display:flex;gap:.65rem;flex-wrap:wrap}.panel{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);padding:1.2rem}.lock{max-width:480px;margin:8vh auto 0}.lock p,.muted{color:var(--grey)}.hidden{display:none!important}.orders-list{display:grid;gap:.9rem}.order{background:var(--navy-card);border:1px solid var(--line);border-radius:14px;padding:1rem}.order-top{display:flex;justify-content:space-between;gap:1rem;align-items:start}.order h2{font-size:1.35rem;text-transform:none}.mono{font-family:'IBM Plex Mono';font-size:.75rem;color:var(--blue-bright);overflow-wrap:anywhere}.badges{display:flex;gap:.4rem;flex-wrap:wrap;margin:.7rem 0}.pill{border:1px solid var(--line);border-radius:999px;padding:.22rem .52rem;font:500 .68rem 'IBM Plex Mono';color:var(--grey)}.pill.good{color:#8fe3b1;border-color:rgba(107,226,153,.32);background:rgba(55,199,115,.08)}.pill.wait{color:#ffd98f}.order-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:1rem;margin-top:.8rem}.order-items{display:grid;gap:.35rem}.item{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.total{font:800 1.75rem 'Barlow Condensed';white-space:nowrap}.empty{padding:2rem;text-align:center;color:var(--grey)}.status{min-height:1.4em;color:var(--blue-bright);margin:.7rem 0}.address{line-height:1.45}.customer{line-height:1.55}
+@media(max-width:760px){.order-grid{grid-template-columns:1fr}.order-top{flex-direction:column}.total{font-size:1.55rem}}
+</style>
+</head>
+<body>
+<main class="orders-shell">
+<section id="lockPanel" class="panel lock">
+<div class="eyebrow">Private area</div>
+<h1>Sandbox <span>orders</span></h1>
+<p>View Automation Outlet Stripe sandbox Checkout Sessions using the same private key as Stock Manager.</p>
+<form id="unlockForm">
+<div class="field"><label for="managerKey">Order manager key</label><input id="managerKey" type="password" autocomplete="current-password" required></div>
+<button class="btn big" type="submit">Open orders</button>
+<div id="unlockStatus" class="status"></div>
+</form>
+</section>
+
+<section id="ordersPanel" class="hidden">
+<div class="orders-head">
+<div><div class="eyebrow">Automation Outlet · Stripe sandbox</div><h1>Test <span>orders</span></h1><p class="muted">Payment and webhook status only. Sandbox orders never reduce real AO stock.</p></div>
+<div class="orders-actions"><a class="btn ghost" href="/stock-admin.html">Stock manager</a><button class="btn ghost" id="refreshBtn" type="button">Refresh</button><button class="btn" id="lockBtn" type="button">Lock</button></div>
+</div>
+<div id="status" class="status"></div>
+<div id="ordersList" class="orders-list"></div>
+</section>
+</main>
+<script src="/orders-admin.js"></script>
+</body>
+</html>
