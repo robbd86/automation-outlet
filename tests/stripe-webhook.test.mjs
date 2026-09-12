@@ -6,7 +6,7 @@ import webhook from "../api/stripe-webhook.mjs";
 const secret = "whsec_unit_test_only";
 const sessionId = "cs_test_ao123";
 const acknowledgement = { ao_webhook_status: "paid_test_acknowledged_v1", ao_stock_action: "unchanged" };
-let oldFetch, oldKey, oldSecret, calls;
+let oldFetch, oldKey, oldSecret, oldGithubToken, calls;
 const paidSession = () => ({
   id: sessionId, object: "checkout.session", livemode: false, mode: "payment",
   status: "complete", payment_status: "paid", amount_total: 15665, currency: "gbp",
@@ -39,8 +39,10 @@ beforeEach(() => {
   oldFetch = global.fetch;
   oldKey = process.env.STRIPE_SECRET_KEY;
   oldSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  oldGithubToken = process.env.AO_GITHUB_TOKEN;
   process.env.STRIPE_SECRET_KEY = "sk_test_unit_test_only";
   process.env.STRIPE_WEBHOOK_SECRET = secret;
+  process.env.AO_GITHUB_TOKEN = "github-test";
   calls = [];
   global.fetch = async () => { throw new Error("Unexpected network request"); };
 });
@@ -48,6 +50,7 @@ afterEach(() => {
   global.fetch = oldFetch;
   if (oldKey === undefined) delete process.env.STRIPE_SECRET_KEY; else process.env.STRIPE_SECRET_KEY = oldKey;
   if (oldSecret === undefined) delete process.env.STRIPE_WEBHOOK_SECRET; else process.env.STRIPE_WEBHOOK_SECRET = oldSecret;
+  if (oldGithubToken === undefined) delete process.env.AO_GITHUB_TOKEN; else process.env.AO_GITHUB_TOKEN = oldGithubToken;
 });
 
 test("rejects unsupported HTTP methods without touching Stripe", async () => {
