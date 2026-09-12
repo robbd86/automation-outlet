@@ -38,7 +38,7 @@ function githubMock(url, options, stockProduct, comments) {
   if (value.includes("/issues?")) {
     return { ok: true, status: 200, json: async () => [issueFor(stockProduct)] };
   }
-  if (value.includes("/issues/162/comments")) {
+  if (value.includes("/issues/1/comments")) {
     if (options?.method === "POST") {
       const payload = JSON.parse(options.body);
       const comment = { id: 100 + comments.length, body: payload.body };

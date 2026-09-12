@@ -210,7 +210,7 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
   let orderIssue = null;
   global.fetch = async (url, options = {}) => {
     const value = String(url);
-    if (value.includes("api.github.com") && value.includes("/issues/162/comments")) {
+    if (value.includes("api.github.com") && value.includes("/issues/1/comments")) {
       if (options.method === "POST") {
         const payload = JSON.parse(options.body);
         const comment = { id: 11, body: payload.body };
@@ -247,6 +247,7 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
         stored.metadata.ao_stock_action = params["metadata[ao_stock_action]"];
         stored.metadata.ao_order_status = params["metadata[ao_order_status]"];
         stored.metadata.ao_order_issue = params["metadata[ao_order_issue]"];
+        stored.metadata.ao_order_repo = params["metadata[ao_order_repo]"];
       }
       return Response.json(stored);
     }
@@ -264,6 +265,7 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
   assert.equal(stored.metadata.ao_stock_action, "reduced");
   assert.equal(stored.metadata.ao_order_status, "awaiting_dispatch");
   assert.equal(stored.metadata.ao_order_issue, "901");
+  assert.equal(stored.metadata.ao_order_repo, "robbd86/automation-outlet-orders");
   assert.equal(orderIssue.number, 901);
   assert.match(orderIssue.title, /NEW AO ORDER/);
 
