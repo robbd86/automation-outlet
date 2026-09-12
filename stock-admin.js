@@ -165,7 +165,8 @@ function createAdminItem(product) {
   const meta = document.createElement("div");
   meta.className = "admin-meta";
   const delivery = product.deliveryMode === "parcel" ? "UK parcel checkout" : "Delivery quote";
-  meta.textContent = `${product.brand} · ${product.category} · ${gbp.format(Number(product.priceGbp || 0))} · Qty ${product.quantity} · ${delivery}`;
+  const movement = [Number(product.reservedQuantity)>0?`Reserved ${product.reservedQuantity}`:"",Number(product.soldQuantity)>0?`Sold ${product.soldQuantity}`:""].filter(Boolean).join(" · ");
+  meta.textContent = `${product.brand} · ${product.category} · ${gbp.format(Number(product.priceGbp || 0))} · Available ${product.quantity}${movement?` · ${movement}`:""} · ${delivery}`;
 
   info.append(title, part, meta);
 
