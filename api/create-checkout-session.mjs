@@ -1,3 +1,4 @@
+import { appendInventoryEvent, listInventoryEvents, newReservationId, reservationIsAllocated } from "../lib/inventory-ledger.mjs";
 import { listProducts } from "../lib/stock-read.mjs";
 import { available, money, productSlug, publicProducts } from "../lib/shop.mjs";
 
@@ -71,6 +72,27 @@ export default async function handler(request, response) {
     const shippingPence = subtotalPence >= 25000 ? 0 : 795;
     const shippingName = shippingPence === 0 ? "Free UK delivery" : "UK standard delivery";
 
+    const reservationId = newReservationId();
+    const expiresAtMs = Date.now() + (31 * 60 * 1000);
+    const expiresAt = new Date(expiresAtMs).toISOString();
+    const reservationItems = lines.map(({ product, quantity }) => ({
+      stockId: product.id,
+      partNumber: product.partNumber,
+      quantity,
+    }));
+    await appendInventoryEvent({
+      kind: "reserve",
+      reservationId,
+      expiresAt,
+      items: reservationItems,
+    });
+    const allocationEvents = await listInventoryEvents();
+    const baseQuantities = new Map(products.map((product) => [product.id, product.baseQuantity ?? product.quantity]));
+    if (!reservationIsAllocated(baseQuantities, allocationEvents, reservationId)) {
+      await appendInventoryEvent({ kind: "release", reservationId, items: reservationItems }).catch(() => {});
+      return json(response, 409, { error: "Stock changed while checkout was starting. Please refresh your basket and try again." });
+    }
+
     const params = new URLSearchParams();
     add(params, "mode", "payment");
     add(params, "ui_mode", "hosted_page");
@@ -89,6 +111,7 @@ export default async function handler(request, response) {
     add(params, "shipping_options[0][shipping_rate_data][delivery_estimate][maximum][value]", 4);
     add(params, "allow_promotion_codes", "false");
     add(params, "automatic_tax[enabled]", "false");
+    add(params, "expires_at", Math.floor(expiresAtMs / 1000));
 
     const origin = siteOrigin(request);
     add(params, "success_url", `${origin}/order-success.html?session_id={CHECKOUT_SESSION_ID}&sandbox=1`);
@@ -113,6 +136,9 @@ export default async function handler(request, response) {
     add(params, "metadata[ao_delivery_mode]", "uk_parcel");
     add(params, "metadata[ao_product_subtotal_pence]", subtotalPence);
     add(params, "metadata[ao_shipping_pence]", shippingPence);
+    add(params, "metadata[ao_reservation_id]", reservationId);
+    add(params, "metadata[ao_stock_action]", "reserved");
+    add(params, "metadata[ao_order_status]", "payment_pending");
 
     const stripe = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -125,6 +151,7 @@ export default async function handler(request, response) {
 
     const data = await stripe.json().catch(() => ({}));
     if (!stripe.ok || !data.url) {
+      await appendInventoryEvent({ kind: "release", reservationId, items: reservationItems }).catch(() => {});
       console.error("Stripe Checkout session creation failed", stripe.status, data?.error?.type, data?.error?.code);
       return json(response, 502, { error: data?.error?.message || "Stripe could not create the checkout session." });
     }
@@ -132,6 +159,6 @@ export default async function handler(request, response) {
     return json(response, 200, { url: data.url, sessionId: data.id, sandbox: true });
   } catch (error) {
     console.error("Sandbox checkout error", error?.message || error);
-    return json(response, 500, { error: "Could not start Stripe Checkout." });
+    return json(response, error?.status === 503 ? 503 : 500, { error: "Could not start Stripe Checkout." });
   }
 }

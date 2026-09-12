@@ -33,7 +33,12 @@ test('stock reader paginates and catalogue failures remain 503',async()=>{
  const original=global.fetch;const token=process.env.AO_GITHUB_TOKEN;process.env.AO_GITHUB_TOKEN='test-only';let calls=0;
  const issue={state:'open',body:'<!-- AO_STOCK_B64:'+Buffer.from(JSON.stringify(part)).toString('base64')+' -->'};
  try{
-  global.fetch=async()=>({ok:true,json:async()=>++calls===1?Array(100).fill(issue):[issue]});
+  global.fetch=async(url)=>{
+   const value=String(url);
+   if(value.includes('/issues?')) return {ok:true,json:async()=>++calls===1?Array(100).fill(issue):[issue]};
+   if(value.includes('/issues/162/comments')) return {ok:true,json:async()=>[]};
+   throw new Error('Unexpected fetch: '+url);
+  };
   assert.equal((await listProducts()).length,101);assert.equal(calls,2);
   global.fetch=async()=>({ok:false,status:503,json:async()=>({message:'temporarily unavailable'})});
   let status;const res={setHeader(){},status(s){status=s;return this;},send(){}};

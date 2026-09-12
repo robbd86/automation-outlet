@@ -1,9 +1,15 @@
 import Stripe from "stripe";
+import { appendInventoryEvent, listInventoryEvents, reservationStates } from "../lib/inventory-ledger.mjs";
 
 const MAX_BODY_BYTES = 1024 * 1024;
-const ACKNOWLEDGEMENT = Object.freeze({
+const LEGACY_ACKNOWLEDGEMENT = Object.freeze({
   ao_webhook_status: "paid_test_acknowledged_v1",
   ao_stock_action: "unchanged",
+});
+const INVENTORY_ACKNOWLEDGEMENT = Object.freeze({
+  ao_webhook_status: "paid_test_acknowledged_v2",
+  ao_stock_action: "reduced",
+  ao_order_status: "awaiting_dispatch",
 });
 
 function json(status, body, headers = {}) {
@@ -27,8 +33,8 @@ async function rawBody(request) {
   return Buffer.concat(chunks);
 }
 
-function isAcknowledged(session) {
-  return Object.entries(ACKNOWLEDGEMENT).every(([key, value]) => session.metadata?.[key] === value);
+function isAcknowledged(session, acknowledgement) {
+  return Object.entries(acknowledgement).every(([key, value]) => session.metadata?.[key] === value);
 }
 
 async function stripeRequest(sessionId, secret, options = {}) {
@@ -90,25 +96,53 @@ export default {
           session.metadata?.ao_environment !== "sandbox") {
         return json(502, { error: "Could not verify the paid AO sandbox session." });
       }
-      if (isAcknowledged(session)) {
-        return json(200, { received: true, sandbox: true, duplicate: true, stockChanged: false });
+
+      const reservationId = String(session.metadata?.ao_reservation_id || "");
+      const acknowledgement = reservationId ? INVENTORY_ACKNOWLEDGEMENT : LEGACY_ACKNOWLEDGEMENT;
+      if (isAcknowledged(session, acknowledgement)) {
+        return json(200, {
+          received: true,
+          sandbox: true,
+          duplicate: true,
+          stockChanged: Boolean(reservationId),
+        });
       }
 
-      // The unique Stripe session is the record. Fixed metadata assignments are idempotent
-      // even after Stripe's idempotency-key retention expires. No new orders, emails or stock writes.
-      const body = new URLSearchParams(Object.entries(ACKNOWLEDGEMENT).map(([key, value]) => [`metadata[${key}]`, value]));
+      if (reservationId) {
+        const states = reservationStates(await listInventoryEvents());
+        const state = states.get(reservationId);
+        if (!state || !["reserve", "paid"].includes(state.kind)) {
+          return json(503, { error: "Inventory reservation unavailable; retry delivery." });
+        }
+        if (state.kind !== "paid") {
+          await appendInventoryEvent({
+            kind: "paid",
+            reservationId,
+            sessionId: session.id,
+            eventId: event.id,
+            items: state.items,
+          });
+        }
+      }
+
+      const body = new URLSearchParams(Object.entries(acknowledgement).map(([key, value]) => [`metadata[${key}]`, value]));
       const updated = await stripeRequest(session.id, secret, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          "Idempotency-Key": `ao-test-webhook-v1-${session.id}`,
+          "Idempotency-Key": `ao-test-webhook-v2-${session.id}`,
         },
         body: body.toString(),
       });
-      if (updated.id !== session.id || updated.livemode !== false || !isAcknowledged(updated)) {
+      if (updated.id !== session.id || updated.livemode !== false || !isAcknowledged(updated, acknowledgement)) {
         throw new Error("acknowledgement_not_confirmed");
       }
-      return json(200, { received: true, sandbox: true, recorded: true, stockChanged: false });
+      return json(200, {
+        received: true,
+        sandbox: true,
+        recorded: true,
+        stockChanged: Boolean(reservationId),
+      });
     } catch {
       // Includes timeouts, API failures and overlapping idempotency-key requests: let Stripe retry.
       // Do not log the payload, signature, customer details, tokens or upstream error messages.

@@ -6,7 +6,7 @@ import webhook from "../api/stripe-webhook.mjs";
 const secret = "whsec_unit_test_only";
 const sessionId = "cs_test_ao123";
 const acknowledgement = { ao_webhook_status: "paid_test_acknowledged_v1", ao_stock_action: "unchanged" };
-let oldFetch, oldKey, oldSecret, calls;
+let oldFetch, oldKey, oldSecret, oldGithubToken, calls;
 const paidSession = () => ({
   id: sessionId, object: "checkout.session", livemode: false, mode: "payment",
   status: "complete", payment_status: "paid", amount_total: 15665, currency: "gbp",
@@ -39,8 +39,10 @@ beforeEach(() => {
   oldFetch = global.fetch;
   oldKey = process.env.STRIPE_SECRET_KEY;
   oldSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  oldGithubToken = process.env.AO_GITHUB_TOKEN;
   process.env.STRIPE_SECRET_KEY = "sk_test_unit_test_only";
   process.env.STRIPE_WEBHOOK_SECRET = secret;
+  process.env.AO_GITHUB_TOKEN = "github-test";
   calls = [];
   global.fetch = async () => { throw new Error("Unexpected network request"); };
 });
@@ -48,6 +50,7 @@ afterEach(() => {
   global.fetch = oldFetch;
   if (oldKey === undefined) delete process.env.STRIPE_SECRET_KEY; else process.env.STRIPE_SECRET_KEY = oldKey;
   if (oldSecret === undefined) delete process.env.STRIPE_WEBHOOK_SECRET; else process.env.STRIPE_WEBHOOK_SECRET = oldSecret;
+  if (oldGithubToken === undefined) delete process.env.AO_GITHUB_TOKEN; else process.env.AO_GITHUB_TOKEN = oldGithubToken;
 });
 
 test("rejects unsupported HTTP methods without touching Stripe", async () => {
@@ -112,7 +115,7 @@ test("persists acknowledgement on the existing session and preserves stock and o
   const stored = paidSession();
   mockStripe((_url, options) => {
     if (options.method === "POST") {
-      assert.equal(options.headers["Idempotency-Key"], `ao-test-webhook-v1-${sessionId}`);
+      assert.equal(options.headers["Idempotency-Key"], `ao-test-webhook-v2-${sessionId}`);
       const params = Object.fromEntries(new URLSearchParams(options.body));
       assert.deepEqual(params, {
         "metadata[ao_webhook_status]": acknowledgement.ao_webhook_status,
@@ -183,4 +186,63 @@ test("recovers after a write succeeds but its response is lost", async () => {
   assert.equal((await invoke()).code, 503);
   assert.equal((await invoke()).body.duplicate, true);
   assert.equal(calls.filter(c => c.method === "POST").length, 1);
+});
+
+
+test("paid reserved checkout commits inventory once and moves order to awaiting dispatch", async () => {
+  const reservationId = "aor_test_reservation";
+  const reserve = {
+    schema: 1,
+    kind: "reserve",
+    reservationId,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 600000).toISOString(),
+    items: [{ stockId: "stock-1", partNumber: "6ES7-TEST", quantity: 1 }],
+  };
+  const comments = [{
+    id: 10,
+    body: "<!-- AO_INV_B64:" + Buffer.from(JSON.stringify(reserve)).toString("base64") + " -->",
+  }];
+  const stored = {
+    ...paidSession(),
+    metadata: { ...paidSession().metadata, ao_reservation_id: reservationId, ao_stock_action: "reserved" },
+  };
+  global.fetch = async (url, options = {}) => {
+    const value = String(url);
+    if (value.includes("api.github.com") && value.includes("/issues/162/comments")) {
+      if (options.method === "POST") {
+        const payload = JSON.parse(options.body);
+        const comment = { id: 11, body: payload.body };
+        comments.push(comment);
+        return Response.json(comment, { status: 201 });
+      }
+      return Response.json(comments);
+    }
+    if (value === `https://api.stripe.com/v1/checkout/sessions/${sessionId}`) {
+      if (options.method === "POST") {
+        const params = Object.fromEntries(new URLSearchParams(options.body));
+        stored.metadata.ao_webhook_status = params["metadata[ao_webhook_status]"];
+        stored.metadata.ao_stock_action = params["metadata[ao_stock_action]"];
+        stored.metadata.ao_order_status = params["metadata[ao_order_status]"];
+      }
+      return Response.json(stored);
+    }
+    throw new Error("Unexpected fetch: " + url);
+  };
+
+  const value = event();
+  value.data.object.metadata = { ...stored.metadata };
+  const result = await invoke(value);
+  assert.equal(result.code, 200);
+  assert.equal(result.body.stockChanged, true);
+  assert.equal(comments.length, 2);
+  assert.match(comments[1].body, /AO inventory paid/);
+  assert.equal(stored.metadata.ao_webhook_status, "paid_test_acknowledged_v2");
+  assert.equal(stored.metadata.ao_stock_action, "reduced");
+  assert.equal(stored.metadata.ao_order_status, "awaiting_dispatch");
+
+  const second = await invoke({ ...value, id: "evt_test_repeat" });
+  assert.equal(second.code, 200);
+  assert.equal(second.body.duplicate, true);
+  assert.equal(comments.length, 2);
 });

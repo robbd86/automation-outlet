@@ -32,6 +32,24 @@ function responseCapture() {
   };
 }
 
+function githubMock(url, options, stockProduct, comments) {
+  const value = String(url);
+  if (!value.includes("api.github.com")) return null;
+  if (value.includes("/issues?")) {
+    return { ok: true, status: 200, json: async () => [issueFor(stockProduct)] };
+  }
+  if (value.includes("/issues/162/comments")) {
+    if (options?.method === "POST") {
+      const payload = JSON.parse(options.body);
+      const comment = { id: 100 + comments.length, body: payload.body };
+      comments.push(comment);
+      return { ok: true, status: 201, json: async () => comment };
+    }
+    return { ok: true, status: 200, json: async () => comments };
+  }
+  throw new Error("Unexpected GitHub fetch: " + url);
+}
+
 test("sandbox checkout validates stock and price server-side", async () => {
   const oldFetch = global.fetch;
   const oldToken = process.env.AO_GITHUB_TOKEN;
@@ -39,12 +57,12 @@ test("sandbox checkout validates stock and price server-side", async () => {
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeBody = "";
+  const comments = [];
 
   try {
     global.fetch = async (url, options = {}) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor(product)] };
-      }
+      const git = githubMock(url, options, product, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) {
         stripeBody = String(options.body || "");
         return { ok: true, status: 200, json: async () => ({ id: "cs_test_123", url: "https://checkout.stripe.com/c/pay/cs_test_123" }) };
@@ -67,6 +85,10 @@ test("sandbox checkout validates stock and price server-side", async () => {
     assert.match(stripeBody, /shipping_options%5B0%5D%5Bshipping_rate_data%5D%5Bfixed_amount%5D%5Bamount%5D=795/);
     assert.match(stripeBody, /metadata%5Bao_shipping_pence%5D=795/);
     assert.match(stripeBody, /metadata%5Bao_product_subtotal_pence%5D=3000/);
+    assert.match(stripeBody, /metadata%5Bao_stock_action%5D=reserved/);
+    assert.match(stripeBody, /metadata%5Bao_reservation_id%5D=aor_/);
+    assert.equal(comments.length, 1);
+    assert.match(comments[0].body, /AO inventory reserve/);
   } finally {
     global.fetch = oldFetch;
     if (oldToken === undefined) delete process.env.AO_GITHUB_TOKEN; else process.env.AO_GITHUB_TOKEN = oldToken;
@@ -95,11 +117,12 @@ test("sandbox checkout gives free UK shipping from £250 product subtotal", asyn
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeBody = "";
+  const freeProduct = { ...product, priceGbp: 250, quantity: 1 };
+  const comments = [];
   try {
     global.fetch = async (url, options = {}) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor({ ...product, priceGbp: 250, quantity: 1 })] };
-      }
+      const git = githubMock(url, options, freeProduct, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) {
         stripeBody = String(options.body || "");
         return { ok: true, status: 200, json: async () => ({ id: "cs_test_free", url: "https://checkout.stripe.com/c/pay/cs_test_free" }) };
@@ -129,11 +152,12 @@ test("sandbox checkout blocks products that require a delivery quote", async () 
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeCalled = false;
+  const quoteProduct = { ...product, deliveryMode: "quote" };
+  const comments = [];
   try {
-    global.fetch = async (url) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor({ ...product, deliveryMode: "quote" })] };
-      }
+    global.fetch = async (url, options = {}) => {
+      const git = githubMock(url, options, quoteProduct, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) stripeCalled = true;
       throw new Error("Unexpected fetch: " + url);
     };
