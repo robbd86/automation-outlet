@@ -112,7 +112,7 @@ test("persists acknowledgement on the existing session and preserves stock and o
   const stored = paidSession();
   mockStripe((_url, options) => {
     if (options.method === "POST") {
-      assert.equal(options.headers["Idempotency-Key"], `ao-test-webhook-v1-${sessionId}`);
+      assert.equal(options.headers["Idempotency-Key"], `ao-test-webhook-v2-${sessionId}`);
       const params = Object.fromEntries(new URLSearchParams(options.body));
       assert.deepEqual(params, {
         "metadata[ao_webhook_status]": acknowledgement.ao_webhook_status,
