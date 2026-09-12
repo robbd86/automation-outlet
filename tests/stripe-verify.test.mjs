@@ -22,12 +22,14 @@ test("verifies paid Stripe sandbox sessions server-side", async () => {
       ok: true,
       status: 200,
       json: async () => ({
+        id: "cs_test_abc123",
+        livemode: false,
         payment_status: "paid",
         status: "complete",
         amount_total: 15665,
         currency: "gbp",
         customer_details: { email: "buyer@example.com", name: "Buyer" },
-        metadata: { ao_webhook_status: "paid_test_acknowledged_v2", ao_stock_action: "reduced", ao_order_status: "awaiting_dispatch" },
+        metadata: { ao_environment: "sandbox", ao_webhook_status: "paid_test_acknowledged_v2", ao_stock_action: "reduced", ao_order_status: "awaiting_dispatch" },
         line_items: { data: [{ description: "Siemens 6ES7-TEST", quantity: 1, amount_total: 15665, currency: "gbp" }] },
       }),
     });
