@@ -160,6 +160,7 @@ function renderIssue(product) {
 - **Quantity:** ${product.quantity}
 - **Status:** ${statusLabel(product.status)}
 - **Featured:** ${product.featured ? "Yes" : "No"}
+- **Delivery / checkout:** ${product.deliveryMode === "parcel" ? "UK parcel checkout" : "Quote required"}
 - **eBay:** ${product.ebayUrl || "Not linked"}
 - **Image:** ${product.imageUrl || "Not supplied"}
 
