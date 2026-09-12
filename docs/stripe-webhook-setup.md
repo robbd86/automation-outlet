@@ -93,3 +93,16 @@ paid AO path. A successful build alone does not prove real webhook delivery.
 References: [Stripe webhooks](https://docs.stripe.com/webhooks),
 [Checkout Session metadata updates](https://docs.stripe.com/api/checkout/sessions/update),
 [Vercel Web Standard handlers](https://vercel.com/docs/functions/runtimes/node-js).
+
+
+## Sandbox order dashboard
+
+The private `/orders-admin.html` page reads Automation Outlet sandbox Checkout
+Sessions directly from Stripe. It uses the same `AO_DEAL_DESK_KEY` as Stock
+Manager and shows payment, signed-webhook acknowledgement, customer/delivery
+details and line items. It is a commissioning view only: it accepts test Stripe
+keys, does not create a second order database and does not reduce stock.
+
+After a sandbox payment, the success page briefly re-checks the Checkout Session
+so it can display whether both the payment and webhook acknowledgement are
+confirmed. Stripe remains the source of truth for these test orders.
