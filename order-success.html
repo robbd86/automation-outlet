@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stripe Sandbox Order | Automation Outlet</title>
+<title>Payment Confirmation | Automation Outlet</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,17 +16,19 @@
 <body>
 <header><div class="wrap nav"><a href="/" class="logo logo-image"><img src="/ao-site-logo.svg" width="280" height="59" alt="Automation Outlet"></a></div></header>
 <main class="success"><div class="wrap"><section class="success-card">
-<div class="success-badge" id="badge">Stripe sandbox return</div>
-<h1 id="heading">Verifying test payment…</h1>
+<div class="success-badge" id="badge">Stripe return</div>
+<h1 id="heading">Verifying payment…</h1>
 <p id="message">Automation Outlet is checking this Checkout Session directly with Stripe before confirming the result.</p>
-<p id="detail">This is a sandbox flow only: no real money is taken and no live stock will be fulfilled.</p>
+<p id="detail">Automation Outlet is confirming the payment and signed webhook before finalising the order.</p>
 <div class="session" id="session"></div>
-<div class="actions"><a class="btn" href="/buy-stock.html">Continue shopping</a><a class="btn ghost" href="/cart.html?stripe_test=1">Back to test basket</a></div>
+<div class="actions"><a class="btn" href="/buy-stock.html">Continue shopping</a><a class="btn ghost" id="backLink" href="/cart.html?stripe_test=1">Back to test basket</a></div>
 </section></div></main>
 <script>
 const p=new URLSearchParams(location.search),id=p.get("session_id");
-const badge=document.getElementById("badge"),heading=document.getElementById("heading"),message=document.getElementById("message"),detail=document.getElementById("detail"),session=document.getElementById("session");
-if(id) session.textContent="Sandbox session: "+id;
+const liveTest=p.get("live_test")==="1"||String(id||"").startsWith("cs_live_");
+const badge=document.getElementById("badge"),heading=document.getElementById("heading"),message=document.getElementById("message"),detail=document.getElementById("detail"),session=document.getElementById("session"),backLink=document.getElementById("backLink");
+if(id) session.textContent=(liveTest?"Live":"Sandbox")+" session: "+id;
+if(liveTest){badge.textContent="Live Stripe return";backLink.href="/cart.html?stripe_live_test=1";backLink.textContent="Back to commissioning basket";}
 const sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 async function verify(){
  const response=await fetch("/api/verify-checkout-session?session_id="+encodeURIComponent(id),{headers:{Accept:"application/json"},cache:"no-store"});
@@ -40,21 +42,28 @@ async function verify(){
   let data=await verify();
   for(let attempt=0;attempt<4&&!data.webhookAcknowledged;attempt+=1){await sleep(900);data=await verify();}
   const amount=new Intl.NumberFormat("en-GB",{style:"currency",currency:String(data.currency||"GBP").toUpperCase()}).format((Number(data.amountTotal)||0)/100);
-  heading.textContent="Test payment completed";
-  message.textContent="Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
+  const isLive=Boolean(data.live);
+  heading.textContent=isLive?"Live payment completed":"Test payment completed";
+  message.textContent=isLive
+   ?"Stripe has confirmed the real commissioning payment as paid. Order total: "+amount+"."
+   :"Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
   if(data.webhookAcknowledged){
    badge.textContent="✓ Payment + webhook verified";
-   detail.textContent=data.stockAction==="reduced"?"The signed Stripe webhook was acknowledged and the sandbox inventory reservation is now committed to the order.":"The signed Stripe webhook was acknowledged successfully.";
+   detail.textContent=data.stockAction==="reduced"
+    ?(isLive?"The signed live Stripe webhook was acknowledged and the inventory reservation is committed to the order.":"The signed Stripe webhook was acknowledged and the sandbox inventory reservation is now committed to the order.")
+    :"The signed Stripe webhook was acknowledged successfully.";
   }else{
    badge.textContent="✓ Stripe payment verified";
-   detail.textContent="Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. The inventory reservation remains held until the payment event is processed or the test session expires.";
+   detail.textContent=isLive
+    ?"The real payment is verified, but the live webhook acknowledgement has not appeared yet. Do not repeat the payment; Stripe can retry the webhook automatically."
+    :"Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. The inventory reservation remains held until the payment event is processed or the test session expires.";
   }
   try{localStorage.removeItem("aoCartV1");}catch{}
  }catch(error){
   badge.textContent="Payment verification pending";
   heading.textContent="Payment not yet verified";
   message.textContent=error.message||"Automation Outlet could not verify this Stripe payment.";
-  detail.textContent="Your basket has been left unchanged. This sandbox page will not treat the order as paid unless Stripe confirms it server-side.";
+  detail.textContent="Your basket has been left unchanged. This page will not treat the order as paid unless Stripe confirms it server-side.";
  }
 })();
 </script>
