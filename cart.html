@@ -28,11 +28,11 @@
 <main class="cart-page"><div class="wrap">
 <div class="eyebrow">Automation Outlet shop</div><h1>Your basket</h1><p class="cart-sub">Review quantities before requesting a trade invoice or continuing to checkout.</p>
 <div class="cart-layout"><div id="cartList" class="cart-list"></div>
-<aside class="summary"><h2>Order summary</h2><div class="summary-row"><span>Items</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total</span><strong id="cartTotal">£0.00</strong></div>
+<aside class="summary"><h2>Order summary</h2><div class="summary-row"><span>Items</span><span id="itemCount">0</span></div><div class="summary-row"><span>Products</span><span id="productSubtotal">£0.00</span></div><div class="summary-row"><span>UK delivery</span><span id="shippingTotal">—</span></div><div class="summary-row total"><span>Order total</span><strong id="cartTotal">£0.00</strong></div>
 <button class="btn big" id="stripeCheckoutBtn" type="button" hidden>Secure checkout · Stripe sandbox</button>
 <div id="checkoutStatus" class="summary-note" aria-live="polite"></div>
 <a class="btn big ghost" id="proformaBtn" href="#">Request pro-forma / bank transfer</a><a class="btn big ghost" href="/contact.html">Ask a question first</a>
-<p class="summary-note">No VAT is added to the displayed product prices. Delivery is confirmed for the order. Sandbox checkout is available only through the private test link while Stripe is being commissioned.</p></aside></div>
+<p class="summary-note">No VAT is added. Eligible UK parcel orders cost £7.95 delivery, or delivery is free when the product subtotal reaches £250. Large, heavy or awkward items require a delivery quote. International delivery is quoted separately. Sandbox card checkout is available only through the private test link while Stripe is being commissioned.</p></aside></div>
 </div></main>
 <footer><div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p>Industrial automation solutions · Cambridgeshire, UK</p></div></div></footer>
 <script src="/shop-cart.js"></script>
@@ -43,9 +43,9 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function render(){
  const items=window.AOCart?.read()||[]; list.innerHTML="";
  if(!items.length) list.innerHTML='<div class="empty"><h2>Your basket is empty</h2><p style="margin:.7rem 0 1.2rem">Browse current stock and add a part to prepare your order.</p><a class="btn" href="/buy-stock.html">Browse stock</a></div>';
- let total=0,count=0;
+ let subtotal=0,count=0;
  items.forEach(item=>{
-  const qty=Math.max(1,Number(item.quantity)||1), line=(Number(item.price)||0)*qty; total+=line; count+=qty;
+  const qty=Math.max(1,Number(item.quantity)||1), line=(Number(item.price)||0)*qty; subtotal+=line; count+=qty;
   const article=document.createElement("article"); article.className="cart-item";
   article.innerHTML='<div class="cart-thumb">'+(item.imageUrl?'<img src="'+esc(item.imageUrl)+'" alt="'+esc(item.partNumber)+'">':'No image')+'</div><div><h2><a href="'+esc(item.url||"#")+'">'+esc(item.title||item.partNumber)+'</a></h2><div class="cart-part">'+esc(item.partNumber)+'</div><div class="cart-meta">'+esc(item.brand)+' · UK stock</div></div><div class="cart-side"><div><div class="line-price">'+gbp.format(line)+'</div><div class="qty"><button type="button" data-minus aria-label="Decrease">−</button><span>'+qty+'</span><button type="button" data-plus aria-label="Increase">+</button></div></div><button class="remove" type="button">Remove</button></div>';
   article.querySelector("[data-minus]").onclick=()=>window.AOCart.update(item.id,qty-1);
@@ -53,10 +53,21 @@ function render(){
   article.querySelector(".remove").onclick=()=>window.AOCart.remove(item.id);
   list.appendChild(article);
  });
- document.getElementById("itemCount").textContent=String(count); document.getElementById("cartTotal").textContent=gbp.format(total);
+ const allParcel=items.length>0&&items.every(i=>i.deliveryMode==="parcel");
+ const shipping=allParcel?(subtotal>=250?0:7.95):null;
+ const orderTotal=subtotal+(shipping??0);
+ document.getElementById("itemCount").textContent=String(count);
+ document.getElementById("productSubtotal").textContent=gbp.format(subtotal);
+ document.getElementById("shippingTotal").textContent=shipping===null?"Quote required":shipping===0?"FREE":gbp.format(shipping);
+ document.getElementById("cartTotal").textContent=gbp.format(orderTotal);
  const summary=items.map(i=>i.quantity+" x "+i.brand+" "+i.partNumber+" @ "+gbp.format(Number(i.price)||0)).join("\n");
- const msg="Hi Rob, I'd like a pro-forma invoice / bank transfer details for the following Automation Outlet order:\n\n"+summary+"\n\nBasket total: "+gbp.format(total)+"\n\nPlease confirm delivery cost and availability.";
+ const deliveryText=shipping===null?"Delivery: quote required":shipping===0?"UK delivery: FREE":"UK delivery: "+gbp.format(shipping);
+ const msg="Hi Rob, I'd like a pro-forma invoice / bank transfer details for the following Automation Outlet order:\n\n"+summary+"\n\nProduct subtotal: "+gbp.format(subtotal)+"\n"+deliveryText+"\nOrder total before any quoted carriage: "+gbp.format(orderTotal)+"\n\nPlease confirm availability.";
  document.getElementById("proformaBtn").href="https://wa.me/447849506371?text="+encodeURIComponent(msg);
+ if(stripeTest&&checkoutBtn){
+  checkoutBtn.disabled=!items.length||!allParcel;
+  if(items.length&&!allParcel) checkoutStatus.textContent="One or more items require a delivery quote, so card checkout is disabled for this basket.";
+ }
 }
 const params=new URLSearchParams(location.search);
 const stripeTest=params.get("stripe_test")==="1";
