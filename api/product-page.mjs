@@ -31,6 +31,18 @@ function text(value, max = 160) {
     .slice(0, max);
 }
 
+function shopDescription(value, fallback = "") {
+  return String(value || fallback || "")
+    .replace(/Full listing details and photographs are available via the linked eBay listing\.?/gi, "")
+    .replace(/Full details (?:are )?available (?:on|via) eBay\.?/gi, "")
+    .replace(/See (?:the )?eBay listing for (?:full )?details(?: and photographs)?\.?/gi, "")
+    .replace(/in the imported eBay report/gi, "")
+    .replace(/Condition as stated in the listing\./gi, "Condition stated above.")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:])/g, "$1")
+    .trim();
+}
+
 function conditionSchema(condition) {
   const value = String(condition || "").toLowerCase();
   if (/parts|repair|faulty|damaged/.test(value)) return "https://schema.org/DamagedCondition";
@@ -72,12 +84,11 @@ export function renderPage(product, products = []) {
   const part = text(product.partNumber, 120);
   const brand = text(product.brand, 80);
   const title = text(product.title, 180) || `${brand} ${part}`;
-  const metaDescription = text(
-    product.description || `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`,
-    158
-  );
+  const fallbackDescription = `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`;
+  const cleanDescription = shopDescription(product.description, fallbackDescription);
+  const metaDescription = text(cleanDescription, 158);
   const price = money(product);
-  const descriptionHtml = html(product.description || "Contact us for full test details and condition photographs.").replace(/\n/g, "<br>");
+  const descriptionHtml = html(cleanDescription || "Contact us for test details, serial confirmation or additional photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
   const statusLabel = inStock ? "In stock – UK" : "Sold / currently unavailable";
   const statusClass = inStock ? "live" : "sold";
@@ -167,7 +178,6 @@ ${header()}
         <div class="stock-line">${inStock ? '<b>Available now.</b> Dispatch timing confirmed with your order.' : 'This exact unit is not currently available.'}</div>
         ${inStock && price ? `<div class="purchase-row"><div class="qty-wrap"><label for="productQty">Quantity</label><div class="qty-control"><button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button><input id="productQty" type="number" min="1" max="99" value="1" inputmode="numeric"><button type="button" id="qtyPlus" aria-label="Increase quantity">+</button></div></div>${primaryAction}</div>` : `<div class="product-actions">${primaryAction}</div>`}
         <div class="secondary-actions"><a class="btn ghost" href="/contact.html?part=${encodeURIComponent(part)}">Request trade price</a><a class="btn ghost" href="https://wa.me/${WA}?text=${waText}" target="_blank" rel="noopener">Make an enquiry</a></div>
-        ${inStock && product.ebayUrl ? `<a class="text-action" href="${html(product.ebayUrl)}" target="_blank" rel="noopener nofollow sponsored">Prefer eBay? View listing ↗</a>` : ""}
         <div class="trust-grid"><div class="trust-item"><b>UK based</b>Cambridgeshire stock network</div><div class="trust-item"><b>Worldwide shipping</b>Quoted for your destination</div><div class="trust-item"><b>Secure ordering</b>Basket ready for checkout</div><div class="trust-item"><b>Industrial specialist</b>Exact part-number focus</div></div>
         ${!inStock ? `<div class="product-note"><strong>This unit is no longer available.</strong> Send us the exact part number and we can check incoming stock and our supplier network.</div>` : ""}
       </article>

@@ -10,7 +10,7 @@ test('category HTML includes crawlable active products only, one URL per part',(
  assert.equal(schemas(page)[0].mainEntity.numberOfItems,1);
  assert.match(page,/href="\/stock\/siemens-6es7-test"/);
  assert.doesNotMatch(page,/DRAFT|SOLD|CLOSED|£9.00/);
- assert.match(page,/£15.00/);
+ assert.match(page,/£15.00/);assert.doesNotMatch(page,/purchase through.*eBay/i);
 });
 test('empty category is noindex and unknown categories return 404',async()=>{
  assert.match(renderCatalogue('drives-inverters',[]),/noindex,follow/);
@@ -26,6 +26,8 @@ test('product price and condition schema agree with displayed data',()=>{
  assert.equal(schemas(page)[0].offers.itemCondition,'https://schema.org/DamagedCondition');
  const unknown=renderPage({...part,priceGbp:null});assert.match(unknown,/Enquire for price/);assert.equal(schemas(unknown)[0].offers,undefined);
  assert.match(page,/id="navToggle"/);assert.match(page,/id="mobileMenu"/);assert.match(page,/Add to basket/);assert.match(page,/No VAT added/);
+ const legacy=renderPage({...part,description:'Used item. Full listing details and photographs are available via the linked eBay listing.'});
+ assert.doesNotMatch(legacy,/eBay/i);assert.match(legacy,/Used item/);
 });
 test('stock reader paginates and catalogue failures remain 503',async()=>{
  const original=global.fetch;const token=process.env.AO_GITHUB_TOKEN;process.env.AO_GITHUB_TOKEN='test-only';let calls=0;

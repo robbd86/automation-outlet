@@ -283,13 +283,13 @@
       : condition === "Used - powers up"
         ? "Used item, power-up checked."
         : condition === "Used - untested"
-          ? "Used item; no additional test status is stated in the imported eBay report."
+          ? "Used item; no additional test status is stated."
           : condition === "For parts or repair"
             ? "Sold for parts or repair."
             : condition === "New opened box"
               ? "New and unused item with original packaging opened."
-              : "Condition as stated in the listing.";
-    return `${title}. ${conditionText}${ebayUrl ? " Full listing details and photographs are available via the linked eBay listing." : ""}`;
+              : "Condition stated above.";
+    return `${title}. ${conditionText} Supplied as described and pictured. Contact Automation Outlet if you need additional photographs or serial confirmation before ordering.`;
   }
 
   async function adminProducts() {

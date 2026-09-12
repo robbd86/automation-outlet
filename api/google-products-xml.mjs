@@ -61,6 +61,18 @@ function productSlug(product) {
   return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
 }
 
+function publicDescription(value) {
+  return String(value || "")
+    .replace(/Full listing details and photographs are available via the linked eBay listing\.?/gi, "")
+    .replace(/Full details (?:are )?available (?:on|via) eBay\.?/gi, "")
+    .replace(/See (?:the )?eBay listing for (?:full )?details(?: and photographs)?\.?/gi, "")
+    .replace(/in the imported eBay report/gi, "")
+    .replace(/Condition as stated in the listing\./gi, "Condition stated above.")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:])/g, "$1")
+    .trim();
+}
+
 function googleCondition(value) {
   const condition = String(value || "").toLowerCase();
   if (condition.includes("refurb")) return "refurbished";
@@ -117,7 +129,7 @@ export default async function handler(request, response) {
     const items = products.map((product) => {
       const title = `${product.brand} ${product.partNumber} ${product.title}`;
       const description =
-        product.description ||
+        publicDescription(product.description) ||
         `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`;
 
       return [
