@@ -55,7 +55,9 @@ test("returns only AO sandbox Checkout Sessions with safe order fields", async (
             mode: "payment",
             status: "complete",
             payment_status: "paid",
-            amount_total: 100,
+            amount_subtotal: 100,
+            amount_total: 895,
+            total_details: { amount_shipping: 795 },
             currency: "gbp",
             metadata: {
               ao_environment: "sandbox",
@@ -89,6 +91,9 @@ test("returns only AO sandbox Checkout Sessions with safe order fields", async (
   assert.equal(order.id, "cs_test_ao1");
   assert.equal(order.webhookAcknowledged, true);
   assert.equal(order.stockAction, "unchanged");
+  assert.equal(order.productSubtotal, 100);
+  assert.equal(order.shippingAmount, 795);
+  assert.equal(order.amountTotal, 895);
   assert.equal(order.items[0].partNumber, "TEST £1");
   assert.equal(order.shipping.address.postalCode, "CB1 1AA");
 });
