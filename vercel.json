@@ -4,6 +4,10 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/api/stripe-live-webhook",
+      "destination": "/api/stripe-webhook"
+    },
+    {
       "source": "/parts",
       "destination": "/api/catalogue?collection=all"
     },
