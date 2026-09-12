@@ -21,30 +21,6 @@ def patch_buy_page() -> None:
     catalogue = CATALOGUE.read_text(encoding="utf-8")
     catalogue_js = CATALOGUE_JS.read_text(encoding="utf-8")
 
-    old_ctas = (
-        '<div class="hero-ctas"><a href="https://www.ebay.co.uk" class="btn big" '
-        'target=_blank rel=noopener>View stock on eBay</a><a '
-        'href="/obsolete-parts-sourcing.html" class="btn big ghost">'
-        'Ask us to source a part</a></div>'
-    )
-    new_ctas = (
-        '<div class="hero-ctas"><a href="#stock" class="btn big">'
-        'Browse current stock</a><a href="/obsolete-parts-sourcing.html" '
-        'class="btn big ghost">Ask us to source a part</a></div>'
-    )
-    html = replace_once(html, old_ctas, new_ctas, "buy-page hero buttons")
-
-    old_intro = (
-        "Every PLC, HMI and drive we sell is powered up and function-tested by a "
-        "controls engineer before it's listed &mdash; so you know what you're getting. "
-        "Obsolete and hard-to-find parts a speciality."
-    )
-    new_intro = (
-        "Browse PLCs, HMIs, drives and industrial automation spares currently available. "
-        "Every listing states exactly what has been tested, the condition and what is included."
-    )
-    html = replace_once(html, old_intro, new_intro, "buy-page introduction")
-
     section_needle = '</div><section style="padding:3.2rem 0">'
     section_replacement = f'</div>{catalogue}<section style="padding:3.2rem 0">'
     html = replace_once(html, section_needle, section_replacement, "stock catalogue insertion point")
