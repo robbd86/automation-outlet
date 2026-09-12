@@ -50,6 +50,7 @@ test("returns only AO sandbox Checkout Sessions with safe order fields", async (
       ao_webhook_status: "paid_test_acknowledged_v2",
       ao_stock_action: "reduced",
       ao_order_status: "awaiting_dispatch",
+      ao_order_issue: "901",
     },
     customer_details: { name: "Test Buyer", email: "test@example.com", phone: "07123456789" },
     collected_information: { shipping_details: { name: "Test Buyer", address: { line1: "1 Test Road", city: "Cambridge", postal_code: "CB1 1AA", country: "GB" } } },
@@ -79,6 +80,7 @@ test("returns only AO sandbox Checkout Sessions with safe order fields", async (
   assert.equal(order.webhookAcknowledged, true);
   assert.equal(order.stockAction, "reduced");
   assert.equal(order.orderStatus, "awaiting_dispatch");
+  assert.equal(order.notificationIssue, 901);
   assert.equal(order.productSubtotal, 100);
   assert.equal(order.shippingAmount, 795);
   assert.equal(order.amountTotal, 895);

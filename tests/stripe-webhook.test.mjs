@@ -126,7 +126,7 @@ test("persists acknowledgement on the existing session and preserves stock and o
     return Response.json(stored);
   });
   const first = await invoke();
-  assert.deepEqual(first.body, { received: true, sandbox: true, recorded: true, stockChanged: false });
+  assert.deepEqual(first.body, { received: true, sandbox: true, recorded: true, stockChanged: false, notificationCreated: false });
   assert.equal(first.headers.get("cache-control"), "no-store");
   assert.equal(calls.length, 2);
   // A second Event object for the SAME session must also deduplicate.
@@ -207,6 +207,7 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
     ...paidSession(),
     metadata: { ...paidSession().metadata, ao_reservation_id: reservationId, ao_stock_action: "reserved" },
   };
+  let orderIssue = null;
   global.fetch = async (url, options = {}) => {
     const value = String(url);
     if (value.includes("api.github.com") && value.includes("/issues/162/comments")) {
@@ -218,12 +219,34 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
       }
       return Response.json(comments);
     }
+    if (value.includes("api.github.com") && value.includes("/issues?state=all&labels=ao-order")) {
+      return Response.json(orderIssue ? [orderIssue] : []);
+    }
+    if (value.includes("api.github.com") && value.endsWith("/labels")) {
+      return Response.json({}, { status: 201 });
+    }
+    if (value.includes("api.github.com") && value.endsWith("/issues") && options.method === "POST") {
+      const payload = JSON.parse(options.body);
+      orderIssue = { number: 901, title: payload.title, body: payload.body };
+      return Response.json(orderIssue, { status: 201 });
+    }
+    if (value.startsWith(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?`)) {
+      return Response.json({
+        ...stored,
+        amount_subtotal: 100,
+        total_details: { amount_shipping: 795 },
+        customer_details: { name: "Test Buyer", email: "test@example.com", phone: "07000000000" },
+        collected_information: { shipping_details: { name: "Test Buyer", address: { line1: "1 Test Road", city: "Cambridge", postal_code: "CB1 1AA", country: "GB" } } },
+        line_items: { data: [{ description: "Test item", quantity: 1, amount_total: 100, currency: "gbp", price: { product: { metadata: { part_number: "6ES7-TEST" } } } }] },
+      });
+    }
     if (value === `https://api.stripe.com/v1/checkout/sessions/${sessionId}`) {
       if (options.method === "POST") {
         const params = Object.fromEntries(new URLSearchParams(options.body));
         stored.metadata.ao_webhook_status = params["metadata[ao_webhook_status]"];
         stored.metadata.ao_stock_action = params["metadata[ao_stock_action]"];
         stored.metadata.ao_order_status = params["metadata[ao_order_status]"];
+        stored.metadata.ao_order_issue = params["metadata[ao_order_issue]"];
       }
       return Response.json(stored);
     }
@@ -240,6 +263,9 @@ test("paid reserved checkout commits inventory once and moves order to awaiting 
   assert.equal(stored.metadata.ao_webhook_status, "paid_test_acknowledged_v2");
   assert.equal(stored.metadata.ao_stock_action, "reduced");
   assert.equal(stored.metadata.ao_order_status, "awaiting_dispatch");
+  assert.equal(stored.metadata.ao_order_issue, "901");
+  assert.equal(orderIssue.number, 901);
+  assert.match(orderIssue.title, /NEW AO ORDER/);
 
   const second = await invoke({ ...value, id: "evt_test_repeat" });
   assert.equal(second.code, 200);
