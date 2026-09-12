@@ -371,6 +371,7 @@ async function listSandboxOrders(request, response) {
         stockAction: session.metadata?.ao_stock_action || "pending",
         orderStatus: session.metadata?.ao_order_status || "pending",
         notificationIssue: Number(session.metadata?.ao_order_issue) || null,
+        notificationRepo: session.metadata?.ao_order_repo || (session.metadata?.ao_order_issue ? "robbd86/automation-outlet-site" : null),
       }));
 
     return json(response, 200, { sandbox: true, orders });
