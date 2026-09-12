@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { appendInventoryEvent, listInventoryEvents, reservationStates } from "../lib/inventory-ledger.mjs";
+import { createOrFindOrderNotification } from "../lib/order-notification.mjs";
 
 const MAX_BODY_BYTES = 1024 * 1024;
 const LEGACY_ACKNOWLEDGEMENT = Object.freeze({
@@ -44,6 +45,17 @@ async function stripeRequest(sessionId, secret, options = {}) {
     signal: AbortSignal.timeout(8000),
   });
   if (!result.ok) throw new Error("stripe_request_failed");
+  return result.json();
+}
+
+async function stripeOrderDetail(sessionId, secret) {
+  const params = new URLSearchParams();
+  params.append("expand[]", "line_items.data.price.product");
+  const result = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${secret}` },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!result.ok) throw new Error("stripe_order_detail_failed");
   return result.json();
 }
 
@@ -125,7 +137,14 @@ export default {
         }
       }
 
+      let orderIssue = null;
+      if (reservationId) {
+        const detail = await stripeOrderDetail(session.id, secret);
+        orderIssue = await createOrFindOrderNotification(detail);
+      }
+
       const body = new URLSearchParams(Object.entries(acknowledgement).map(([key, value]) => [`metadata[${key}]`, value]));
+      if (orderIssue?.number) body.set("metadata[ao_order_issue]", String(orderIssue.number));
       const updated = await stripeRequest(session.id, secret, {
         method: "POST",
         headers: {
@@ -142,6 +161,7 @@ export default {
         sandbox: true,
         recorded: true,
         stockChanged: Boolean(reservationId),
+        notificationCreated: Boolean(orderIssue?.number),
       });
     } catch {
       // Includes timeouts, API failures and overlapping idempotency-key requests: let Stripe retry.
