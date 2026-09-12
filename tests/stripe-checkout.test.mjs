@@ -32,6 +32,24 @@ function responseCapture() {
   };
 }
 
+function githubMock(url, options, stockProduct, comments) {
+  const value = String(url);
+  if (!value.includes("api.github.com")) return null;
+  if (value.includes("/issues?")) {
+    return { ok: true, status: 200, json: async () => [issueFor(stockProduct)] };
+  }
+  if (value.includes("/issues/162/comments")) {
+    if (options?.method === "POST") {
+      const payload = JSON.parse(options.body);
+      const comment = { id: 100 + comments.length, body: payload.body };
+      comments.push(comment);
+      return { ok: true, status: 201, json: async () => comment };
+    }
+    return { ok: true, status: 200, json: async () => comments };
+  }
+  throw new Error("Unexpected GitHub fetch: " + url);
+}
+
 test("sandbox checkout validates stock and price server-side", async () => {
   const oldFetch = global.fetch;
   const oldToken = process.env.AO_GITHUB_TOKEN;
