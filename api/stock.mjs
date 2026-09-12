@@ -1,3 +1,4 @@
+import { inventoryUsage, listInventoryEvents } from "../lib/inventory-ledger.mjs";
 import crypto from "node:crypto";
 
 const API_VERSION = "2022-11-28";
@@ -218,13 +219,25 @@ async function listProducts(request, response) {
     issues.push(...batch);
     if (batch.length < 100) break;
   }
-  const products = issues
+  const rawProducts = issues
     .filter((issue) => !issue.pull_request)
     .map((issue) => {
       const data = decodeData(issue.body);
       return data ? { issueNumber: issue.number, issueState: issue.state, ...data } : null;
     })
     .filter(Boolean);
+  const usage = inventoryUsage(await listInventoryEvents());
+  const products = rawProducts.map((product) => {
+    const baseQuantity = Math.max(0, Number.parseInt(product.quantity, 10) || 0);
+    const row = usage.get(product.id) || { reserved: 0, sold: 0 };
+    return {
+      ...product,
+      baseQuantity,
+      reservedQuantity: row.reserved,
+      soldQuantity: row.sold,
+      quantity: Math.max(0, baseQuantity - row.reserved - row.sold),
+    };
+  });
 
   if (admin) {
     return sendJson(response, 200, { products });
@@ -290,7 +303,14 @@ async function updateProduct(request, response) {
   const existing = decodeData(issue.body);
   if (!existing) return sendJson(response, 404, { error: "Stock item data not found" });
 
-  const product = normaliseProduct(raw.product || raw, existing);
+  const events = await listInventoryEvents();
+  const row = inventoryUsage(events).get(existing.id) || { reserved: 0, sold: 0 };
+  const input = { ...(raw.product || raw) };
+  if (Object.prototype.hasOwnProperty.call(input, "quantity")) {
+    const desiredAvailable = positiveInt(input.quantity, 0);
+    input.quantity = desiredAvailable + row.reserved + row.sold;
+  }
+  const product = normaliseProduct(input, existing);
   const problem = validateProduct(product);
   if (problem) return sendJson(response, 400, { error: problem });
 
@@ -304,8 +324,17 @@ async function updateProduct(request, response) {
     }),
   });
 
+  const baseQuantity = Math.max(0, Number.parseInt(product.quantity, 10) || 0);
   return sendJson(response, 200, {
-    product: { issueNumber, issueState: state, ...product },
+    product: {
+      issueNumber,
+      issueState: state,
+      ...product,
+      baseQuantity,
+      reservedQuantity: row.reserved,
+      soldQuantity: row.sold,
+      quantity: Math.max(0, baseQuantity - row.reserved - row.sold),
+    },
   });
 }
 
