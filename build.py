@@ -259,8 +259,8 @@ page("sell-surplus",
 buy_body = (
     hero("Buy &middot; new, used &amp; surplus",
          "Buy <em>automation</em> parts",
-         "Every PLC, HMI and drive we sell is powered up and function-tested by a controls engineer before it's listed &mdash; so you know what you're getting. Obsolete and hard-to-find parts a speciality.",
-         [("View stock on eBay", "https://www.ebay.co.uk"), ("Ask us to source a part", "/obsolete-parts-sourcing.html")])
+         "Browse PLCs, HMIs, drives and industrial automation spares currently available. Every listing states exactly what has been tested, the condition and what is included.",
+         [("Browse current stock", "#stock"), ("Ask us to source a part", "/obsolete-parts-sourcing.html")])
     + steps([
         ("CONDITION", "Know what you are buying", "Each listing states its condition and test status. Untested and parts-or-repair equipment is labelled separately from tested working stock."),
         ("PRICED", "A fraction of list", "Surplus and used kit at sensible money, without OEM lead times or new-build pricing."),
