@@ -370,6 +370,7 @@ async function listSandboxOrders(request, response) {
         webhookAcknowledged: /^paid_test_acknowledged_v[12]$/.test(String(session.metadata?.ao_webhook_status || "")),
         stockAction: session.metadata?.ao_stock_action || "pending",
         orderStatus: session.metadata?.ao_order_status || "pending",
+        notificationIssue: Number(session.metadata?.ao_order_issue) || null,
       }));
 
     return json(response, 200, { sandbox: true, orders });
