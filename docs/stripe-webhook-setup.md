@@ -106,3 +106,19 @@ keys, does not create a second order database and does not reduce stock.
 After a sandbox payment, the success page briefly re-checks the Checkout Session
 so it can display whether both the payment and webhook acknowledgement are
 confirmed. Stripe remains the source of truth for these test orders.
+
+
+## UK delivery rules
+
+Automation Outlet parcel-eligible products use one server-side Checkout rule:
+£7.95 UK delivery below a £250 product subtotal and free UK delivery from £250.
+Stripe Checkout is restricted to GB shipping addresses for this route. Product
+records must explicitly use `deliveryMode: parcel` to enter card checkout.
+
+Large, heavy, awkward or otherwise unsuitable stock uses
+`deliveryMode: quote`. These products remain visible and priced on the website
+but card checkout is disabled until carriage is agreed. International delivery is
+also quoted separately.
+
+Existing stock without an explicit delivery mode fails safe to quote-required.
+Sandbox webhooks continue to leave real AO stock unchanged.
