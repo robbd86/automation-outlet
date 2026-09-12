@@ -330,7 +330,6 @@ async function listSandboxOrders(request, response) {
   const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(100, requestedLimit)) : 50;
   const params = new URLSearchParams();
   params.set("limit", String(limit));
-  params.append("expand[]", "data.line_items.data.price.product");
 
   try {
     const stripe = await fetch(`https://api.stripe.com/v1/checkout/sessions?${params.toString()}`, {
@@ -340,9 +339,22 @@ async function listSandboxOrders(request, response) {
     const payload = await stripe.json().catch(() => ({}));
     if (!stripe.ok) return json(response, 502, { error: "Could not load Stripe sandbox orders." });
 
-    const sessions = Array.isArray(payload.data) ? payload.data : [];
-    const orders = sessions
+    const summarySessions = (Array.isArray(payload.data) ? payload.data : [])
       .filter((session) => session?.metadata?.ao_environment === "sandbox" && session.mode === "payment")
+      .slice(0, 20);
+
+    const sessions = await Promise.all(summarySessions.map(async (session) => {
+      const detailParams = new URLSearchParams();
+      detailParams.append("expand[]", "line_items.data.price.product");
+      const detail = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(session.id)}?${detailParams.toString()}`, {
+        headers: { Authorization: `Bearer ${secret}` },
+        signal: AbortSignal.timeout(8000),
+      });
+      const data = await detail.json().catch(() => ({}));
+      return detail.ok ? data : session;
+    }));
+
+    const orders = sessions
       .map((session) => ({
         id: session.id,
         created: session.created,
