@@ -49,8 +49,9 @@ export default async function handler(request, response) {
       customerEmail: session.customer_details?.email || null,
       customerName: session.customer_details?.name || null,
       items,
-      webhookAcknowledged: session.metadata?.ao_webhook_status === "paid_test_acknowledged_v1",
+      webhookAcknowledged: /^paid_test_acknowledged_v[12]$/.test(String(session.metadata?.ao_webhook_status || "")),
       stockAction: session.metadata?.ao_stock_action || "pending",
+      orderStatus: session.metadata?.ao_order_status || "pending",
       sandbox: true,
     });
   } catch (error) {
