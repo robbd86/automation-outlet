@@ -126,7 +126,7 @@ test("persists acknowledgement on the existing session and preserves stock and o
     return Response.json(stored);
   });
   const first = await invoke();
-  assert.deepEqual(first.body, { received: true, sandbox: true, recorded: true, stockChanged: false });
+  assert.deepEqual(first.body, { received: true, sandbox: true, recorded: true, stockChanged: false, notificationCreated: false });
   assert.equal(first.headers.get("cache-control"), "no-store");
   assert.equal(calls.length, 2);
   // A second Event object for the SAME session must also deduplicate.
