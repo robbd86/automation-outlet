@@ -1,10 +1,10 @@
 import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
-import webhook from "../api/stripe-live-webhook.mjs";
+import webhook from "../api/stripe-webhook.mjs";
 
 const signingSecret = "whsec_live_commissioning_test";
-let oldSecret;
+let oldSecret, oldSandboxSecret, oldSandboxKey;
 
 function request(event, options = {}) {
   const body = JSON.stringify(event);
@@ -24,12 +24,20 @@ function request(event, options = {}) {
 
 beforeEach(() => {
   oldSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET;
+  oldSandboxSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  oldSandboxKey = process.env.STRIPE_SECRET_KEY;
   process.env.STRIPE_LIVE_WEBHOOK_SECRET = signingSecret;
+  delete process.env.STRIPE_WEBHOOK_SECRET;
+  delete process.env.STRIPE_SECRET_KEY;
 });
 
 afterEach(() => {
   if (oldSecret === undefined) delete process.env.STRIPE_LIVE_WEBHOOK_SECRET;
   else process.env.STRIPE_LIVE_WEBHOOK_SECRET = oldSecret;
+  if (oldSandboxSecret === undefined) delete process.env.STRIPE_WEBHOOK_SECRET;
+  else process.env.STRIPE_WEBHOOK_SECRET = oldSandboxSecret;
+  if (oldSandboxKey === undefined) delete process.env.STRIPE_SECRET_KEY;
+  else process.env.STRIPE_SECRET_KEY = oldSandboxKey;
 });
 
 test("live webhook commissioning endpoint verifies Stripe signatures without processing orders", async () => {
