@@ -64,25 +64,55 @@ export default {
   async fetch(request) {
     if (request.method !== "POST") return json(405, { error: "Method not allowed" }, { Allow: "POST" });
     const secret = process.env.STRIPE_SECRET_KEY || "";
-    const signingSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
-    if (!secret.startsWith("sk_test_") || !signingSecret.startsWith("whsec_")) {
-      return json(503, { error: "Sandbox webhook is not configured." });
+    const sandboxSigningSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+    const liveSigningSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || "";
+    const sandboxConfigured = secret.startsWith("sk_test_") && sandboxSigningSecret.startsWith("whsec_");
+    const liveConfigured = liveSigningSecret.startsWith("whsec_");
+    if (!sandboxConfigured && !liveConfigured) {
+      return json(503, { error: "Stripe webhook is not configured." });
     }
 
     const signature = request.headers.get("stripe-signature");
     if (!signature) return json(400, { error: "Invalid webhook signature." });
-    let event;
+
+    let body;
     try {
-      const body = await rawBody(request);
-      // Stripe verifies the HMAC and rejects signatures older than five minutes.
-      event = Stripe.webhooks.constructEvent(body, signature, signingSecret, 300);
+      body = await rawBody(request);
     } catch (error) {
       return json(error?.message === "body_limit" ? 413 : 400, { error: "Invalid webhook payload or signature." });
     }
 
-    if (!event || typeof event !== "object" || typeof event.type !== "string") {
-      return json(400, { error: "Invalid webhook event." });
+    let event = null;
+    let channel = "";
+    for (const [name, signingSecret] of [
+      ["sandbox", sandboxConfigured ? sandboxSigningSecret : ""],
+      ["live", liveConfigured ? liveSigningSecret : ""],
+    ]) {
+      if (!signingSecret) continue;
+      try {
+        event = Stripe.webhooks.constructEvent(body, signature, signingSecret, 300);
+        channel = name;
+        break;
+      } catch {}
     }
+
+    if (!event || typeof event !== "object" || typeof event.type !== "string") {
+      return json(400, { error: "Invalid webhook payload or signature." });
+    }
+
+    if (channel === "live") {
+      if (event.livemode !== true || event.account || event.context) {
+        return json(400, { error: "Only own-account live events are accepted." });
+      }
+      return json(200, {
+        received: true,
+        liveWebhook: true,
+        commissioning: true,
+        eventType: event.type,
+        livemode: true,
+      });
+    }
+
     if (event.livemode !== false || event.account || event.context) {
       return json(400, { error: "Only own-account sandbox events are accepted." });
     }
