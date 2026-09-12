@@ -1,4 +1,4 @@
-const API="/api/orders";
+const API="/api/deal-desk?view=orders";
 const keyStore="aoStockManagerKey";
 let managerKey=sessionStorage.getItem(keyStore)||"";
 const el=(id)=>document.getElementById(id);
