@@ -1,3 +1,4 @@
+import { updateSandboxOrderStatus } from "../lib/stripe-order-admin.mjs";
 import crypto from "node:crypto";
 
 const API_VERSION = "2022-11-28";
@@ -354,8 +355,9 @@ async function listSandboxOrders(request, response) {
         customer: safeOrderCustomer(session),
         shipping: safeOrderShipping(session),
         items: safeOrderItems(session),
-        webhookAcknowledged: session.metadata?.ao_webhook_status === "paid_test_acknowledged_v1",
+        webhookAcknowledged: /^paid_test_acknowledged_v[12]$/.test(String(session.metadata?.ao_webhook_status || "")),
         stockAction: session.metadata?.ao_stock_action || "pending",
+        orderStatus: session.metadata?.ao_order_status || "pending",
       }));
 
     return json(response, 200, { sandbox: true, orders });
@@ -544,6 +546,7 @@ export default async function handler(request, response) {
     if (request.method === "POST") return await createEnquiry(request, response);
     if (request.method === "GET" && String(request.query?.view || "") === "orders") return await listSandboxOrders(request, response);
     if (request.method === "GET") return await listEnquiries(request, response);
+    if (request.method === "PATCH" && String(request.query?.view || "") === "orders") return await updateSandboxOrderStatus(request, response, requireAdmin(request));
     if (request.method === "PATCH") return await updateEnquiry(request, response);
     return json(response, 405, { error: "Method not allowed" });
   } catch (error) {
