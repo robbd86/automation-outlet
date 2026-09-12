@@ -57,12 +57,12 @@ test("sandbox checkout validates stock and price server-side", async () => {
   process.env.AO_GITHUB_TOKEN = "github-test";
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
   let stripeBody = "";
+  const comments = [];
 
   try {
     global.fetch = async (url, options = {}) => {
-      if (String(url).includes("api.github.com")) {
-        return { ok: true, status: 200, json: async () => [issueFor(product)] };
-      }
+      const git = githubMock(url, options, product, comments);
+      if (git) return git;
       if (String(url).includes("api.stripe.com")) {
         stripeBody = String(options.body || "");
         return { ok: true, status: 200, json: async () => ({ id: "cs_test_123", url: "https://checkout.stripe.com/c/pay/cs_test_123" }) };
@@ -85,6 +85,10 @@ test("sandbox checkout validates stock and price server-side", async () => {
     assert.match(stripeBody, /shipping_options%5B0%5D%5Bshipping_rate_data%5D%5Bfixed_amount%5D%5Bamount%5D=795/);
     assert.match(stripeBody, /metadata%5Bao_shipping_pence%5D=795/);
     assert.match(stripeBody, /metadata%5Bao_product_subtotal_pence%5D=3000/);
+    assert.match(stripeBody, /metadata%5Bao_stock_action%5D=reserved/);
+    assert.match(stripeBody, /metadata%5Bao_reservation_id%5D=aor_/);
+    assert.equal(comments.length, 1);
+    assert.match(comments[0].body, /AO inventory reserve/);
   } finally {
     global.fetch = oldFetch;
     if (oldToken === undefined) delete process.env.AO_GITHUB_TOKEN; else process.env.AO_GITHUB_TOKEN = oldToken;
