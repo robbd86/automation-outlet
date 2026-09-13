@@ -205,7 +205,7 @@ el("unlockForm").addEventListener("submit", async (event) => {
     sessionStorage.setItem(keyStore, managerKey);
     showDesk();
     setStatus("unlockStatus", "");
-    if (!health.configured) setStatus("listingStatus", "OpenAI API key still needs adding in Vercel.", true);
+    if (!health.configured) setStatus("listingStatus", "OpenAI API key is unavailable in this deployment. Check the Vercel Preview environment.", true);
   } catch (error) {
     setStatus("unlockStatus", error.message, true);
   }
@@ -239,7 +239,7 @@ el("lockBtn").addEventListener("click", () => {
 if (managerKey) {
   api("GET", null, "?health=1").then((health) => {
     showDesk();
-    if (!health.configured) setStatus("listingStatus", "OpenAI API key still needs adding in Vercel.", true);
+    if (!health.configured) setStatus("listingStatus", "OpenAI API key is unavailable in this deployment. Check the Vercel Preview environment.", true);
   }).catch(() => {
     sessionStorage.removeItem(keyStore);
     managerKey = "";
