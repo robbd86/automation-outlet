@@ -175,25 +175,46 @@ function marketEvidenceHtml(items) {
 }
 
 function usageSummary(usage, model, cache, cacheAgeHours) {
-  const total = Number(usage?.total_tokens || 0);
   const input = Number(usage?.input_tokens || 0);
   const output = Number(usage?.output_tokens || 0);
+  const cachedInput = Math.min(
+    input,
+    Number(usage?.input_tokens_details?.cached_tokens || 0)
+  );
+  const uncachedInput = Math.max(0, input - cachedInput);
+  const total = Number(usage?.total_tokens || (input + output) || 0);
+
   const label = model === "gpt-5.6-luna" ? "GPT-5.6 Luna" :
     model === "gpt-5.6-terra" ? "GPT-5.6 Terra" :
     (model || "OpenAI");
 
   let text = "Model: " + label;
-  if (total) text += " · Tokens: " + total.toLocaleString("en-GB");
+
+  if (total) {
+    text += " · Tokens: " + total.toLocaleString("en-GB");
+    if (input || output) {
+      text += " (in " + input.toLocaleString("en-GB") +
+        " / out " + output.toLocaleString("en-GB");
+      if (cachedInput) text += " / cached " + cachedInput.toLocaleString("en-GB");
+      text += ")";
+    }
+  } else {
+    text += " · Tokens: usage unavailable";
+  }
 
   const rates = model === "gpt-5.6-luna"
-    ? { input: 0.20, output: 1.20 }
+    ? { input: 0.20, cached: 0.02, output: 1.20 }
     : model === "gpt-5.6-terra"
-      ? { input: 2.00, output: 12.00 }
+      ? { input: 2.00, cached: 0.20, output: 12.00 }
       : null;
 
   if (rates && (input || output)) {
-    const dollars = (input * rates.input + output * rates.output) / 1000000;
-    text += " · Model tokens ≈ $" + dollars.toFixed(dollars < 0.01 ? 4 : 3);
+    const dollars = (
+      uncachedInput * rates.input +
+      cachedInput * rates.cached +
+      output * rates.output
+    ) / 1000000;
+    text += " · Est. model cost ≈ $" + dollars.toFixed(dollars < 0.01 ? 4 : 3);
   }
 
   if (cache === "hit") {
