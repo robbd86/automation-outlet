@@ -127,7 +127,7 @@ async function runAgent(kind, input, buttonId, statusId) {
 
     lastKind = kind;
     lastResult = finished.result;
-    renderResult(kind, finished.result, finished.usage);
+    renderResult(kind, finished.result, finished.usage, finished.model);
     setStatus(statusId, "Complete.");
   } catch (error) {
     setStatus(statusId, error.message, true);
@@ -174,7 +174,38 @@ function marketEvidenceHtml(items) {
   }).join("");
 }
 
-function renderListing(r, usage) {
+function usageCostHtml(usage, model, kind) {
+  if (!usage?.total_tokens) return "";
+
+  const input = Number(usage.input_tokens || 0);
+  const cached = Math.min(input, Number(usage.input_tokens_details?.cached_tokens || 0));
+  const output = Number(usage.output_tokens || 0);
+  const reasoning = Number(usage.output_tokens_details?.reasoning_tokens || 0);
+  const uncached = Math.max(0, input - cached);
+
+  const rates = String(model || "").includes("luna")
+    ? { input: 0.20, cached: 0.02, output: 1.20 }
+    : { input: 2.00, cached: 0.20, output: 12.00 };
+
+  const tokenCostUsd = (
+    uncached * rates.input +
+    cached * rates.cached +
+    output * rates.output
+  ) / 1000000;
+
+  const searchCapUsd = kind === "listing" ? 0.02 : 0.07;
+  const modelName = escapeHtml(model || "model");
+
+  return " · " +
+    input.toLocaleString("en-GB") + " input / " +
+    output.toLocaleString("en-GB") + " output" +
+    (reasoning ? " (" + reasoning.toLocaleString("en-GB") + " reasoning)" : "") +
+    " · " + modelName +
+    " token cost ≈ $" + tokenCostUsd.toFixed(3) +
+    " + web searches (capped at up to $" + searchCapUsd.toFixed(2) + ")";
+}
+
+function renderListing(r, usage, model) {
   const checks = listHtml(r.checks);
   const seo = Array.isArray(r.seoKeywords) ? r.seoKeywords.map(escapeHtml).join(", ") : "";
   const evidence = marketEvidenceHtml(r.marketEvidence);
@@ -195,11 +226,11 @@ function renderListing(r, usage) {
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
     <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
-    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
+    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}${usageCostHtml(usage, model, "listing")}.` : ""}</p>
   `;
 }
 
-function renderDeal(r, usage) {
+function renderDeal(r, usage, model) {
   const rows = Array.isArray(r.items) ? r.items.map((item) => `
     <div class="result-section"><h3>${escapeHtml(item.partNumber || item.identification)}</h3>
     <p>${escapeHtml(item.identification)} · Qty ${escapeHtml(item.quantity)}</p>
@@ -213,13 +244,13 @@ function renderDeal(r, usage) {
     ${rows}
     <div class="result-section"><h3>Risks</h3>${listHtml(r.risks)}</div>
     <div class="result-section"><h3>Next steps</h3>${listHtml(r.nextSteps)}</div>
-    <p class="small">Commercial research aid only; verify unusually high-value parts before committing funds.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
+    <p class="small">Commercial research aid only; verify unusually high-value parts before committing funds.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}${usageCostHtml(usage, model, "deal")}.` : ""}</p>
   `;
 }
 
-function renderResult(kind, result, usage) {
+function renderResult(kind, result, usage, model) {
   el("resultEmpty").classList.add("hidden");
-  el("result").innerHTML = kind === "listing" ? renderListing(result, usage) : renderDeal(result, usage);
+  el("result").innerHTML = kind === "listing" ? renderListing(result, usage, model) : renderDeal(result, usage, model);
   if (kind === "listing") {
     el("sendToStock").addEventListener("click", saveListingDraft);
     el("copyDescription").addEventListener("click", async () => {
