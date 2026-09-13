@@ -1,4 +1,5 @@
 const API = "/api/agents";
+const STOCK_API = "/api/stock";
 const keyStore = "aoStockManagerKey";
 let managerKey = sessionStorage.getItem(keyStore) || "";
 let lastKind = "";
@@ -25,6 +26,21 @@ async function api(method = "GET", body = null, query = "") {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+
+async function saveStockDraft(product) {
+  const response = await fetch(STOCK_API, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "x-deal-desk-key": managerKey,
+    },
+    body: JSON.stringify(product),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Could not save draft");
   return data;
 }
 
@@ -98,8 +114,8 @@ function renderListing(r, usage) {
     <div class="result-section"><h3>Pricing note</h3><p>${escapeHtml(r.pricingNotes)}</p></div>
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
-    <div class="actions"><button class="btn" id="sendToStock" type="button">Send to Stock Manager</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
-    <p class="small">AI research draft. Review condition, photos, part number and price before publishing.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
+    <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
+    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
   `;
 }
 
@@ -125,7 +141,7 @@ function renderResult(kind, result, usage) {
   el("resultEmpty").classList.add("hidden");
   el("result").innerHTML = kind === "listing" ? renderListing(result, usage) : renderDeal(result, usage);
   if (kind === "listing") {
-    el("sendToStock").addEventListener("click", sendToStockManager);
+    el("sendToStock").addEventListener("click", saveListingDraft);
     el("copyDescription").addEventListener("click", async () => {
       await navigator.clipboard.writeText(lastResult?.description || "");
       el("copyDescription").textContent = "Copied";
@@ -133,8 +149,9 @@ function renderResult(kind, result, usage) {
   }
 }
 
-function sendToStockManager() {
+async function saveListingDraft() {
   if (!lastResult || lastKind !== "listing") return;
+  const button = el("sendToStock");
   const r = lastResult;
   const draft = {
     title: r.listingTitle || "",
@@ -152,8 +169,22 @@ function sendToStockManager() {
     description: r.description || "",
     featured: false
   };
-  sessionStorage.setItem("aoAgentListingDraft", JSON.stringify(draft));
-  window.location.href = "/stock-admin.html";
+
+  button.disabled = true;
+  button.textContent = "Saving…";
+  try {
+    await saveStockDraft(draft);
+    button.textContent = "Draft saved";
+    const open = document.createElement("a");
+    open.className = "btn secondary";
+    open.href = "/stock-admin.html";
+    open.textContent = "Open Stock Manager";
+    button.parentElement.appendChild(open);
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "Save as website draft";
+    alert(error.message);
+  }
 }
 
 document.querySelectorAll(".tab").forEach((button) => {
