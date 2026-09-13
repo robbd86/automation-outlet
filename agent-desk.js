@@ -130,9 +130,9 @@ function renderListing(r, usage) {
     <h2>${escapeHtml(r.listingTitle || r.partNumber || "Listing")}</h2>
     <p><strong>eBay title:</strong> ${escapeHtml(r.ebayTitle)}</p>
     <div class="kpis">
-      <div class="kpi"><span>Recommended</span><b>${gbp.format(Number(r.recommendedPriceGbp || 0))}</b></div>
-      <div class="kpi"><span>Low</span><b>${gbp.format(Number(r.priceLowGbp || 0))}</b></div>
-      <div class="kpi"><span>High</span><b>${gbp.format(Number(r.priceHighGbp || 0))}</b></div>
+      <div class="kpi"><span>Recommended ask</span><b>${gbp.format(Number(r.recommendedPriceGbp || 0))}</b></div>
+      <div class="kpi"><span>Quick sale</span><b>${gbp.format(Number(r.priceLowGbp || 0))}</b></div>
+      <div class="kpi"><span>Stretch high</span><b>${gbp.format(Number(r.priceHighGbp || 0))}</b></div>
     </div>
     <div class="result-section"><h3>Identification</h3><p>${escapeHtml(r.brand)} · ${escapeHtml(r.identification)}<br><span class="small">${escapeHtml(r.partNumber)} · ${escapeHtml(r.category)} · ${escapeHtml(r.condition)}</span></p></div>
     <div class="result-section"><h3>Description</h3><div class="desc">${escapeHtml(r.description)}</div></div>
