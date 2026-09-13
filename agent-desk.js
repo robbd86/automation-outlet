@@ -127,7 +127,7 @@ async function runAgent(kind, input, buttonId, statusId) {
 
     lastKind = kind;
     lastResult = finished.result;
-    renderResult(kind, finished.result, finished.usage, finished.model);
+    renderResult(kind, finished.result, finished.usage, finished.model, finished.cache, finished.cacheAgeHours);
     setStatus(statusId, "Complete.");
   } catch (error) {
     setStatus(statusId, error.message, true);
@@ -174,7 +174,7 @@ function marketEvidenceHtml(items) {
   }).join("");
 }
 
-function usageSummary(usage, model) {
+function usageSummary(usage, model, cache, cacheAgeHours) {
   const total = Number(usage?.total_tokens || 0);
   const input = Number(usage?.input_tokens || 0);
   const output = Number(usage?.output_tokens || 0);
@@ -196,11 +196,18 @@ function usageSummary(usage, model) {
     text += " · Model tokens ≈ $" + dollars.toFixed(dollars < 0.01 ? 4 : 3);
   }
 
-  if (model) text += " + web-search charges";
+  if (cache === "hit") {
+    const age = Number.isFinite(Number(cacheAgeHours)) ? " · " + Number(cacheAgeHours) + "h old" : "";
+    text += " · Cached research" + age + " · no web-search charge";
+  } else if (cache === "miss") {
+    text += " · Fresh research + web-search charges";
+  } else if (model) {
+    text += " + web-search charges";
+  }
   return text;
 }
 
-function renderListing(r, usage, model) {
+function renderListing(r, usage, model, cache, cacheAgeHours) {
   const checks = listHtml(r.checks);
   const seo = Array.isArray(r.seoKeywords) ? r.seoKeywords.map(escapeHtml).join(", ") : "";
   const evidence = marketEvidenceHtml(r.marketEvidence);
@@ -221,7 +228,7 @@ function renderListing(r, usage, model) {
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
     <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
-    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.<br>${escapeHtml(usageSummary(usage, model))}</p>
+    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.<br>${escapeHtml(usageSummary(usage, model, cache, cacheAgeHours))}</p>
   `;
 }
 
@@ -243,9 +250,11 @@ function renderDeal(r, usage, model) {
   `;
 }
 
-function renderResult(kind, result, usage, model) {
+function renderResult(kind, result, usage, model, cache, cacheAgeHours) {
   el("resultEmpty").classList.add("hidden");
-  el("result").innerHTML = kind === "listing" ? renderListing(result, usage, model) : renderDeal(result, usage, model);
+  el("result").innerHTML = kind === "listing"
+    ? renderListing(result, usage, model, cache, cacheAgeHours)
+    : renderDeal(result, usage, model);
   if (kind === "listing") {
     el("sendToStock").addEventListener("click", saveListingDraft);
     el("copyDescription").addEventListener("click", async () => {
