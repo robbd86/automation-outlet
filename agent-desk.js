@@ -141,9 +141,41 @@ function listHtml(items) {
   return "<ul>" + items.map((item) => "<li>" + escapeHtml(item) + "</li>").join("") + "</ul>";
 }
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value || \"\"));
+    return url.protocol === \"https:\" || url.protocol === \"http:\" ? url.href : \"\";
+  } catch {
+    return \"\";
+  }
+}
+
+function marketEvidenceHtml(items) {
+  if (!Array.isArray(items) || !items.length) return \"<p class='small'>No strong comparable links returned.</p>\";
+
+  return items.slice(0, 4).map((item) => {
+    const url = safeExternalUrl(item.url);
+    const source = escapeHtml(item.source || \"Source\");
+    const condition = escapeHtml(item.condition || \"\");
+    const type = escapeHtml(item.evidenceType || \"\");
+    const warranty = escapeHtml(item.warrantyService || \"No service note\");
+    const price = gbp.format(Number(item.priceGbp || 0));
+    const link = url
+      ? '<a href=\"' + escapeHtml(url) + '\" target=\"_blank\" rel=\"noopener noreferrer\">Open source</a>'
+      : '<span class=\"small\">No link</span>';
+
+    return '<div class=\"evidence-item\">' +
+      '<p><strong>' + source + ' · ' + price + '</strong></p>' +
+      '<p class=\"small\">' + condition + ' · ' + type + '</p>' +
+      '<p class=\"small\">' + warranty + ' · ' + link + '</p>' +
+      '</div>';
+  }).join(\"\");
+}
+
 function renderListing(r, usage) {
   const checks = listHtml(r.checks);
   const seo = Array.isArray(r.seoKeywords) ? r.seoKeywords.map(escapeHtml).join(", ") : "";
+  const evidence = marketEvidenceHtml(r.marketEvidence);
   return `
     <span class="badge">LISTING DRAFT</span>
     <h2>${escapeHtml(r.listingTitle || r.partNumber || "Listing")}</h2>
@@ -153,9 +185,11 @@ function renderListing(r, usage) {
       <div class="kpi"><span>Quick sale</span><b>${gbp.format(Number(r.priceLowGbp || 0))}</b></div>
       <div class="kpi"><span>Stretch high</span><b>${gbp.format(Number(r.priceHighGbp || 0))}</b></div>
     </div>
+    <p><strong>Pricing confidence:</strong> ${escapeHtml(r.pricingConfidence || "—")}</p>
     <div class="result-section"><h3>Identification</h3><p>${escapeHtml(r.brand)} · ${escapeHtml(r.identification)}<br><span class="small">${escapeHtml(r.partNumber)} · ${escapeHtml(r.category)} · ${escapeHtml(r.condition)}</span></p></div>
     <div class="result-section"><h3>Description</h3><div class="desc">${escapeHtml(r.description)}</div></div>
     <div class="result-section"><h3>Pricing note</h3><p>${escapeHtml(r.pricingNotes)}</p></div>
+    <div class="result-section"><h3>Market evidence</h3>${evidence}</div>
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
     <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
