@@ -4,6 +4,10 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/api/agents",
+      "destination": "/api/deal-desk"
+    },
+    {
       "source": "/api/stripe-live-webhook",
       "destination": "/api/stripe-webhook"
     },
