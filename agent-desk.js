@@ -74,13 +74,38 @@ async function poll(sessionId, statusId) {
   throw new Error("Agent run took too long. Try again.");
 }
 
+function isTransientAgentError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("internal error") ||
+    message.includes("server error") ||
+    message.includes("temporarily unavailable");
+}
+
 async function runAgent(kind, input, buttonId, statusId) {
   const button = el(buttonId);
   button.disabled = true;
   setStatus(statusId, "Starting agent…");
+
   try {
-    const started = await api("POST", { kind, input });
-    const finished = await poll(started.sessionId, statusId);
+    let finished = null;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const started = await api("POST", { kind, input });
+        finished = await poll(started.sessionId, statusId);
+        break;
+      } catch (error) {
+        if (attempt === 0 && isTransientAgentError(error)) {
+          setStatus(statusId, "OpenAI had a temporary internal error — retrying once…");
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!finished?.result) throw new Error("Agent run did not return a result.");
+
     lastKind = kind;
     lastResult = finished.result;
     renderResult(kind, finished.result, finished.usage);
