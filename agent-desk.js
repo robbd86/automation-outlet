@@ -1,9 +1,14 @@
 const API = "/api/agents";
 const STOCK_API = "/api/stock";
+const PHOTO_API = "/api/photo-agent";
 const keyStore = "aoStockManagerKey";
 let managerKey = sessionStorage.getItem(keyStore) || "";
 let lastKind = "";
 let lastResult = null;
+let photoItems = [];
+let photoReviewResult = null;
+let brandedHeroDataUrl = "";
+let uploadedHeroUrl = "";
 
 const el = (id) => document.getElementById(id);
 const gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
@@ -61,6 +66,252 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[ch]));
+}
+
+
+async function photoApi(body) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 70000);
+  try {
+    const response = await fetch(PHOTO_API, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "x-deal-desk-key": managerKey,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Photo Agent request failed");
+    return data;
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("Photo Agent timed out. Try fewer photos.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function readFileDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read " + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadBrowserImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not decode image"));
+    image.src = src;
+  });
+}
+
+async function compressPhoto(file) {
+  const src = await readFileDataUrl(file);
+  const image = await loadBrowserImage(src);
+  const max = 1400;
+  const scale = Math.min(1, max / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+  const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+  const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(image, 0, 0, width, height);
+  return {
+    name: file.name,
+    dataUrl: canvas.toDataURL("image/jpeg", 0.78),
+    width,
+    height,
+  };
+}
+
+function renderPhotoGrid() {
+  const grid = el("photoGrid");
+  if (!photoItems.length) {
+    grid.innerHTML = "";
+    grid.classList.add("hidden");
+    return;
+  }
+  grid.classList.remove("hidden");
+  const hero = Number(photoReviewResult?.heroIndex ?? -1);
+  grid.innerHTML = photoItems.map((item, index) => {
+    const review = photoReviewResult?.imageReviews?.find((x) => Number(x.index) === index);
+    const tag = index === hero ? "HERO" : (review?.role ? String(review.role).toUpperCase() : String(index + 1));
+    return '<div class="photo-thumb' + (index === hero ? ' hero' : '') + '">' +
+      '<img src="' + item.dataUrl + '" alt="Product photo ' + (index + 1) + '">' +
+      '<span class="photo-tag">' + escapeHtml(tag) + '</span></div>';
+  }).join("");
+}
+
+function listInline(items) {
+  return Array.isArray(items) && items.length ? items.map(escapeHtml).join(", ") : "None noted";
+}
+
+function drawContain(ctx, image, x, y, w, h) {
+  const ratio = Math.min(w / image.width, h / image.height);
+  const dw = image.width * ratio;
+  const dh = image.height * ratio;
+  ctx.drawImage(image, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+
+async function buildBrandedHero(heroIndex) {
+  const item = photoItems[heroIndex];
+  if (!item) return "";
+  const image = await loadBrowserImage(item.dataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 1600;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, 1600, 1600);
+
+  ctx.strokeStyle = "#dbe9fb";
+  ctx.lineWidth = 5;
+  [[1220,105,1500,105],[1320,165,1540,165],[108,1240,330,1240],[108,1300,405,1300]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x2,y2,10,0,Math.PI*2); ctx.stroke();
+  });
+
+  ctx.fillStyle = "#081b35";
+  ctx.beginPath(); ctx.moveTo(1325,0); ctx.lineTo(1600,0); ctx.lineTo(1600,275); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#1876f2";
+  ctx.beginPath(); ctx.moveTo(1415,0); ctx.lineTo(1600,0); ctx.lineTo(1600,185); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#081b35";
+  ctx.beginPath(); ctx.moveTo(0,1430); ctx.lineTo(0,1600); ctx.lineTo(360,1600); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#1876f2";
+  ctx.beginPath(); ctx.moveTo(0,1510); ctx.lineTo(0,1600); ctx.lineTo(190,1600); ctx.closePath(); ctx.fill();
+
+  ctx.save();
+  ctx.shadowColor = "rgba(7,17,31,.18)";
+  ctx.shadowBlur = 28;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(115, 235, 1370, 990);
+  ctx.restore();
+  drawContain(ctx, image, 145, 265, 1310, 930);
+
+  try {
+    const logo = await loadBrowserImage("/ao-site-logo.svg");
+    drawContain(ctx, logo, 75, 55, 480, 140);
+  } catch {}
+
+  const part = (photoReviewResult?.detectedPartNumber || el("listingPart").value.trim() || "INDUSTRIAL AUTOMATION").toUpperCase();
+  ctx.fillStyle = "#071b35";
+  ctx.font = "700 54px Arial, sans-serif";
+  ctx.fillText(part.slice(0, 38), 105, 1335);
+
+  const badges = ["UK STOCK", "FAST DISPATCH", "INDUSTRIAL AUTOMATION"];
+  ctx.font = "700 29px Arial, sans-serif";
+  badges.forEach((label, i) => {
+    const x = 105 + i * 475;
+    ctx.strokeStyle = "#b9d2ef";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, 1395, 420, 100);
+    ctx.fillStyle = "#1876f2";
+    ctx.beginPath(); ctx.arc(x + 48, 1445, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#071b35";
+    ctx.fillText(label, x + 82, 1455);
+  });
+
+  return canvas.toDataURL("image/jpeg", 0.9);
+}
+
+function downloadDataUrl(dataUrl, filename) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function photoNotesForListing() {
+  if (!photoReviewResult) return "";
+  const r = photoReviewResult;
+  const parts = [];
+  if (r.detectedPartNumber) parts.push("Photo label reads: " + r.detectedPartNumber + (r.detectedRevision ? " (" + r.detectedRevision + ")" : ""));
+  if (Array.isArray(r.visibleSpecs) && r.visibleSpecs.length) parts.push("Visible specs: " + r.visibleSpecs.join("; "));
+  if (Array.isArray(r.accessoriesVisible) && r.accessoriesVisible.length) parts.push("Visible accessories: " + r.accessoriesVisible.join("; "));
+  if (Array.isArray(r.conditionNotes) && r.conditionNotes.length) parts.push("Photo condition notes: " + r.conditionNotes.join("; "));
+  if (Array.isArray(r.damageNotes) && r.damageNotes.length) parts.push("Visible damage/concerns: " + r.damageNotes.join("; "));
+  if (r.listingNotesAppend) parts.push(r.listingNotesAppend);
+  return parts.join("\n");
+}
+
+async function renderPhotoReview() {
+  const box = el("photoReview");
+  if (!photoReviewResult) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  brandedHeroDataUrl = await buildBrandedHero(Number(photoReviewResult.heroIndex || 0));
+  uploadedHeroUrl = "";
+  renderPhotoGrid();
+
+  const r = photoReviewResult;
+  const mismatch = r.detectedPartNumber && el("listingPart").value.trim() &&
+    r.detectedPartNumber.toUpperCase() !== el("listingPart").value.trim().toUpperCase();
+
+  box.classList.remove("hidden");
+  box.innerHTML =
+    '<p><strong>Detected:</strong> ' + escapeHtml(r.detectedBrand || "—") + ' · ' + escapeHtml(r.detectedPartNumber || "Part number not clear") +
+    (r.detectedRevision ? ' · ' + escapeHtml(r.detectedRevision) : '') + ' · <strong>Confidence:</strong> ' + escapeHtml(r.confidence || "—") + '</p>' +
+    (mismatch ? '<p style="color:#ffb4b4"><strong>Check:</strong> Photo part number does not match the typed part number.</p>' : '') +
+    '<p><strong>Hero:</strong> Photo ' + (Number(r.heroIndex || 0) + 1) + ' — ' + escapeHtml(r.heroReason || "") + '</p>' +
+    '<p><strong>Visible specs:</strong> ' + listInline(r.visibleSpecs) + '</p>' +
+    '<p><strong>Accessories:</strong> ' + listInline(r.accessoriesVisible) + '</p>' +
+    '<p><strong>Missing shots:</strong> ' + listInline(r.missingShots) + '</p>' +
+    (brandedHeroDataUrl ? '<div class="photo-hero-preview"><img src="' + brandedHeroDataUrl + '" alt="AO branded hero preview"></div>' +
+      '<div class="photo-actions"><button class="btn secondary" id="downloadHero" type="button">Download branded hero</button></div>' : '');
+
+  if (!el("listingPart").value.trim() && r.detectedPartNumber) el("listingPart").value = r.detectedPartNumber;
+  if (el("downloadHero")) {
+    el("downloadHero").addEventListener("click", () => {
+      const name = safeFilename(r.detectedPartNumber || el("listingPart").value || "ao-listing") + "-AO-hero.jpg";
+      downloadDataUrl(brandedHeroDataUrl, name);
+    });
+  }
+}
+
+function safeFilename(value) {
+  return String(value || "ao-listing").replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+}
+
+async function clearPhotos() {
+  photoItems = [];
+  photoReviewResult = null;
+  brandedHeroDataUrl = "";
+  uploadedHeroUrl = "";
+  el("listingPhotos").value = "";
+  el("photoAnalyse").disabled = true;
+  el("photoClear").disabled = true;
+  setStatus("photoStatus", "");
+  el("photoReview").innerHTML = "";
+  el("photoReview").classList.add("hidden");
+  renderPhotoGrid();
+}
+
+async function resetListingForNext() {
+  el("listingForm").reset();
+  el("listingQty").value = "1";
+  await clearPhotos();
+  lastKind = "";
+  lastResult = null;
+  el("result").innerHTML = "";
+  el("resultEmpty").classList.remove("hidden");
+  setStatus("listingStatus", "Ready for next item.");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function showDesk() {
@@ -248,7 +499,7 @@ function renderListing(r, usage, model, cache, cacheAgeHours) {
     <div class="result-section"><h3>Market evidence</h3>${evidence}</div>
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
-    <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
+    <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="saveNext" type="button">Save draft & next item</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
     <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.<br>${escapeHtml(usageSummary(usage, model, cache, cacheAgeHours))}</p>
   `;
 }
@@ -277,7 +528,8 @@ function renderResult(kind, result, usage, model, cache, cacheAgeHours) {
     ? renderListing(result, usage, model, cache, cacheAgeHours)
     : renderDeal(result, usage, model);
   if (kind === "listing") {
-    el("sendToStock").addEventListener("click", saveListingDraft);
+    el("sendToStock").addEventListener("click", () => saveListingDraft(false));
+    el("saveNext").addEventListener("click", () => saveListingDraft(true));
     el("copyDescription").addEventListener("click", async () => {
       await navigator.clipboard.writeText(lastResult?.description || "");
       el("copyDescription").textContent = "Copied";
@@ -285,9 +537,9 @@ function renderResult(kind, result, usage, model, cache, cacheAgeHours) {
   }
 }
 
-async function saveListingDraft() {
+async function saveListingDraft(moveNext = false) {
   if (!lastResult || lastKind !== "listing") return;
-  const button = el("sendToStock");
+  const button = moveNext ? el("saveNext") : el("sendToStock");
   const r = lastResult;
   const draft = {
     title: r.listingTitle || "",
@@ -300,15 +552,25 @@ async function saveListingDraft() {
     status: "draft",
     deliveryMode: r.deliveryMode || "quote",
     sortOrder: 100,
-    imageUrl: "",
+    imageUrl: uploadedHeroUrl || "",
     ebayUrl: "",
     description: r.description || "",
     featured: false
   };
 
   button.disabled = true;
-  button.textContent = "Saving…";
+  button.textContent = brandedHeroDataUrl && !uploadedHeroUrl ? "Uploading hero…" : "Saving…";
   try {
+    if (brandedHeroDataUrl && !uploadedHeroUrl) {
+      const uploaded = await photoApi({
+        action: "upload-hero",
+        partNumber: r.partNumber || el("listingPart").value.trim(),
+        dataUrl: brandedHeroDataUrl
+      });
+      uploadedHeroUrl = uploaded.url || "";
+      draft.imageUrl = uploadedHeroUrl;
+      button.textContent = "Saving…";
+    }
     await saveStockDraft(draft);
     button.textContent = "Draft saved";
     const open = document.createElement("a");
@@ -316,6 +578,10 @@ async function saveListingDraft() {
     open.href = "/stock-admin.html";
     open.textContent = "Open Stock Manager";
     button.parentElement.appendChild(open);
+    if (moveNext) {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      await resetListingForNext();
+    }
   } catch (error) {
     button.disabled = false;
     button.textContent = "Save as website draft";
@@ -349,13 +615,63 @@ el("unlockForm").addEventListener("submit", async (event) => {
 
 el("listingForm").addEventListener("submit", (event) => {
   event.preventDefault();
+  const photoNotes = photoNotesForListing();
+  const userNotes = el("listingNotes").value.trim();
   runAgent("listing", {
     partNumber: el("listingPart").value.trim(),
     condition: el("listingCondition").value,
     quantity: Number(el("listingQty").value || 1),
-    notes: el("listingNotes").value.trim()
+    notes: [userNotes, photoNotes].filter(Boolean).join("\n\n")
   }, "listingRun", "listingStatus");
 });
+
+
+el("listingPhotos").addEventListener("change", async (event) => {
+  const files = Array.from(event.target.files || []).slice(0, 12);
+  if (!files.length) return clearPhotos();
+  setStatus("photoStatus", "Preparing " + files.length + " photo" + (files.length === 1 ? "" : "s") + "…");
+  el("photoAnalyse").disabled = true;
+  try {
+    photoItems = [];
+    for (let i = 0; i < files.length; i += 1) {
+      setStatus("photoStatus", "Preparing photo " + (i + 1) + " of " + files.length + "…");
+      photoItems.push(await compressPhoto(files[i]));
+    }
+    photoReviewResult = null;
+    brandedHeroDataUrl = "";
+    uploadedHeroUrl = "";
+    renderPhotoGrid();
+    el("photoAnalyse").disabled = false;
+    el("photoClear").disabled = false;
+    setStatus("photoStatus", files.length + " photos ready. Tap Review photos.");
+  } catch (error) {
+    setStatus("photoStatus", error.message, true);
+  }
+});
+
+el("photoAnalyse").addEventListener("click", async () => {
+  if (!photoItems.length) return;
+  const button = el("photoAnalyse");
+  button.disabled = true;
+  setStatus("photoStatus", "Reading labels and choosing the best photo…");
+  try {
+    const data = await photoApi({
+      action: "analyse",
+      partNumber: el("listingPart").value.trim(),
+      condition: el("listingCondition").value,
+      images: photoItems.map((item) => ({ name: item.name, dataUrl: item.dataUrl }))
+    });
+    photoReviewResult = data.review;
+    await renderPhotoReview();
+    setStatus("photoStatus", "Photo review complete. Hero image prepared automatically.");
+  } catch (error) {
+    setStatus("photoStatus", error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+el("photoClear").addEventListener("click", clearPhotos);
 
 el("dealForm").addEventListener("submit", (event) => {
   event.preventDefault();
