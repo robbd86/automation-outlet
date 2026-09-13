@@ -127,7 +127,7 @@ async function runAgent(kind, input, buttonId, statusId) {
 
     lastKind = kind;
     lastResult = finished.result;
-    renderResult(kind, finished.result, finished.usage);
+    renderResult(kind, finished.result, finished.usage, finished.model);
     setStatus(statusId, "Complete.");
   } catch (error) {
     setStatus(statusId, error.message, true);
@@ -174,7 +174,33 @@ function marketEvidenceHtml(items) {
   }).join("");
 }
 
-function renderListing(r, usage) {
+function usageSummary(usage, model) {
+  const total = Number(usage?.total_tokens || 0);
+  const input = Number(usage?.input_tokens || 0);
+  const output = Number(usage?.output_tokens || 0);
+  const label = model === "gpt-5.6-luna" ? "GPT-5.6 Luna" :
+    model === "gpt-5.6-terra" ? "GPT-5.6 Terra" :
+    (model || "OpenAI");
+
+  let text = "Model: " + label;
+  if (total) text += " · Tokens: " + total.toLocaleString("en-GB");
+
+  const rates = model === "gpt-5.6-luna"
+    ? { input: 0.20, output: 1.20 }
+    : model === "gpt-5.6-terra"
+      ? { input: 2.00, output: 12.00 }
+      : null;
+
+  if (rates && (input || output)) {
+    const dollars = (input * rates.input + output * rates.output) / 1000000;
+    text += " · Model tokens ≈ $" + dollars.toFixed(dollars < 0.01 ? 4 : 3);
+  }
+
+  if (model) text += " + web-search charges";
+  return text;
+}
+
+function renderListing(r, usage, model) {
   const checks = listHtml(r.checks);
   const seo = Array.isArray(r.seoKeywords) ? r.seoKeywords.map(escapeHtml).join(", ") : "";
   const evidence = marketEvidenceHtml(r.marketEvidence);
@@ -195,11 +221,11 @@ function renderListing(r, usage) {
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
     <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
-    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
+    <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.<br>${escapeHtml(usageSummary(usage, model))}</p>
   `;
 }
 
-function renderDeal(r, usage) {
+function renderDeal(r, usage, model) {
   const rows = Array.isArray(r.items) ? r.items.map((item) => `
     <div class="result-section"><h3>${escapeHtml(item.partNumber || item.identification)}</h3>
     <p>${escapeHtml(item.identification)} · Qty ${escapeHtml(item.quantity)}</p>
@@ -213,13 +239,13 @@ function renderDeal(r, usage) {
     ${rows}
     <div class="result-section"><h3>Risks</h3>${listHtml(r.risks)}</div>
     <div class="result-section"><h3>Next steps</h3>${listHtml(r.nextSteps)}</div>
-    <p class="small">Commercial research aid only; verify unusually high-value parts before committing funds.${usage?.total_tokens ? ` Tokens: ${usage.total_tokens.toLocaleString("en-GB")}.` : ""}</p>
+    <p class="small">Commercial research aid only; verify unusually high-value parts before committing funds.<br>${escapeHtml(usageSummary(usage, model))}</p>
   `;
 }
 
-function renderResult(kind, result, usage) {
+function renderResult(kind, result, usage, model) {
   el("resultEmpty").classList.add("hidden");
-  el("result").innerHTML = kind === "listing" ? renderListing(result, usage) : renderDeal(result, usage);
+  el("result").innerHTML = kind === "listing" ? renderListing(result, usage, model) : renderDeal(result, usage, model);
   if (kind === "listing") {
     el("sendToStock").addEventListener("click", saveListingDraft);
     el("copyDescription").addEventListener("click", async () => {
