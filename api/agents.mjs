@@ -43,6 +43,7 @@ async function openai(path, options = {}) {
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
+      "OpenAI-Beta": "agents=v1",
       ...(options.headers || {}),
     },
   });
@@ -72,26 +73,7 @@ Rules:
 - Default website status to draft and deliveryMode to quote.
 - Use one of these categories where possible: PLC CPU, PLC I/O module, Communication module, HMI, Drive / inverter, Safety module, Power supply, Industrial PC, Sensor, Motor starter, Other automation.
 - Preserve the user's stated condition exactly where it maps cleanly to Automation Outlet wording.
-Return ONLY valid JSON and no markdown with exactly this shape:
-{
-  "partNumber": "",
-  "brand": "",
-  "identification": "",
-  "category": "",
-  "condition": "",
-  "quantity": 1,
-  "listingTitle": "",
-  "ebayTitle": "",
-  "description": "",
-  "recommendedPriceGbp": 0,
-  "priceLowGbp": 0,
-  "priceHighGbp": 0,
-  "deliveryMode": "quote",
-  "status": "draft",
-  "seoKeywords": [],
-  "checks": [],
-  "pricingNotes": ""
-}
+- Put anything that still needs visual or manual verification into checks.
 `;
 
 const dealInstructions = `
@@ -107,43 +89,93 @@ Rules:
 - Prefer seller-held consignment where that materially reduces cash/risk and still gives a strong chance of sale.
 - Never claim sold-price evidence unless you actually found it.
 - State uncertainty clearly.
-Return ONLY valid JSON and no markdown with exactly this shape:
-{
-  "summary": "",
-  "recommendation": "buy|consignment|broker|more-info|pass",
-  "confidence": "high|medium|low",
-  "estimatedRetailGbp": 0,
-  "estimatedTradeGbp": 0,
-  "maxCashBuyGbp": 0,
-  "suggestedConsignmentAskGbp": 0,
-  "items": [
-    {
-      "partNumber": "",
-      "identification": "",
-      "quantity": 1,
-      "realisticSaleGbpEach": 0,
-      "tradeValueGbpEach": 0,
-      "maxBuyGbpEach": 0,
-      "notes": ""
-    }
-  ],
-  "risks": [],
-  "nextSteps": []
-}
 `;
+
+const listingSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    partNumber: { type: "string" },
+    brand: { type: "string" },
+    identification: { type: "string" },
+    category: { type: "string" },
+    condition: { type: "string" },
+    quantity: { type: "integer", minimum: 1 },
+    listingTitle: { type: "string" },
+    ebayTitle: { type: "string" },
+    description: { type: "string" },
+    recommendedPriceGbp: { type: "number", minimum: 0 },
+    priceLowGbp: { type: "number", minimum: 0 },
+    priceHighGbp: { type: "number", minimum: 0 },
+    deliveryMode: { type: "string", enum: ["quote", "parcel"] },
+    status: { type: "string", enum: ["draft"] },
+    seoKeywords: { type: "array", items: { type: "string" } },
+    checks: { type: "array", items: { type: "string" } },
+    pricingNotes: { type: "string" }
+  },
+  required: [
+    "partNumber", "brand", "identification", "category", "condition", "quantity",
+    "listingTitle", "ebayTitle", "description", "recommendedPriceGbp",
+    "priceLowGbp", "priceHighGbp", "deliveryMode", "status",
+    "seoKeywords", "checks", "pricingNotes"
+  ]
+};
+
+const dealItemSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    partNumber: { type: "string" },
+    identification: { type: "string" },
+    quantity: { type: "integer", minimum: 1 },
+    realisticSaleGbpEach: { type: "number", minimum: 0 },
+    tradeValueGbpEach: { type: "number", minimum: 0 },
+    maxBuyGbpEach: { type: "number", minimum: 0 },
+    notes: { type: "string" }
+  },
+  required: [
+    "partNumber", "identification", "quantity", "realisticSaleGbpEach",
+    "tradeValueGbpEach", "maxBuyGbpEach", "notes"
+  ]
+};
+
+const dealSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    summary: { type: "string" },
+    recommendation: {
+      type: "string",
+      enum: ["buy", "consignment", "broker", "more-info", "pass"]
+    },
+    confidence: { type: "string", enum: ["high", "medium", "low"] },
+    estimatedRetailGbp: { type: "number", minimum: 0 },
+    estimatedTradeGbp: { type: "number", minimum: 0 },
+    maxCashBuyGbp: { type: "number", minimum: 0 },
+    suggestedConsignmentAskGbp: { type: "number", minimum: 0 },
+    items: { type: "array", items: dealItemSchema },
+    risks: { type: "array", items: { type: "string" } },
+    nextSteps: { type: "array", items: { type: "string" } }
+  },
+  required: [
+    "summary", "recommendation", "confidence", "estimatedRetailGbp",
+    "estimatedTradeGbp", "maxCashBuyGbp", "suggestedConsignmentAskGbp",
+    "items", "risks", "nextSteps"
+  ]
+};
 
 function configFor(kind) {
   if (kind === "listing") {
     return {
       name: "AO Listing Agent",
       instructions: listingInstructions,
-      reasoning: { effort: "medium", summary: "none" },
+      schema: listingSchema,
     };
   }
   return {
     name: "AO Deal Analyst",
     instructions: dealInstructions,
-    reasoning: { effort: "medium", summary: "none" },
+    schema: dealSchema,
   };
 }
 
@@ -187,7 +219,7 @@ async function startAgent(request, response) {
 
   const input = body.input && typeof body.input === "object" ? body.input : {};
   const cfg = configFor(kind);
-  const task = `Automation Outlet task input:\n${JSON.stringify(input, null, 2)}\n\nComplete the task and return only the requested JSON object.`;
+  const task = `Automation Outlet task input:\n${JSON.stringify(input, null, 2)}\n\nComplete the task using the supplied output schema.`;
 
   const session = await openai("/agents/sessions", {
     method: "POST",
@@ -197,10 +229,18 @@ async function startAgent(request, response) {
         model: "gpt-5.6-terra",
         name: cfg.name,
         instructions: cfg.instructions,
-        tools: [{ type: "web_search" }],
+        tools: [{
+          type: "web_search",
+          mode: "live",
+          context_size: "medium",
+          location: { country: "GB", timezone: "Europe/London" }
+        }],
         multi_agent: { enabled: false, max_concurrent_subagents: 1 },
-        reasoning: cfg.reasoning,
-        text: { verbosity: "low" }
+        reasoning: { effort: "medium" },
+        text: {
+          verbosity: "low",
+          format: { type: "json_schema", schema: cfg.schema }
+        }
       },
       input: task,
       metadata: {
