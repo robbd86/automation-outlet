@@ -143,33 +143,35 @@ function listHtml(items) {
 
 function safeExternalUrl(value) {
   try {
-    const url = new URL(String(value || \"\"));
-    return url.protocol === \"https:\" || url.protocol === \"http:\" ? url.href : \"\";
+    const url = new URL(String(value || ""));
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
   } catch {
-    return \"\";
+    return "";
   }
 }
 
 function marketEvidenceHtml(items) {
-  if (!Array.isArray(items) || !items.length) return \"<p class='small'>No strong comparable links returned.</p>\";
+  if (!Array.isArray(items) || !items.length) {
+    return "<p class='small'>No strong comparable links returned.</p>";
+  }
 
   return items.slice(0, 4).map((item) => {
     const url = safeExternalUrl(item.url);
-    const source = escapeHtml(item.source || \"Source\");
-    const condition = escapeHtml(item.condition || \"\");
-    const type = escapeHtml(item.evidenceType || \"\");
-    const warranty = escapeHtml(item.warrantyService || \"No service note\");
+    const source = escapeHtml(item.source || "Source");
+    const condition = escapeHtml(item.condition || "");
+    const type = escapeHtml(item.evidenceType || "");
+    const warranty = escapeHtml(item.warrantyService || "No service note");
     const price = gbp.format(Number(item.priceGbp || 0));
     const link = url
-      ? '<a href=\"' + escapeHtml(url) + '\" target=\"_blank\" rel=\"noopener noreferrer\">Open source</a>'
-      : '<span class=\"small\">No link</span>';
+      ? '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">Open source</a>'
+      : '<span class="small">No link</span>';
 
-    return '<div class=\"evidence-item\">' +
+    return '<div class="evidence-item">' +
       '<p><strong>' + source + ' · ' + price + '</strong></p>' +
-      '<p class=\"small\">' + condition + ' · ' + type + '</p>' +
-      '<p class=\"small\">' + warranty + ' · ' + link + '</p>' +
+      '<p class="small">' + condition + ' · ' + type + '</p>' +
+      '<p class="small">' + warranty + ' · ' + link + '</p>' +
       '</div>';
-  }).join(\"\");
+  }).join("");
 }
 
 function renderListing(r, usage) {
