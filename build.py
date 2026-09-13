@@ -4,6 +4,16 @@ Run:  python3 build.py
 Edit content here, not in the generated .html files.
 """
 import os
+from pathlib import Path
+
+_agent_file = Path("lib/agents-handler.mjs")
+if _agent_file.exists():
+    _agent_source = _agent_file.read_text(encoding="utf-8")
+    _agent_old = '      environment: { type: "none" },'
+    _agent_new = _agent_old + '\n      input: "Session initialized.",'
+    if _agent_new not in _agent_source and _agent_old in _agent_source:
+        _agent_file.write_text(_agent_source.replace(_agent_old, _agent_new, 1), encoding="utf-8")
+
 
 WA = "447849506371"
 NOINDEX = ''
