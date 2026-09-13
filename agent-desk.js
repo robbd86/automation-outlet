@@ -209,7 +209,7 @@ async function buildBrandedHero(heroIndex) {
   ctx.font = "700 54px Arial, sans-serif";
   ctx.fillText(part.slice(0, 38), 105, 1335);
 
-  const badges = ["UK STOCK", "FAST DISPATCH", "INDUSTRIAL AUTOMATION"];
+  const badges = ["AO LISTING", "FAST RESPONSE", "INDUSTRIAL AUTOMATION"];
   ctx.font = "700 29px Arial, sans-serif";
   badges.forEach((label, i) => {
     const x = 105 + i * 475;
@@ -303,8 +303,16 @@ async function clearPhotos() {
 }
 
 async function resetListingForNext() {
+  const previousCondition = el("listingCondition").value;
+  const keepCondition = Boolean(el("keepCondition")?.checked);
+  const autoDraft = Boolean(el("photoAutoDraft")?.checked);
+
   el("listingForm").reset();
   el("listingQty").value = "1";
+  if (el("keepCondition")) el("keepCondition").checked = keepCondition;
+  if (el("photoAutoDraft")) el("photoAutoDraft").checked = autoDraft;
+  if (keepCondition) el("listingCondition").value = previousCondition;
+
   await clearPhotos();
   lastKind = "";
   lastResult = null;
@@ -509,7 +517,7 @@ function renderListing(r, usage, model, cache, cacheAgeHours) {
     <div class="result-section"><h3>Market evidence</h3>${evidence}</div>
     <div class="result-section"><h3>Checks before publishing</h3>${checks}</div>
     <div class="result-section"><h3>SEO keywords</h3><p class="small">${seo || "—"}</p></div>
-    <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="saveNext" type="button">Save draft & next item</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
+    <div class="actions"><button class="btn" id="sendToStock" type="button">Save as website draft</button><button class="btn secondary" id="saveNext" type="button">Save draft & next item</button><button class="btn secondary" id="copyEbayTitle" type="button">Copy eBay title</button><button class="btn secondary" id="copyDescription" type="button">Copy description</button></div>
     <p class="small">Saving creates a hidden Stock Manager draft only. It will not publish until you review and activate it.<br>${escapeHtml(usageSummary(usage, model, cache, cacheAgeHours))}</p>
   `;
 }
@@ -540,6 +548,10 @@ function renderResult(kind, result, usage, model, cache, cacheAgeHours) {
   if (kind === "listing") {
     el("sendToStock").addEventListener("click", () => saveListingDraft(false));
     el("saveNext").addEventListener("click", () => saveListingDraft(true));
+    el("copyEbayTitle").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(lastResult?.ebayTitle || "");
+      el("copyEbayTitle").textContent = "Copied";
+    });
     el("copyDescription").addEventListener("click", async () => {
       await navigator.clipboard.writeText(lastResult?.description || "");
       el("copyDescription").textContent = "Copied";
@@ -594,7 +606,7 @@ async function saveListingDraft(moveNext = false) {
     }
   } catch (error) {
     button.disabled = false;
-    button.textContent = "Save as website draft";
+    button.textContent = moveNext ? "Save draft & next item" : "Save as website draft";
     alert(error.message);
   }
 }
@@ -623,16 +635,33 @@ el("unlockForm").addEventListener("submit", async (event) => {
   }
 });
 
-el("listingForm").addEventListener("submit", (event) => {
-  event.preventDefault();
+async function runListingFromForm() {
+  const partNumber = el("listingPart").value.trim();
+  const condition = el("listingCondition").value;
+
+  if (!partNumber) {
+    setStatus("listingStatus", "Add a part number or review a clear label photo first.", true);
+    return false;
+  }
+  if (!condition) {
+    setStatus("listingStatus", "Choose the item condition before drafting.", true);
+    return false;
+  }
+
   const photoNotes = photoNotesForListing();
   const userNotes = el("listingNotes").value.trim();
-  runAgent("listing", {
-    partNumber: el("listingPart").value.trim(),
-    condition: el("listingCondition").value,
+  await runAgent("listing", {
+    partNumber,
+    condition,
     quantity: Number(el("listingQty").value || 1),
     notes: [userNotes, photoNotes].filter(Boolean).join("\n\n")
   }, "listingRun", "listingStatus");
+  return true;
+}
+
+el("listingForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await runListingFromForm();
 });
 
 
@@ -674,7 +703,22 @@ el("photoAnalyse").addEventListener("click", async () => {
     photoReviewResult = data.review;
     await renderPhotoReview();
     const usage = photoUsageSummary(data.usage);
-    setStatus("photoStatus", "Photo review complete. Hero image prepared automatically." + (usage ? " · " + usage : ""));
+    const usageText = usage ? " · " + usage : "";
+    const partNumber = el("listingPart").value.trim();
+    const condition = el("listingCondition").value;
+
+    if (el("photoAutoDraft")?.checked) {
+      if (!partNumber) {
+        setStatus("photoStatus", "Photo review complete, but the part number was not clear. Enter it manually." + usageText, true);
+      } else if (!condition) {
+        setStatus("photoStatus", "Photo review complete. Choose a condition to draft the listing." + usageText);
+      } else {
+        setStatus("photoStatus", "Photo review complete. Starting listing automatically…" + usageText);
+        await runListingFromForm();
+      }
+    } else {
+      setStatus("photoStatus", "Photo review complete. Hero image prepared automatically." + usageText);
+    }
   } catch (error) {
     setStatus("photoStatus", error.message, true);
   } finally {
