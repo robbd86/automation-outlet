@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "buildCommand": "python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 release.py && python3 patch_conversion.py && python3 patch_seo.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py",
+  "buildCommand": "node -e \"const fs=require('fs');const p='lib/agents-handler.mjs';let s=fs.readFileSync(p,'utf8');s=s.replace('      environment: { type: \\\\\"none\\\\\" },','      environment: { type: \\\\\"none\\\\\" },\\\\n      input: \\\\\"Initialize this session and wait for the next user message.\\\\\",');fs.writeFileSync(p,s)\" && python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 release.py && python3 patch_conversion.py && python3 patch_seo.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py",
   "outputDirectory": ".",
   "rewrites": [
     {
