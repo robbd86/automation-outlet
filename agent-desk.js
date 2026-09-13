@@ -115,7 +115,7 @@ function loadBrowserImage(src) {
 async function compressPhoto(file) {
   const src = await readFileDataUrl(file);
   const image = await loadBrowserImage(src);
-  const max = 1400;
+  const max = 1200;
   const scale = Math.min(1, max / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
   const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
   const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
@@ -128,7 +128,7 @@ async function compressPhoto(file) {
   ctx.drawImage(image, 0, 0, width, height);
   return {
     name: file.name,
-    dataUrl: canvas.toDataURL("image/jpeg", 0.78),
+    dataUrl: canvas.toDataURL("image/jpeg", 0.72),
     width,
     height,
   };
@@ -627,7 +627,7 @@ el("listingForm").addEventListener("submit", (event) => {
 
 
 el("listingPhotos").addEventListener("change", async (event) => {
-  const files = Array.from(event.target.files || []).slice(0, 12);
+  const files = Array.from(event.target.files || []).slice(0, 8);
   if (!files.length) return clearPhotos();
   setStatus("photoStatus", "Preparing " + files.length + " photo" + (files.length === 1 ? "" : "s") + "…");
   el("photoAnalyse").disabled = true;
