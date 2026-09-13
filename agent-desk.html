@@ -79,12 +79,13 @@ textarea{min-height:120px;resize:vertical}.btn{border:0;border-radius:10px;backg
       <form id="listingForm">
         <h2>Listing Agent</h2>
         <p>Give it the basics. It researches the part, drafts the listing and recommends a realistic price.</p>
-        <div class="field"><label for="listingPart">Part number</label><input id="listingPart" placeholder="6ES7 315-2EH14-0AB0" required></div>
+        <div class="field"><label for="listingPart">Part number <span class="small">(optional if the label photo is clear)</span></label><input id="listingPart" placeholder="Leave blank and let Photo Agent read it"></div>
         <div class="row">
           <div class="field"><label for="listingCondition">Condition</label>
             <select id="listingCondition" required>
               <option value="">Select condition</option><option>New sealed</option><option>New opened box</option><option>New without box</option><option>Used - tested working</option><option>Used - powers up</option><option>Used - untested</option><option>For parts or repair</option>
             </select>
+            <label class="small" style="display:flex;gap:8px;align-items:center"><input id="keepCondition" type="checkbox" checked style="width:auto"> Keep this condition for the next item</label>
           </div>
           <div class="field"><label for="listingQty">Quantity</label><input id="listingQty" type="number" min="1" max="9999" value="1" required></div>
         </div>
@@ -100,6 +101,7 @@ textarea{min-height:120px;resize:vertical}.btn{border:0;border-radius:10px;backg
             <button class="btn secondary" id="photoAnalyse" type="button" disabled>Review photos</button>
             <button class="btn secondary" id="photoClear" type="button" disabled>Clear photos</button>
           </div>
+          <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="photoAutoDraft" type="checkbox" checked style="width:auto"> Automatically research & draft once photos are reviewed</label>
           <div id="photoStatus" class="status"></div>
           <div id="photoReview" class="photo-review hidden"></div>
         </div>
