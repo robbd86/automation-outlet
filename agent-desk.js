@@ -15,18 +15,31 @@ function setStatus(id, text, error = false) {
 }
 
 async function api(method = "GET", body = null, query = "") {
-  const response = await fetch(API + query, {
-    method,
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      "x-deal-desk-key": managerKey,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), method === "POST" ? 45000 : 20000);
+
+  try {
+    const response = await fetch(API + query, {
+      method,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "x-deal-desk-key": managerKey,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Request failed");
+    return data;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Agent status request timed out. Please retry.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function saveStockDraft(product) {
@@ -62,16 +75,22 @@ function showLock() {
 }
 
 async function poll(sessionId, statusId) {
+  const startedAt = Date.now();
+
   for (let attempt = 0; attempt < 90; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 900 : 2200));
     const data = await api("GET", null, "?sessionId=" + encodeURIComponent(sessionId));
+
     if (data.status === "idle" && data.result) return data;
     if (data.status === "failed") throw new Error(data.error || "Agent run failed");
     if (data.status === "requires_action") throw new Error("Agent needs an unsupported action. Please retry.");
-    const suffix = data.status === "in_progress" ? "Researching and drafting…" : "Working…";
-    setStatus(statusId, suffix);
+
+    const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    const turn = data.turnStatus ? " · " + data.turnStatus.replaceAll("_", " ") : "";
+    setStatus(statusId, "Researching and drafting… " + seconds + "s" + turn);
   }
-  throw new Error("Agent run took too long. Try again.");
+
+  throw new Error("Agent run exceeded about 3 minutes. It may still be processing at OpenAI; wait a minute before retrying to avoid duplicate API spend.");
 }
 
 function isTransientAgentError(error) {
