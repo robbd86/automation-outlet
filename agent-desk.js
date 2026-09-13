@@ -425,6 +425,16 @@ function marketEvidenceHtml(items) {
   }).join("");
 }
 
+function photoUsageSummary(usage) {
+  const input = Number(usage?.input_tokens || 0);
+  const output = Number(usage?.output_tokens || 0);
+  const total = Number(usage?.total_tokens || (input + output) || 0);
+  if (!total) return "";
+  const dollars = (input * 0.20 + output * 1.20) / 1000000;
+  return total.toLocaleString("en-GB") + " tokens · est. model cost ≈ $" +
+    dollars.toFixed(dollars < 0.01 ? 4 : 3);
+}
+
 function usageSummary(usage, model, cache, cacheAgeHours) {
   const input = Number(usage?.input_tokens || 0);
   const output = Number(usage?.output_tokens || 0);
@@ -663,7 +673,8 @@ el("photoAnalyse").addEventListener("click", async () => {
     });
     photoReviewResult = data.review;
     await renderPhotoReview();
-    setStatus("photoStatus", "Photo review complete. Hero image prepared automatically.");
+    const usage = photoUsageSummary(data.usage);
+    setStatus("photoStatus", "Photo review complete. Hero image prepared automatically." + (usage ? " · " + usage : ""));
   } catch (error) {
     setStatus("photoStatus", error.message, true);
   } finally {
