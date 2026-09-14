@@ -21,7 +21,6 @@ function paidSession() {
     currency: "gbp",
     metadata: {
       ao_environment: "live",
-      ao_commissioning: "true",
       ao_reservation_id: "aor_live_test",
       ao_stock_action: "reserved",
       ao_order_status: "payment_pending",
@@ -101,14 +100,14 @@ test("live webhook rejects an invalid live signature", async () => {
   assert.equal(result.code, 400);
 });
 
-test("paid live commissioning checkout commits stock, creates the private order and acknowledges Stripe", async () => {
+test("paid live customer checkout commits stock, creates the private order and acknowledges Stripe", async () => {
   const reserve = {
     schema: 1,
     kind: "reserve",
     reservationId: "aor_live_test",
     createdAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 600000).toISOString(),
-    items: [{ stockId: "test-1-563b", partNumber: "TEST £1", quantity: 1 }],
+    items: [{ stockId: "stock-1", partNumber: "6ES7-TEST", quantity: 1 }],
   };
   const comments = [{
     id: 10,
@@ -149,11 +148,11 @@ test("paid live commissioning checkout commits stock, creates the private order 
         ...stored,
         line_items: {
           data: [{
-            description: "Automation Outlet TEST £1",
+            description: "Siemens 6ES7-TEST",
             quantity: 1,
-            amount_total: 100,
+            amount_total: 1500,
             currency: "gbp",
-            price: { product: { metadata: { part_number: "TEST £1", ao_stock_id: "test-1-563b" } } },
+            price: { product: { metadata: { part_number: "6ES7-TEST", ao_stock_id: "stock-1" } } },
           }],
         },
       });
