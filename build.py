@@ -227,8 +227,8 @@ TRUST = '''<section style="padding:2.4rem 0">
 home_body = (
     TICKER
     + hero("Industrial Automation Solutions &middot; UK Wide",
-           "Cash paid for <em>surplus PLCs, HMIs, drives</em> &amp; control panels",
-           "We buy and sell new, used and surplus industrial automation equipment across the UK &mdash; from a single item to a full plant takeout. Engineer-run, honestly priced, collected free.",
+           "Turning <em>Surplus</em> into Solutions",
+           "<strong>Cash paid for surplus PLCs, HMIs, drives &amp; control panels.</strong> We buy and sell new, used and surplus industrial automation equipment across the UK &mdash; from a single item to a full plant takeout. Engineer-run, honestly priced, collected free.",
            [("Sell your surplus", "/sell-surplus.html"), ("Browse stock", "/buy-stock.html")],
            '''<form action="/buy-stock.html#stock" method="get" role="search" style="margin-top:1rem"><label for="homePartSearch">Looking for a part?</label><div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem"><input id="homePartSearch" name="q" type="search" placeholder="Enter a part number or description" style="flex:1;min-width:0;max-width:30rem" required><button class="btn" type="submit">Search stock</button></div></form>''')
     + cards([
