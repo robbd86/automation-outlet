@@ -56,3 +56,26 @@ test("partial refund leaves stock unchanged and flags order",async()=>{
   assert.equal(m.stored.metadata.ao_order_status,"partially_refunded");assert.equal(m.stored.metadata.ao_stock_action,"unchanged_partial_refund");
   assert.match(m.issue.title,/^PARTIAL REFUND AO ORDER/);assert.equal(m.issue.state,"open");
 });
+
+
+test("expired checkout releases an outstanding reservation",async()=>{
+  const evt={id:"evt_expired",type:"checkout.session.expired",livemode:true,data:{object:{id:"cs_live_expired123",object:"checkout.session",livemode:true,mode:"payment",metadata:{ao_environment:"live",ao_reservation_id:"aor_expired123",ao_stock_action:"reserved",ao_order_status:"payment_pending"}}}};
+  const items=[{stockId:"stock-2",partNumber:"EXPIRED-TEST",quantity:1}];
+  const reserve={schema:1,kind:"reserve",reservationId:"aor_expired123",createdAt:new Date(Date.now()-3600000).toISOString(),expiresAt:new Date(Date.now()-1000).toISOString(),items};
+  const stored=evt.data.object;let releases=0;
+  global.fetch=async(url,opt={})=>{
+    const u=String(url);
+    if(u.includes("/issues/1/comments")){
+      if(opt.method==="POST"){const p=JSON.parse(opt.body);if(/inventory release/.test(p.body))releases++;return Response.json({id:31,body:p.body},{status:201});}
+      return Response.json([marker(reserve)]);
+    }
+    if(u.endsWith("/v1/checkout/sessions/cs_live_expired123")){
+      if(opt.method==="POST"){for(const[k,v]of new URLSearchParams(opt.body)){const m=k.match(/^metadata\[(.+)\]$/);if(m)stored.metadata[m[1]]=v;}}
+      return Response.json(stored);
+    }
+    throw new Error("Unexpected "+u);
+  };
+  const r=await invoke(evt);
+  assert.equal(r.code,200);assert.equal(r.body.stockReleased,true);assert.equal(releases,1);
+  assert.equal(stored.metadata.ao_order_status,"expired");assert.equal(stored.metadata.ao_stock_action,"released");
+});
