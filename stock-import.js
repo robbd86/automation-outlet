@@ -907,5 +907,32 @@
     preview.replaceChildren();
     actions.classList.add("hidden");
     setImportStatus("");
+    setActionProgress("");
+    clearDraft();
   });
+
+  (async () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DRAFT_STORE) || "null");
+      const freshEnough = saved?.savedAt && Date.now() - Number(saved.savedAt) < 7 * 24 * 60 * 60 * 1000;
+      if (!freshEnough || !Array.isArray(saved?.rows) || !saved.rows.length) {
+        if (saved) clearDraft();
+        return;
+      }
+      rows = saved.rows;
+      const currentProducts = await adminProducts().catch(() => null);
+      if (currentProducts) {
+        rows.forEach((item) => {
+          item.duplicate = Boolean(existingMatch(item, currentProducts));
+          if (item.duplicate) item.selected = false;
+        });
+      }
+      renderPreview();
+      const message = "Recovered your unfinished bulk-import draft. Your previous edits are still here.";
+      setImportStatus(message);
+      setActionProgress(message);
+    } catch {
+      clearDraft();
+    }
+  })();
 })();
