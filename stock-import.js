@@ -13,30 +13,49 @@
     .ebay-file{max-width:340px}
     .ebay-import-summary{color:var(--grey);font-size:.88rem;margin-top:.5rem}
     .ebay-import-status{font-weight:600;color:var(--blue-bright);min-height:1.35em;margin-top:.75rem}
-    .ebay-preview{display:grid;gap:.65rem;margin-top:1rem}
-    .ebay-row{display:grid;grid-template-columns:auto minmax(170px,1.25fr) minmax(210px,1.15fr) minmax(120px,.85fr) minmax(110px,.72fr) minmax(120px,.82fr) 92px 72px minmax(190px,1fr);gap:.55rem;align-items:center;border:1px solid var(--line);border-radius:10px;padding:.7rem;background:var(--navy-deep)}
-    .ebay-row.head{background:transparent;border:0;padding:.15rem .7rem;color:var(--grey);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
-    .ebay-row input,.ebay-row select{min-width:0;padding:.5rem .55rem;font-size:.82rem}
-    .ebay-row input[type="checkbox"]{width:auto}
-    .ebay-image-cell{display:grid;grid-template-columns:64px minmax(135px,1fr);gap:.45rem;align-items:center}
-    .ebay-thumb{width:64px;height:52px;border-radius:7px;background:#fff;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;color:#66758a;font-size:.65rem;text-align:center}
+    .ebay-preview{display:grid;gap:.75rem;margin-top:1rem}
+    .ebay-row{display:grid;grid-template-columns:58px minmax(0,1fr);gap:.75rem;align-items:start;border:1px solid var(--line);border-radius:12px;padding:.85rem;background:var(--navy-deep)}
+    .ebay-pick-wrap{display:grid;justify-items:center;gap:.28rem;padding-top:.1rem;color:var(--grey);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+    .ebay-pick-wrap input{width:20px!important;height:20px;min-width:20px;padding:0!important;cursor:pointer;accent-color:#2b7fff}
+    .ebay-pick-wrap input:disabled{cursor:not-allowed;opacity:.45}
+    .ebay-row-main{min-width:0}
+    .ebay-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid rgba(77,148,255,.12)}
+    .ebay-title{font-size:.95rem;font-weight:700;line-height:1.25}
+    .ebay-sub{font:500 .72rem 'IBM Plex Mono';color:var(--blue-bright);margin-top:.2rem}
+    .ebay-dup{flex:none;color:#ffcf7d;font-size:.72rem;border:1px solid rgba(255,207,125,.35);border-radius:999px;padding:.22rem .5rem;white-space:nowrap}
+    .ebay-row-body{display:grid;grid-template-columns:minmax(210px,250px) minmax(0,1fr);gap:.75rem;align-items:start}
+    .ebay-image-cell{display:grid;grid-template-columns:70px minmax(0,1fr);gap:.5rem;align-items:start}
+    .ebay-thumb{width:70px;height:60px;border-radius:8px;background:#fff;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;color:#66758a;font-size:.65rem;text-align:center}
     .ebay-thumb img{width:100%;height:100%;object-fit:contain;display:block}
-    .ebay-image-tools{display:grid;gap:.32rem;min-width:0}
+    .ebay-image-tools{display:grid;gap:.34rem;min-width:0}
     .ebay-image-tools input[type="url"]{width:100%}
     .ebay-upload-label{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:7px;padding:.42rem .55rem;cursor:pointer;font:600 .76rem 'Barlow';color:var(--white)}
     .ebay-upload-label:hover{border-color:var(--blue-bright)}
     .ebay-upload-label input{display:none}
     .ebay-upload-state{min-height:1em;font-size:.67rem;color:var(--grey);line-height:1.2}
-    .ebay-title{font-size:.87rem;font-weight:600;line-height:1.25}
-    .ebay-sub{font:500 .72rem 'IBM Plex Mono';color:var(--blue-bright);margin-top:.2rem}
-    .ebay-dup{color:#ffcf7d;font-size:.7rem;margin-top:.15rem}
+    .ebay-fields{display:grid;grid-template-columns:minmax(130px,1.1fr) minmax(110px,.9fr) minmax(130px,1fr) 92px 70px minmax(185px,1.25fr);gap:.5rem}
+    .ebay-field{min-width:0}
+    .ebay-field label{display:block;margin:0 0 .25rem;color:var(--grey);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
+    .ebay-field input,.ebay-field select{width:100%;min-width:0;padding:.5rem .55rem;font-size:.8rem}
     .ebay-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
     .ebay-actions .btn{font-size:.9rem;padding:.65rem 1rem}
     .ebay-select-label{display:flex;gap:.45rem;align-items:center;color:var(--grey);font-size:.84rem}
     .ebay-select-label input{width:auto}
-    @media(max-width:1000px){
-      .ebay-preview{overflow-x:auto}
-      .ebay-row{min-width:1420px}
+    @media(max-width:1100px){
+      .ebay-row-body{grid-template-columns:210px minmax(0,1fr)}
+      .ebay-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media(max-width:760px){
+      .ebay-row{grid-template-columns:48px minmax(0,1fr);padding:.7rem;gap:.55rem}
+      .ebay-row-top{display:block}
+      .ebay-dup{display:inline-block;margin-top:.45rem}
+      .ebay-row-body{grid-template-columns:1fr}
+      .ebay-image-cell{grid-template-columns:64px minmax(0,1fr)}
+      .ebay-thumb{width:64px;height:56px}
+      .ebay-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:520px){
+      .ebay-fields{grid-template-columns:1fr}
     }
   `;
   document.head.appendChild(style);
@@ -515,17 +534,21 @@
     return wrap;
   }
 
+  function makeField(labelText, control) {
+    const field = document.createElement("div");
+    field.className = "ebay-field";
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    field.append(label, control);
+    return field;
+  }
+
   function renderPreview() {
     preview.replaceChildren();
     if (!rows.length) {
       actions.classList.add("hidden");
       return;
     }
-
-    const head = document.createElement("div");
-    head.className = "ebay-row head";
-    head.innerHTML = "<span></span><span>eBay listing</span><span>Image</span><span>Part number</span><span>Brand</span><span>Category</span><span>Price</span><span>Qty</span><span>Delivery / checkout</span>";
-    preview.appendChild(head);
 
     const categories = [
       "PLC CPU", "PLC I/O module", "Communication module", "HMI",
@@ -543,13 +566,23 @@
       const row = document.createElement("div");
       row.className = "ebay-row";
 
+      const pickWrap = document.createElement("label");
+      pickWrap.className = "ebay-pick-wrap";
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.className = "ebay-pick";
       checkbox.checked = !item.duplicate;
       checkbox.disabled = item.duplicate;
       checkbox.dataset.index = String(index);
+      const pickText = document.createElement("span");
+      pickText.textContent = item.duplicate ? "Skip" : "Include";
+      pickWrap.append(checkbox, pickText);
 
+      const main = document.createElement("div");
+      main.className = "ebay-row-main";
+
+      const top = document.createElement("div");
+      top.className = "ebay-row-top";
       const titleWrap = document.createElement("div");
       const title = document.createElement("div");
       title.className = "ebay-title";
@@ -558,11 +591,12 @@
       sub.className = "ebay-sub";
       sub.textContent = item.itemNumber ? `eBay ${item.itemNumber}` : "No item number";
       titleWrap.append(title, sub);
+      top.appendChild(titleWrap);
       if (item.duplicate) {
         const dup = document.createElement("div");
         dup.className = "ebay-dup";
         dup.textContent = "Already on website — skipped";
-        titleWrap.appendChild(dup);
+        top.appendChild(dup);
       }
 
       const imageCell = makeImageCell(item);
@@ -583,7 +617,22 @@
       const delivery = makeDeliverySelect(item.deliveryMode || "quote", "ebay-delivery");
       delivery.dataset.index = String(index);
 
-      row.append(checkbox, titleWrap, imageCell, part, brand, category, price, qty, delivery);
+      const fields = document.createElement("div");
+      fields.className = "ebay-fields";
+      fields.append(
+        makeField("Part number", part),
+        makeField("Brand", brand),
+        makeField("Category", category),
+        makeField("Price (£)", price),
+        makeField("Qty", qty),
+        makeField("Delivery / checkout", delivery)
+      );
+
+      const body = document.createElement("div");
+      body.className = "ebay-row-body";
+      body.append(imageCell, fields);
+      main.append(top, body);
+      row.append(pickWrap, main);
       preview.appendChild(row);
     });
 
