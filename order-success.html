@@ -25,10 +25,11 @@
 </section></div></main>
 <script>
 const p=new URLSearchParams(location.search),id=p.get("session_id");
-const liveTest=p.get("live_test")==="1"||String(id||"").startsWith("cs_live_");
+const isLive=String(id||"").startsWith("cs_live_");
+const commissioning=p.get("live_test")==="1";
 const badge=document.getElementById("badge"),heading=document.getElementById("heading"),message=document.getElementById("message"),detail=document.getElementById("detail"),session=document.getElementById("session"),backLink=document.getElementById("backLink");
-if(id) session.textContent=(liveTest?"Live":"Sandbox")+" session: "+id;
-if(liveTest){badge.textContent="Live Stripe return";backLink.href="/cart.html?stripe_live_test=1";backLink.textContent="Back to commissioning basket";}
+if(id) session.textContent=(isLive?"Live":"Sandbox")+" session: "+id;
+if(isLive){badge.textContent="Live Stripe return";backLink.href=commissioning?"/cart.html?stripe_live_test=1":"/cart.html";backLink.textContent=commissioning?"Back to commissioning basket":"Back to basket";}
 const sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 async function verify(){
  const response=await fetch("/api/verify-checkout-session?session_id="+encodeURIComponent(id),{headers:{Accept:"application/json"},cache:"no-store"});
@@ -42,20 +43,21 @@ async function verify(){
   let data=await verify();
   for(let attempt=0;attempt<4&&!data.webhookAcknowledged;attempt+=1){await sleep(900);data=await verify();}
   const amount=new Intl.NumberFormat("en-GB",{style:"currency",currency:String(data.currency||"GBP").toUpperCase()}).format((Number(data.amountTotal)||0)/100);
-  const isLive=Boolean(data.live);
-  heading.textContent=isLive?"Live payment completed":"Test payment completed";
-  message.textContent=isLive
-   ?"Stripe has confirmed the real commissioning payment as paid. Order total: "+amount+"."
+  const verifiedLive=Boolean(data.live);
+  const verifiedCommissioning=Boolean(data.commissioning);
+  heading.textContent=verifiedLive?(verifiedCommissioning?"Live payment completed":"Payment completed"):"Test payment completed";
+  message.textContent=verifiedLive
+   ?(verifiedCommissioning?"Stripe has confirmed the real commissioning payment as paid. Order total: "+amount+".":"Stripe has confirmed your payment as paid. Order total: "+amount+".")
    :"Stripe has confirmed the sandbox payment as paid. Test order total: "+amount+".";
   if(data.webhookAcknowledged){
    badge.textContent="✓ Payment + webhook verified";
    detail.textContent=data.stockAction==="reduced"
-    ?(isLive?"The signed live Stripe webhook was acknowledged and the inventory reservation is committed to the order.":"The signed Stripe webhook was acknowledged and the sandbox inventory reservation is now committed to the order.")
+    ?(verifiedLive?(verifiedCommissioning?"The signed live Stripe webhook was acknowledged and the inventory reservation is committed to the order.":"Your payment is verified, your stock is reserved to this order, and Automation Outlet has recorded it for dispatch."):"The signed Stripe webhook was acknowledged and the sandbox inventory reservation is now committed to the order.")
     :"The signed Stripe webhook was acknowledged successfully.";
   }else{
    badge.textContent="✓ Stripe payment verified";
-   detail.textContent=isLive
-    ?"The real payment is verified, but the live webhook acknowledgement has not appeared yet. Do not repeat the payment; Stripe can retry the webhook automatically."
+   detail.textContent=verifiedLive
+    ?"Your payment is verified, but the order acknowledgement has not appeared yet. Do not repeat the payment; Stripe can retry the confirmation automatically."
     :"Payment is verified. The webhook acknowledgement has not appeared yet; Stripe can retry it automatically. The inventory reservation remains held until the payment event is processed or the test session expires.";
   }
   try{localStorage.removeItem("aoCartV1");}catch{}
