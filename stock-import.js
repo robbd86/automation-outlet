@@ -1,6 +1,7 @@
 (() => {
   const API = "/api/stock";
   const KEY_STORE = "aoStockManagerKey";
+  const DRAFT_STORE = "aoEbayImportDraftV1";
   const panel = document.getElementById("managerPanel");
   if (!panel || document.getElementById("ebayImportPanel")) return;
 
@@ -37,8 +38,9 @@
     .ebay-field{min-width:0}
     .ebay-field label{display:block;margin:0 0 .25rem;color:var(--grey);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
     .ebay-field input,.ebay-field select{width:100%;min-width:0;padding:.5rem .55rem;font-size:.8rem}
-    .ebay-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+    .ebay-actions{position:sticky;bottom:0;z-index:25;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem;padding:.75rem;background:rgba(8,22,45,.98);border:1px solid var(--line);border-radius:10px;box-shadow:0 -8px 24px rgba(0,0,0,.22)}
     .ebay-actions .btn{font-size:.9rem;padding:.65rem 1rem}
+    .ebay-action-progress{flex:1 1 260px;min-height:1.2em;color:var(--blue-bright);font-size:.82rem;font-weight:600}
     .ebay-select-label{display:flex;gap:.45rem;align-items:center;color:var(--grey);font-size:.84rem}
     .ebay-select-label input{width:auto}
     @media(max-width:1100px){
@@ -86,6 +88,7 @@
         </select>
       </label>
       <button id="applyEbayDelivery" class="mini-btn" type="button">Apply delivery</button>
+      <div id="ebayImportProgress" class="ebay-action-progress" aria-live="polite"></div>
       <button id="importSelectedEbay" class="btn" type="button">Import selected</button>
     </div>
   `;
@@ -102,6 +105,7 @@
   const clearButton = document.getElementById("clearEbayImport");
   const bulkDelivery = document.getElementById("bulkEbayDelivery");
   const applyDelivery = document.getElementById("applyEbayDelivery");
+  const actionProgress = document.getElementById("ebayImportProgress");
 
   let rows = [];
   let pendingUploads = 0;
@@ -109,6 +113,31 @@
   function setImportStatus(message, error = false) {
     status.textContent = message;
     status.style.color = error ? "#ff9d9d" : "var(--blue-bright)";
+  }
+
+  function setActionProgress(message, error = false) {
+    actionProgress.textContent = message;
+    actionProgress.style.color = error ? "#ff9d9d" : "var(--blue-bright)";
+  }
+
+  function saveDraft() {
+    if (!rows.length) return;
+    preview.querySelectorAll(".ebay-pick").forEach((checkbox) => {
+      const item = rows[Number(checkbox.dataset.index)];
+      if (item) item.selected = Boolean(checkbox.checked);
+    });
+    const safeRows = rows.map((item) => {
+      const copy = { ...item };
+      delete copy._index;
+      return copy;
+    });
+    try {
+      localStorage.setItem(DRAFT_STORE, JSON.stringify({ savedAt: Date.now(), rows: safeRows }));
+    } catch {}
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_STORE); } catch {}
   }
 
   function normaliseHeader(value) {
