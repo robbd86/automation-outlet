@@ -8,6 +8,14 @@
       "destination": "/api/deal-desk"
     },
     {
+      "source": "/api/photo-agent",
+      "destination": "/api/deal-desk?photo=1"
+    },
+    {
+      "source": "/listing-image/:filename",
+      "destination": "/api/deal-desk?photoImage=:filename"
+    },
+    {
       "source": "/api/stripe-live-webhook",
       "destination": "/api/stripe-webhook"
     },
