@@ -32,3 +32,18 @@ test("bulk importer keeps per-item include controls visible in the responsive ca
   assert.doesNotMatch(source, /min-width:1420px/);
   assert.doesNotMatch(source, /ebay-preview\{overflow-x:auto\}/);
 });
+
+
+test("bulk import shows live progress and does not overwrite the final result", () => {
+  assert.match(source, /ebayImportProgress/);
+  assert.match(source, /Importing \\${i \\+ 1}\\/\\${selected\\.length}/);
+  assert.match(source, /const finalMessage = failures\\.length/);
+  assert.match(source, /renderPreview\\(\\);[\\s\\S]*setImportStatus\\(finalMessage/);
+});
+
+test("bulk import autosaves and can recover unfinished edits", () => {
+  assert.match(source, /aoEbayImportDraftV1/);
+  assert.match(source, /localStorage\\.setItem\\(DRAFT_STORE/);
+  assert.match(source, /Recovered your unfinished bulk-import draft/);
+  assert.match(source, /clearDraft\\(\\)/);
+});
