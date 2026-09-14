@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { appendInventoryEvent, listInventoryEvents, reservationStates } from "../lib/inventory-ledger.mjs";
-import { createOrFindOrderNotification, orderRepoName } from "../lib/order-notification.mjs";
+import { createOrFindOrderNotification, orderRepoName, updateOrderNotificationRefundStatus } from "../lib/order-notification.mjs";
 
 const MAX_BODY_BYTES = 1024 * 1024;
 
@@ -63,6 +63,165 @@ async function stripeOrderDetail(sessionId, secret) {
   });
   if (!result.ok) throw new Error("stripe_order_detail_failed");
   return result.json();
+}
+
+
+async function stripeSessionByPaymentIntent(paymentIntentId, secret) {
+  const params = new URLSearchParams({ payment_intent: paymentIntentId, limit: "1" });
+  const result = await fetch(`https://api.stripe.com/v1/checkout/sessions?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${secret}` },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!result.ok) throw new Error("stripe_session_lookup_failed");
+  const data = await result.json();
+  return Array.isArray(data?.data) ? data.data[0] || null : null;
+}
+
+async function updateStripeSessionMetadata(sessionId, secret, values, idempotencyKey) {
+  const body = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) body.set(`metadata[${key}]`, String(value));
+  return stripeRequest(sessionId, secret, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: body.toString(),
+  });
+}
+
+async function processExpiredCheckout(event, channel, secret) {
+  const isLive = channel === "live";
+  const environment = isLive ? "live" : "sandbox";
+  const session = event.data?.object;
+  if (session?.object !== "checkout.session" ||
+      Boolean(session.livemode) !== isLive ||
+      session.metadata?.ao_environment !== environment ||
+      session.mode !== "payment") {
+    return json(200, { received: true, ignored: true });
+  }
+
+  const reservationId = String(session.metadata?.ao_reservation_id || "");
+  if (!reservationId) return json(200, { received: true, ignored: true, reason: "no_reservation" });
+
+  try {
+    const states = reservationStates(await listInventoryEvents(), 0);
+    const state = states.get(reservationId);
+    if (state?.kind === "reserve") {
+      await appendInventoryEvent({
+        kind: "release",
+        reservationId,
+        sessionId: session.id,
+        eventId: event.id,
+        items: state.items,
+      });
+    }
+    await updateStripeSessionMetadata(session.id, secret, {
+      ao_stock_action: "released",
+      ao_order_status: "expired",
+    }, `ao-expired-v1-${session.id}`).catch(() => {});
+
+    return json(200, {
+      received: true,
+      expired: true,
+      stockReleased: state?.kind === "reserve",
+    });
+  } catch {
+    return json(503, { error: "Checkout expiry release unavailable; retry delivery." });
+  }
+}
+
+async function processRefundedCharge(event, channel, secret) {
+  const isLive = channel === "live";
+  const environment = isLive ? "live" : "sandbox";
+  const charge = event.data?.object;
+  const paymentIntentId = typeof charge?.payment_intent === "string" ? charge.payment_intent : charge?.payment_intent?.id;
+
+  if (charge?.object !== "charge" || Boolean(charge.livemode) !== isLive || !/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId || ""))) {
+    return json(200, { received: true, ignored: true });
+  }
+
+  try {
+    let session = await stripeSessionByPaymentIntent(paymentIntentId, secret);
+    if (!session ||
+        Boolean(session.livemode) !== isLive ||
+        session.mode !== "payment" ||
+        session.metadata?.ao_environment !== environment) {
+      return json(200, { received: true, ignored: true, reason: "not_ao_checkout" });
+    }
+
+    session = await stripeRequest(session.id, secret);
+    const amount = Math.max(0, Number(charge.amount) || 0);
+    const amountRefunded = Math.max(0, Number(charge.amount_refunded) || 0);
+    const full = Boolean(charge.refunded) || (amount > 0 && amountRefunded >= amount);
+    const previousOrderStatus = String(session.metadata?.ao_order_status || "");
+    const reservationId = String(session.metadata?.ao_reservation_id || "");
+    const dispatched = previousOrderStatus === "dispatched";
+    let restocked = false;
+
+    if (full && reservationId && !dispatched) {
+      const states = reservationStates(await listInventoryEvents());
+      const state = states.get(reservationId);
+      if (state?.kind === "paid") {
+        await appendInventoryEvent({
+          kind: "release",
+          reservationId,
+          sessionId: session.id,
+          eventId: event.id,
+          items: state.items,
+        });
+        restocked = true;
+      } else if (state?.kind === "release") {
+        restocked = true;
+      }
+    }
+
+    let orderIssue = Number(session.metadata?.ao_order_issue || 0) || 0;
+    let orderRepo = String(session.metadata?.ao_order_repo || "") || orderRepoName();
+    if (!orderIssue && reservationId) {
+      const detail = await stripeOrderDetail(session.id, secret);
+      const issue = await createOrFindOrderNotification(detail);
+      orderIssue = Number(issue?.number || 0) || 0;
+      orderRepo = orderRepoName();
+    }
+
+    if (orderIssue) {
+      await updateOrderNotificationRefundStatus(orderIssue, {
+        full,
+        amountRefunded,
+        currency: charge.currency || session.currency || "gbp",
+        restocked,
+        eventId: event.id,
+      }, orderRepo);
+    }
+
+    const orderStatus = full ? "refunded" : "partially_refunded";
+    const stockAction = restocked ? "restocked" : (full ? "refund_review" : "unchanged_partial_refund");
+    const updated = await updateStripeSessionMetadata(session.id, secret, {
+      ao_order_status: orderStatus,
+      ao_stock_action: stockAction,
+      ao_refunded_pence: amountRefunded,
+      ao_refund_event: event.id,
+      ...(orderIssue ? { ao_order_issue: orderIssue, ao_order_repo: orderRepo } : {}),
+    }, `ao-refund-v1-${event.id}`);
+
+    if (updated.metadata?.ao_order_status !== orderStatus ||
+        updated.metadata?.ao_refunded_pence !== String(amountRefunded)) {
+      throw new Error("refund_metadata_not_confirmed");
+    }
+
+    return json(200, {
+      received: true,
+      refunded: true,
+      full,
+      amountRefunded,
+      restocked,
+      requiresStockReview: full && !restocked,
+      orderUpdated: Boolean(orderIssue),
+    });
+  } catch {
+    return json(503, { error: "Refund handling unavailable; retry delivery." });
+  }
 }
 
 async function processPaidCheckout(event, channel, secret) {
@@ -221,10 +380,16 @@ export default {
       return json(400, { error: `Only own-account ${isLive ? "live" : "sandbox"} events are accepted.` });
     }
 
-    if (event.type !== "checkout.session.completed") {
-      return json(200, { received: true, ignored: true });
+    const stripeSecret = isLive ? liveSecret : sandboxSecret;
+    if (event.type === "checkout.session.completed") {
+      return processPaidCheckout(event, channel, stripeSecret);
     }
-
-    return processPaidCheckout(event, channel, isLive ? liveSecret : sandboxSecret);
+    if (event.type === "checkout.session.expired") {
+      return processExpiredCheckout(event, channel, stripeSecret);
+    }
+    if (event.type === "charge.refunded") {
+      return processRefundedCharge(event, channel, stripeSecret);
+    }
+    return json(200, { received: true, ignored: true });
   },
 };
