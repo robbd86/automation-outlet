@@ -38,7 +38,9 @@ test("bulk import shows live progress and does not overwrite the final result", 
   assert.match(source, /ebayImportProgress/);
   assert.ok(source.includes('importButton.textContent = `Importing ${i + 1}/${selected.length}…`;'));
   assert.match(source, /const finalMessage = failures\\.length/);
-  assert.match(source, /renderPreview\\(\\);[\\s\\S]*setImportStatus\\(finalMessage/);
+  const refreshed = source.indexOf("    renderPreview();\\n\\n    const finalMessage");
+  const finalStatus = source.indexOf("    setImportStatus(finalMessage", refreshed);
+  assert.ok(refreshed >= 0 && finalStatus > refreshed);
 });
 
 test("bulk import autosaves and can recover unfinished edits", () => {
