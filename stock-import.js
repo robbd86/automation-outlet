@@ -414,7 +414,17 @@
           context.fillStyle = "#ffffff";
           context.fillRect(0, 0, width, height);
           context.drawImage(image, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.82));
+          let quality = 0.84;
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+          while (dataUrl.length > 900000 && quality > 0.54) {
+            quality -= 0.08;
+            dataUrl = canvas.toDataURL("image/jpeg", quality);
+          }
+          if (dataUrl.length > 1000000) {
+            reject(new Error("Image is still too large after compression. Choose a smaller photo."));
+            return;
+          }
+          resolve(dataUrl);
         };
         image.src = String(reader.result || "");
       };
