@@ -22,3 +22,13 @@ test("bulk imports fail safe while an image upload is still running", () => {
   assert.match(source, /pendingUploads > 0/);
   assert.match(source, /Wait for the current image upload to finish before importing/);
 });
+
+
+test("bulk importer keeps per-item include controls visible in the responsive card layout", () => {
+  assert.match(source, /ebay-pick-wrap/);
+  assert.match(source, /checkbox\.checked = !item\.duplicate/);
+  assert.match(source, /checkbox\.disabled = item\.duplicate/);
+  assert.match(source, /pickText\.textContent = item\.duplicate \? "Skip" : "Include"/);
+  assert.doesNotMatch(source, /min-width:1420px/);
+  assert.doesNotMatch(source, /ebay-preview\{overflow-x:auto\}/);
+});
