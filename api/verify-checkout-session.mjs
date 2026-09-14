@@ -42,10 +42,6 @@ export default async function handler(request, response) {
     if (Boolean(session.livemode) !== isLive || session.metadata?.ao_environment !== environment) {
       return json(response, 502, { error: "Stripe session environment did not match the expected AO checkout." });
     }
-    if (isLive && session.metadata?.ao_commissioning !== "true") {
-      return json(response, 403, { error: "This live session is not an AO commissioning checkout." });
-    }
-
     const paid = session.payment_status === "paid";
     const items = Array.isArray(session.line_items?.data)
       ? session.line_items.data.map((item) => ({
