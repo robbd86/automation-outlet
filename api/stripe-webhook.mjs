@@ -80,9 +80,6 @@ async function processPaidCheckout(event, channel, secret) {
   if (incoming.metadata?.ao_environment !== environment || incoming.mode !== "payment") {
     return json(200, { received: true, ignored: true });
   }
-  if (isLive && incoming.metadata?.ao_commissioning !== "true") {
-    return json(200, { received: true, ignored: true });
-  }
   if (incoming.payment_status !== "paid" || incoming.status !== "complete") {
     return json(200, { received: true, ignored: true, reason: "not_paid" });
   }
@@ -95,8 +92,7 @@ async function processPaidCheckout(event, channel, secret) {
         session.mode !== "payment" ||
         session.status !== "complete" ||
         session.payment_status !== "paid" ||
-        session.metadata?.ao_environment !== environment ||
-        (isLive && session.metadata?.ao_commissioning !== "true")) {
+        session.metadata?.ao_environment !== environment) {
       return json(502, { error: `Could not verify the paid AO ${environment} session.` });
     }
 
