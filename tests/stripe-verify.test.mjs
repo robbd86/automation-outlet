@@ -108,7 +108,7 @@ test("verifies paid live commissioning sessions with the live key", async () => 
   }
 });
 
-test("rejects live sessions that are not AO commissioning sessions", async () => {
+test("verifies normal paid live customer sessions", async () => {
   const oldFetch = global.fetch;
   const oldLiveStripe = process.env.STRIPE_LIVE_SECRET_KEY;
   process.env.STRIPE_LIVE_SECRET_KEY = "sk_live_verify_only";
@@ -121,13 +121,25 @@ test("rejects live sessions that are not AO commissioning sessions", async () =>
         livemode: true,
         payment_status: "paid",
         status: "complete",
-        metadata: { ao_environment: "live" },
-        line_items: { data: [] },
+        amount_total: 2295,
+        currency: "gbp",
+        metadata: {
+          ao_environment: "live",
+          ao_webhook_status: "paid_live_acknowledged_v1",
+          ao_stock_action: "reduced",
+          ao_order_status: "awaiting_dispatch",
+        },
+        line_items: { data: [{ description: "Siemens 6ES7-TEST", quantity: 1, amount_total: 1500, currency: "gbp" }] },
       }),
     });
     const response = responseCapture();
     await verify({ method: "GET", query: { session_id: "cs_live_other" } }, response);
-    assert.equal(response.code, 403);
+    assert.equal(response.code, 200);
+    assert.equal(response.body.paid, true);
+    assert.equal(response.body.live, true);
+    assert.equal(response.body.commissioning, false);
+    assert.equal(response.body.webhookAcknowledged, true);
+    assert.equal(response.body.orderStatus, "awaiting_dispatch");
   } finally {
     global.fetch = oldFetch;
     if (oldLiveStripe === undefined) delete process.env.STRIPE_LIVE_SECRET_KEY; else process.env.STRIPE_LIVE_SECRET_KEY = oldLiveStripe;
