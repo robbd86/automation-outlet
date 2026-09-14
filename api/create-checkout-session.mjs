@@ -39,8 +39,14 @@ export default async function handler(request, response) {
   }
 
   const body = parseBody(request);
-  const liveCommissioning = body.checkoutMode === "live_commissioning";
-  const environment = liveCommissioning ? "live" : "sandbox";
+  const checkoutMode = String(body.checkoutMode || "sandbox");
+  if (!["sandbox", "live", "live_commissioning"].includes(checkoutMode)) {
+    return json(response, 400, { error: "Invalid checkout mode." });
+  }
+  const liveCommissioning = checkoutMode === "live_commissioning";
+  const liveCustomer = checkoutMode === "live";
+  const isLive = liveCommissioning || liveCustomer;
+  const environment = isLive ? "live" : "sandbox";
 
   if (liveCommissioning) {
     const managerKey = process.env.AO_DEAL_DESK_KEY || "";
@@ -50,14 +56,14 @@ export default async function handler(request, response) {
     }
   }
 
-  const secret = liveCommissioning
+  const secret = isLive
     ? (process.env.STRIPE_LIVE_SECRET_KEY || "")
     : (process.env.STRIPE_SECRET_KEY || "");
 
-  if (liveCommissioning && !secret.startsWith("sk_live_")) {
+  if (isLive && !secret.startsWith("sk_live_")) {
     return json(response, 503, { error: "Stripe live checkout is not configured." });
   }
-  if (!liveCommissioning && !secret.startsWith("sk_test_")) {
+  if (!isLive && !secret.startsWith("sk_test_")) {
     return json(response, 503, { error: "Stripe sandbox checkout is not configured." });
   }
 
@@ -153,10 +159,12 @@ export default async function handler(request, response) {
     add(params, "expires_at", Math.floor(expiresAtMs / 1000));
 
     const origin = siteOrigin(request);
-    const successQuery = liveCommissioning ? "live_test=1" : "sandbox=1";
-    const cancelQuery = liveCommissioning ? "stripe_live_test=1" : "stripe_test=1";
-    add(params, "success_url", `${origin}/order-success.html?session_id={CHECKOUT_SESSION_ID}&${successQuery}`);
-    add(params, "cancel_url", `${origin}/cart.html?${cancelQuery}&cancelled=1`);
+    const successSuffix = liveCommissioning ? "&live_test=1" : (!isLive ? "&sandbox=1" : "");
+    const cancelQuery = liveCommissioning
+      ? "stripe_live_test=1&cancelled=1"
+      : (!isLive ? "stripe_test=1&cancelled=1" : "cancelled=1");
+    add(params, "success_url", `${origin}/order-success.html?session_id={CHECKOUT_SESSION_ID}${successSuffix}`);
+    add(params, "cancel_url", `${origin}/cart.html?${cancelQuery}`);
 
     lines.forEach(({ product, quantity, unitAmount }, index) => {
       const prefix = `line_items[${index}]`;
@@ -201,8 +209,8 @@ export default async function handler(request, response) {
     return json(response, 200, {
       url: data.url,
       sessionId: data.id,
-      sandbox: !liveCommissioning,
-      live: liveCommissioning,
+      sandbox: !isLive,
+      live: isLive,
       commissioning: liveCommissioning,
     });
   } catch (error) {

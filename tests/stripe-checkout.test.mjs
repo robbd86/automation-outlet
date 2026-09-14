@@ -178,6 +178,54 @@ test("sandbox checkout blocks products that require a delivery quote", async () 
 });
 
 
+test("public live checkout uses the live key and normal UK delivery rules", async () => {
+  const oldFetch = global.fetch;
+  const oldToken = process.env.AO_GITHUB_TOKEN;
+  const oldLiveStripe = process.env.STRIPE_LIVE_SECRET_KEY;
+  process.env.AO_GITHUB_TOKEN = "github-test";
+  process.env.STRIPE_LIVE_SECRET_KEY = "sk_live_customer_only";
+  let stripeBody = "";
+  let stripeAuth = "";
+  const comments = [];
+
+  try {
+    global.fetch = async (url, options = {}) => {
+      const git = githubMock(url, options, product, comments);
+      if (git) return git;
+      if (String(url).includes("api.stripe.com")) {
+        stripeBody = String(options.body || "");
+        stripeAuth = options.headers.Authorization;
+        return { ok: true, status: 200, json: async () => ({ id: "cs_live_customer", url: "https://checkout.stripe.com/c/pay/cs_live_customer" }) };
+      }
+      throw new Error("Unexpected fetch: " + url);
+    };
+
+    const response = responseCapture();
+    await checkout({
+      method: "POST",
+      body: { checkoutMode: "live", items: [{ id: "siemens-6es7-test", quantity: 1 }] },
+      headers: { host: "www.automation-outlet.co.uk", "x-forwarded-proto": "https" },
+    }, response);
+
+    assert.equal(response.code, 200);
+    assert.equal(response.body.live, true);
+    assert.equal(response.body.sandbox, false);
+    assert.equal(response.body.commissioning, false);
+    assert.equal(stripeAuth, "Bearer sk_live_customer_only");
+    assert.match(stripeBody, /metadata%5Bao_environment%5D=live/);
+    assert.doesNotMatch(stripeBody, /metadata%5Bao_commissioning%5D/);
+    assert.match(stripeBody, /shipping_options%5B0%5D%5Bshipping_rate_data%5D%5Bfixed_amount%5D%5Bamount%5D=795/);
+    assert.match(stripeBody, /success_url=.*order-success.html/);
+    assert.match(stripeBody, /cancel_url=.*cart.html%3Fcancelled%3D1/);
+    assert.equal(comments.length, 1);
+  } finally {
+    global.fetch = oldFetch;
+    if (oldToken === undefined) delete process.env.AO_GITHUB_TOKEN; else process.env.AO_GITHUB_TOKEN = oldToken;
+    if (oldLiveStripe === undefined) delete process.env.STRIPE_LIVE_SECRET_KEY; else process.env.STRIPE_LIVE_SECRET_KEY = oldLiveStripe;
+  }
+});
+
+
 test("live commissioning checkout is manager-locked and charges only the £1 test item", async () => {
   const oldFetch = global.fetch;
   const oldToken = process.env.AO_GITHUB_TOKEN;
