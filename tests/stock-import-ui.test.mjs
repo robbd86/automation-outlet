@@ -38,7 +38,7 @@ test("bulk import shows live progress and does not overwrite the final result", 
   assert.match(source, /ebayImportProgress/);
   assert.ok(source.includes('importButton.textContent = `Importing ${i + 1}/${selected.length}…`;'));
   assert.ok(source.includes("const finalMessage = failures.length"));
-  const refreshed = source.indexOf("    renderPreview();\\n\\n    const finalMessage");
+  const refreshed = source.indexOf("    renderPreview();\n\n    const finalMessage");
   const finalStatus = source.indexOf("    setImportStatus(finalMessage", refreshed);
   assert.ok(refreshed >= 0 && finalStatus > refreshed);
 });
