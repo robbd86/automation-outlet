@@ -845,26 +845,37 @@
 
   importButton.addEventListener("click", async () => {
     if (pendingUploads > 0) {
-      setImportStatus("Wait for the current image upload to finish before importing.", true);
+      const message = "Wait for the current image upload to finish before importing.";
+      setImportStatus(message, true);
+      setActionProgress(message, true);
       return;
     }
     const selected = selectedRows();
     if (!selected.length) {
-      setImportStatus("Select at least one new listing to import.", true);
+      const message = "Select at least one new listing to import.";
+      setImportStatus(message, true);
+      setActionProgress(message, true);
       return;
     }
 
+    saveDraft();
     importButton.disabled = true;
     fileInput.disabled = true;
+    importButton.textContent = `Importing 0/${selected.length}…`;
+    setActionProgress(`Starting import of ${selected.length} selected listing${selected.length === 1 ? "" : "s"}…`);
     let imported = 0;
     const failures = [];
 
     for (let i = 0; i < selected.length; i += 1) {
       const item = selected[i];
-      setImportStatus(`Importing ${i + 1} of ${selected.length}: ${item.partNumber}…`);
+      const progressMessage = `Importing ${i + 1} of ${selected.length}: ${item.partNumber}…`;
+      importButton.textContent = `Importing ${i + 1}/${selected.length}…`;
+      setImportStatus(progressMessage);
+      setActionProgress(progressMessage);
       try {
         await createProduct(item);
         imported += 1;
+        item.selected = false;
       } catch (error) {
         failures.push(`${item.partNumber}: ${error.message}`);
       }
@@ -872,19 +883,22 @@
 
     importButton.disabled = false;
     fileInput.disabled = false;
-
-    if (failures.length) {
-      setImportStatus(`${imported} imported. ${failures.length} failed: ${failures.slice(0, 3).join(" | ")}`, true);
-    } else {
-      setImportStatus(`${imported} listing${imported === 1 ? "" : "s"} imported to the website.`);
-    }
-
     document.getElementById("refreshBtn")?.click();
     const currentProducts = await adminProducts().catch(() => []);
     rows.forEach((item) => {
       item.duplicate = Boolean(existingMatch(item, currentProducts));
+      if (item.duplicate) item.selected = false;
     });
     renderPreview();
+
+    const finalMessage = failures.length
+      ? `${imported} imported successfully. ${failures.length} failed: ${failures.slice(0, 3).join(" | ")}`
+      : `Import complete ✓ ${imported} listing${imported === 1 ? "" : "s"} added to Automation Outlet.`;
+    setImportStatus(finalMessage, failures.length > 0);
+    setActionProgress(finalMessage, failures.length > 0);
+    importButton.textContent = failures.length ? "Retry remaining" : "Import complete ✓";
+    if (failures.length) saveDraft(); else clearDraft();
+    if (!failures.length) setTimeout(() => { importButton.textContent = "Import selected"; }, 5000);
   });
 
   clearButton.addEventListener("click", () => {
