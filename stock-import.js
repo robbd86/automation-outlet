@@ -507,6 +507,7 @@
       item.imageUrl = data.url;
       urlInput.value = data.url;
       setThumb(thumb, data.url);
+      saveDraft();
       state.textContent = "Uploaded ✓";
       state.style.color = "#8fe3b1";
     } finally {
@@ -600,9 +601,13 @@
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.className = "ebay-pick";
-      checkbox.checked = !item.duplicate;
+      checkbox.checked = item.duplicate ? false : item.selected !== false;
       checkbox.disabled = item.duplicate;
       checkbox.dataset.index = String(index);
+      checkbox.addEventListener("change", () => {
+        item.selected = checkbox.checked;
+        saveDraft();
+      });
       const pickText = document.createElement("span");
       pickText.textContent = item.duplicate ? "Skip" : "Include";
       pickWrap.append(checkbox, pickText);
@@ -667,8 +672,9 @@
 
     actions.classList.remove("hidden");
     const selectable = rows.filter((item) => !item.duplicate).length;
-    selectAll.checked = selectable > 0;
-    setImportStatus(`${rows.length} active listing${rows.length === 1 ? "" : "s"} loaded. ${selectable} ready to import.`);
+    const selectedCount = preview.querySelectorAll(".ebay-pick:checked:not(:disabled)").length;
+    selectAll.checked = selectable > 0 && selectedCount === selectable;
+    setImportStatus(`${rows.length} active listing${rows.length === 1 ? "" : "s"} loaded. ${selectedCount} selected to import.`);
   }
 
   function syncEdits() {
@@ -734,6 +740,7 @@
           duplicate: false,
         };
         item.duplicate = Boolean(existingMatch(item, currentProducts));
+        item.selected = !item.duplicate;
         return item;
       })
       .filter(Boolean);
@@ -741,6 +748,8 @@
     if (!parsed.length) throw new Error("No usable active listings were found in the file.");
     rows = parsed;
     renderPreview();
+    saveDraft();
+    setActionProgress("Draft auto-saved in this browser. Your edits are protected before import.");
   }
 
   function selectedRows() {
@@ -800,7 +809,19 @@
   selectAll.addEventListener("change", () => {
     preview.querySelectorAll(".ebay-pick:not(:disabled)").forEach((checkbox) => {
       checkbox.checked = selectAll.checked;
+      const item = rows[Number(checkbox.dataset.index)];
+      if (item) item.selected = selectAll.checked;
     });
+    saveDraft();
+  });
+
+  preview.addEventListener("input", () => {
+    syncEdits();
+    saveDraft();
+  });
+  preview.addEventListener("change", () => {
+    syncEdits();
+    saveDraft();
   });
 
   applyDelivery.addEventListener("click", () => {
@@ -816,7 +837,10 @@
       if (control) control.value = chosen;
       changed += 1;
     });
-    setImportStatus(changed ? `Delivery updated for ${changed} selected listing${changed === 1 ? "" : "s"}.` : "Select at least one listing first.", !changed);
+    saveDraft();
+    const message = changed ? `Delivery updated for ${changed} selected listing${changed === 1 ? "" : "s"}.` : "Select at least one listing first.";
+    setImportStatus(message, !changed);
+    setActionProgress(message, !changed);
   });
 
   importButton.addEventListener("click", async () => {
