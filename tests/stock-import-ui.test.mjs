@@ -36,7 +36,7 @@ test("bulk importer keeps per-item include controls visible in the responsive ca
 
 test("bulk import shows live progress and does not overwrite the final result", () => {
   assert.match(source, /ebayImportProgress/);
-  assert.match(source, /Importing \\${i \\+ 1}\\/\\${selected\\.length}/);
+  assert.ok(source.includes('importButton.textContent = `Importing ${i + 1}/${selected.length}…`;'));
   assert.match(source, /const finalMessage = failures\\.length/);
   assert.match(source, /renderPreview\\(\\);[\\s\\S]*setImportStatus\\(finalMessage/);
 });
