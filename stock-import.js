@@ -1,6 +1,7 @@
 (() => {
   const API = "/api/stock";
   const KEY_STORE = "aoStockManagerKey";
+  const DRAFT_STORE = "aoEbayImportDraftV1";
   const panel = document.getElementById("managerPanel");
   if (!panel || document.getElementById("ebayImportPanel")) return;
 
@@ -37,8 +38,9 @@
     .ebay-field{min-width:0}
     .ebay-field label{display:block;margin:0 0 .25rem;color:var(--grey);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
     .ebay-field input,.ebay-field select{width:100%;min-width:0;padding:.5rem .55rem;font-size:.8rem}
-    .ebay-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+    .ebay-actions{position:sticky;bottom:0;z-index:25;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem;padding:.75rem;background:rgba(8,22,45,.98);border:1px solid var(--line);border-radius:10px;box-shadow:0 -8px 24px rgba(0,0,0,.22)}
     .ebay-actions .btn{font-size:.9rem;padding:.65rem 1rem}
+    .ebay-action-progress{flex:1 1 260px;min-height:1.2em;color:var(--blue-bright);font-size:.82rem;font-weight:600}
     .ebay-select-label{display:flex;gap:.45rem;align-items:center;color:var(--grey);font-size:.84rem}
     .ebay-select-label input{width:auto}
     @media(max-width:1100px){
@@ -86,6 +88,7 @@
         </select>
       </label>
       <button id="applyEbayDelivery" class="mini-btn" type="button">Apply delivery</button>
+      <div id="ebayImportProgress" class="ebay-action-progress" aria-live="polite"></div>
       <button id="importSelectedEbay" class="btn" type="button">Import selected</button>
     </div>
   `;
@@ -102,6 +105,7 @@
   const clearButton = document.getElementById("clearEbayImport");
   const bulkDelivery = document.getElementById("bulkEbayDelivery");
   const applyDelivery = document.getElementById("applyEbayDelivery");
+  const actionProgress = document.getElementById("ebayImportProgress");
 
   let rows = [];
   let pendingUploads = 0;
@@ -109,6 +113,31 @@
   function setImportStatus(message, error = false) {
     status.textContent = message;
     status.style.color = error ? "#ff9d9d" : "var(--blue-bright)";
+  }
+
+  function setActionProgress(message, error = false) {
+    actionProgress.textContent = message;
+    actionProgress.style.color = error ? "#ff9d9d" : "var(--blue-bright)";
+  }
+
+  function saveDraft() {
+    if (!rows.length) return;
+    preview.querySelectorAll(".ebay-pick").forEach((checkbox) => {
+      const item = rows[Number(checkbox.dataset.index)];
+      if (item) item.selected = Boolean(checkbox.checked);
+    });
+    const safeRows = rows.map((item) => {
+      const copy = { ...item };
+      delete copy._index;
+      return copy;
+    });
+    try {
+      localStorage.setItem(DRAFT_STORE, JSON.stringify({ savedAt: Date.now(), rows: safeRows }));
+    } catch {}
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_STORE); } catch {}
   }
 
   function normaliseHeader(value) {
@@ -478,6 +507,7 @@
       item.imageUrl = data.url;
       urlInput.value = data.url;
       setThumb(thumb, data.url);
+      saveDraft();
       state.textContent = "Uploaded ✓";
       state.style.color = "#8fe3b1";
     } finally {
@@ -571,9 +601,13 @@
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.className = "ebay-pick";
-      checkbox.checked = !item.duplicate;
+      checkbox.checked = item.duplicate ? false : item.selected !== false;
       checkbox.disabled = item.duplicate;
       checkbox.dataset.index = String(index);
+      checkbox.addEventListener("change", () => {
+        item.selected = checkbox.checked;
+        saveDraft();
+      });
       const pickText = document.createElement("span");
       pickText.textContent = item.duplicate ? "Skip" : "Include";
       pickWrap.append(checkbox, pickText);
@@ -638,8 +672,9 @@
 
     actions.classList.remove("hidden");
     const selectable = rows.filter((item) => !item.duplicate).length;
-    selectAll.checked = selectable > 0;
-    setImportStatus(`${rows.length} active listing${rows.length === 1 ? "" : "s"} loaded. ${selectable} ready to import.`);
+    const selectedCount = preview.querySelectorAll(".ebay-pick:checked:not(:disabled)").length;
+    selectAll.checked = selectable > 0 && selectedCount === selectable;
+    setImportStatus(`${rows.length} active listing${rows.length === 1 ? "" : "s"} loaded. ${selectedCount} selected to import.`);
   }
 
   function syncEdits() {
@@ -705,6 +740,7 @@
           duplicate: false,
         };
         item.duplicate = Boolean(existingMatch(item, currentProducts));
+        item.selected = !item.duplicate;
         return item;
       })
       .filter(Boolean);
@@ -712,6 +748,8 @@
     if (!parsed.length) throw new Error("No usable active listings were found in the file.");
     rows = parsed;
     renderPreview();
+    saveDraft();
+    setActionProgress("Draft auto-saved in this browser. Your edits are protected before import.");
   }
 
   function selectedRows() {
@@ -771,7 +809,19 @@
   selectAll.addEventListener("change", () => {
     preview.querySelectorAll(".ebay-pick:not(:disabled)").forEach((checkbox) => {
       checkbox.checked = selectAll.checked;
+      const item = rows[Number(checkbox.dataset.index)];
+      if (item) item.selected = selectAll.checked;
     });
+    saveDraft();
+  });
+
+  preview.addEventListener("input", () => {
+    syncEdits();
+    saveDraft();
+  });
+  preview.addEventListener("change", () => {
+    syncEdits();
+    saveDraft();
   });
 
   applyDelivery.addEventListener("click", () => {
@@ -787,31 +837,45 @@
       if (control) control.value = chosen;
       changed += 1;
     });
-    setImportStatus(changed ? `Delivery updated for ${changed} selected listing${changed === 1 ? "" : "s"}.` : "Select at least one listing first.", !changed);
+    saveDraft();
+    const message = changed ? `Delivery updated for ${changed} selected listing${changed === 1 ? "" : "s"}.` : "Select at least one listing first.";
+    setImportStatus(message, !changed);
+    setActionProgress(message, !changed);
   });
 
   importButton.addEventListener("click", async () => {
     if (pendingUploads > 0) {
-      setImportStatus("Wait for the current image upload to finish before importing.", true);
+      const message = "Wait for the current image upload to finish before importing.";
+      setImportStatus(message, true);
+      setActionProgress(message, true);
       return;
     }
     const selected = selectedRows();
     if (!selected.length) {
-      setImportStatus("Select at least one new listing to import.", true);
+      const message = "Select at least one new listing to import.";
+      setImportStatus(message, true);
+      setActionProgress(message, true);
       return;
     }
 
+    saveDraft();
     importButton.disabled = true;
     fileInput.disabled = true;
+    importButton.textContent = `Importing 0/${selected.length}…`;
+    setActionProgress(`Starting import of ${selected.length} selected listing${selected.length === 1 ? "" : "s"}…`);
     let imported = 0;
     const failures = [];
 
     for (let i = 0; i < selected.length; i += 1) {
       const item = selected[i];
-      setImportStatus(`Importing ${i + 1} of ${selected.length}: ${item.partNumber}…`);
+      const progressMessage = `Importing ${i + 1} of ${selected.length}: ${item.partNumber}…`;
+      importButton.textContent = `Importing ${i + 1}/${selected.length}…`;
+      setImportStatus(progressMessage);
+      setActionProgress(progressMessage);
       try {
         await createProduct(item);
         imported += 1;
+        item.selected = false;
       } catch (error) {
         failures.push(`${item.partNumber}: ${error.message}`);
       }
@@ -819,19 +883,22 @@
 
     importButton.disabled = false;
     fileInput.disabled = false;
-
-    if (failures.length) {
-      setImportStatus(`${imported} imported. ${failures.length} failed: ${failures.slice(0, 3).join(" | ")}`, true);
-    } else {
-      setImportStatus(`${imported} listing${imported === 1 ? "" : "s"} imported to the website.`);
-    }
-
     document.getElementById("refreshBtn")?.click();
     const currentProducts = await adminProducts().catch(() => []);
     rows.forEach((item) => {
       item.duplicate = Boolean(existingMatch(item, currentProducts));
+      if (item.duplicate) item.selected = false;
     });
     renderPreview();
+
+    const finalMessage = failures.length
+      ? `${imported} imported successfully. ${failures.length} failed: ${failures.slice(0, 3).join(" | ")}`
+      : `Import complete ✓ ${imported} listing${imported === 1 ? "" : "s"} added to Automation Outlet.`;
+    setImportStatus(finalMessage, failures.length > 0);
+    setActionProgress(finalMessage, failures.length > 0);
+    importButton.textContent = failures.length ? "Retry remaining" : "Import complete ✓";
+    if (failures.length) saveDraft(); else clearDraft();
+    if (!failures.length) setTimeout(() => { importButton.textContent = "Import selected"; }, 5000);
   });
 
   clearButton.addEventListener("click", () => {
@@ -840,5 +907,32 @@
     preview.replaceChildren();
     actions.classList.add("hidden");
     setImportStatus("");
+    setActionProgress("");
+    clearDraft();
   });
+
+  (async () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DRAFT_STORE) || "null");
+      const freshEnough = saved?.savedAt && Date.now() - Number(saved.savedAt) < 7 * 24 * 60 * 60 * 1000;
+      if (!freshEnough || !Array.isArray(saved?.rows) || !saved.rows.length) {
+        if (saved) clearDraft();
+        return;
+      }
+      rows = saved.rows;
+      const currentProducts = await adminProducts().catch(() => null);
+      if (currentProducts) {
+        rows.forEach((item) => {
+          item.duplicate = Boolean(existingMatch(item, currentProducts));
+          if (item.duplicate) item.selected = false;
+        });
+      }
+      renderPreview();
+      const message = "Recovered your unfinished bulk-import draft. Your previous edits are still here.";
+      setImportStatus(message);
+      setActionProgress(message);
+    } catch {
+      clearDraft();
+    }
+  })();
 })();
