@@ -35,6 +35,7 @@ jobs:
           node --check agent-desk.js
           node --check deal-desk.js
           node --check stock-admin.js
+          node --check stock-import.js
       - name: Test API and catalogue behaviour
         run: node --test tests/*.test.mjs
       - name: Validate public sitemap

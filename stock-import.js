@@ -14,10 +14,19 @@
     .ebay-import-summary{color:var(--grey);font-size:.88rem;margin-top:.5rem}
     .ebay-import-status{font-weight:600;color:var(--blue-bright);min-height:1.35em;margin-top:.75rem}
     .ebay-preview{display:grid;gap:.65rem;margin-top:1rem}
-    .ebay-row{display:grid;grid-template-columns:auto minmax(160px,1.4fr) minmax(120px,.9fr) minmax(110px,.75fr) minmax(120px,.85fr) 95px 80px;gap:.55rem;align-items:center;border:1px solid var(--line);border-radius:10px;padding:.7rem;background:var(--navy-deep)}
+    .ebay-row{display:grid;grid-template-columns:auto minmax(170px,1.25fr) minmax(210px,1.15fr) minmax(120px,.85fr) minmax(110px,.72fr) minmax(120px,.82fr) 92px 72px minmax(190px,1fr);gap:.55rem;align-items:center;border:1px solid var(--line);border-radius:10px;padding:.7rem;background:var(--navy-deep)}
     .ebay-row.head{background:transparent;border:0;padding:.15rem .7rem;color:var(--grey);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
     .ebay-row input,.ebay-row select{min-width:0;padding:.5rem .55rem;font-size:.82rem}
     .ebay-row input[type="checkbox"]{width:auto}
+    .ebay-image-cell{display:grid;grid-template-columns:64px minmax(135px,1fr);gap:.45rem;align-items:center}
+    .ebay-thumb{width:64px;height:52px;border-radius:7px;background:#fff;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;color:#66758a;font-size:.65rem;text-align:center}
+    .ebay-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+    .ebay-image-tools{display:grid;gap:.32rem;min-width:0}
+    .ebay-image-tools input[type="url"]{width:100%}
+    .ebay-upload-label{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:7px;padding:.42rem .55rem;cursor:pointer;font:600 .76rem 'Barlow';color:var(--white)}
+    .ebay-upload-label:hover{border-color:var(--blue-bright)}
+    .ebay-upload-label input{display:none}
+    .ebay-upload-state{min-height:1em;font-size:.67rem;color:var(--grey);line-height:1.2}
     .ebay-title{font-size:.87rem;font-weight:600;line-height:1.25}
     .ebay-sub{font:500 .72rem 'IBM Plex Mono';color:var(--blue-bright);margin-top:.2rem}
     .ebay-dup{color:#ffcf7d;font-size:.7rem;margin-top:.15rem}
@@ -27,7 +36,7 @@
     .ebay-select-label input{width:auto}
     @media(max-width:1000px){
       .ebay-preview{overflow-x:auto}
-      .ebay-row{min-width:900px}
+      .ebay-row{min-width:1420px}
     }
   `;
   document.head.appendChild(style);
@@ -40,7 +49,7 @@
       <div>
         <div class="eyebrow">Bulk stock import</div>
         <h2>Import active eBay listings</h2>
-        <p class="ebay-import-summary">Upload an eBay Seller Hub active-listings CSV. Review the detected details, untick anything you do not want on the website, then import the selected rows.</p>
+        <p class="ebay-import-summary">Upload an eBay Seller Hub active-listings CSV. Review the detected details, confirm or replace the image, choose checkout delivery, untick anything you do not want on the website, then import the selected rows.</p>
       </div>
       <div class="ebay-import-controls">
         <input id="ebayCsvFile" class="ebay-file" type="file" accept=".csv,text/csv,.txt,text/plain">
@@ -51,6 +60,13 @@
     <div id="ebayImportPreview" class="ebay-preview"></div>
     <div id="ebayImportActions" class="ebay-actions hidden">
       <label class="ebay-select-label"><input id="selectAllEbay" type="checkbox" checked> Select all new items</label>
+      <label class="ebay-select-label">Delivery for selected
+        <select id="bulkEbayDelivery">
+          <option value="parcel">UK parcel - £7.95 / free over £250</option>
+          <option value="quote">Quote required - no card checkout</option>
+        </select>
+      </label>
+      <button id="applyEbayDelivery" class="mini-btn" type="button">Apply delivery</button>
       <button id="importSelectedEbay" class="btn" type="button">Import selected</button>
     </div>
   `;
@@ -65,8 +81,11 @@
   const selectAll = document.getElementById("selectAllEbay");
   const importButton = document.getElementById("importSelectedEbay");
   const clearButton = document.getElementById("clearEbayImport");
+  const bulkDelivery = document.getElementById("bulkEbayDelivery");
+  const applyDelivery = document.getElementById("applyEbayDelivery");
 
   let rows = [];
+  let pendingUploads = 0;
 
   function setImportStatus(message, error = false) {
     status.textContent = message;
@@ -339,6 +358,163 @@
     return input;
   }
 
+  function makeDeliverySelect(value, className) {
+    const select = document.createElement("select");
+    select.className = className;
+    [
+      ["quote", "Quote required - no card checkout"],
+      ["parcel", "UK parcel - £7.95 / free over £250"],
+    ].forEach(([optionValue, label]) => {
+      const option = document.createElement("option");
+      option.value = optionValue;
+      option.textContent = label;
+      option.selected = optionValue === value;
+      select.appendChild(option);
+    });
+    return select;
+  }
+
+  function setThumb(container, url) {
+    container.replaceChildren();
+    if (!url) {
+      container.textContent = "No image";
+      return;
+    }
+    const image = document.createElement("img");
+    image.src = url;
+    image.alt = "Listing image";
+    image.addEventListener("error", () => container.replaceChildren("No preview"), { once: true });
+    container.appendChild(image);
+  }
+
+  function fileToJpegDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//i.test(file.type || "")) {
+        reject(new Error("Choose a JPG, PNG or WebP image."));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read that image."));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("Could not open that image."));
+        image.onload = () => {
+          const maxSide = 1200;
+          const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+          const width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+          const height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("Image conversion is not available in this browser."));
+            return;
+          }
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, width, height);
+          context.drawImage(image, 0, 0, width, height);
+          let quality = 0.84;
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+          while (dataUrl.length > 900000 && quality > 0.54) {
+            quality -= 0.08;
+            dataUrl = canvas.toDataURL("image/jpeg", quality);
+          }
+          if (dataUrl.length > 1000000) {
+            reject(new Error("Image is still too large after compression. Choose a smaller photo."));
+            return;
+          }
+          resolve(dataUrl);
+        };
+        image.src = String(reader.result || "");
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadRowImage(file, item, thumb, urlInput, state, fileInputControl) {
+    const key = sessionStorage.getItem(KEY_STORE) || "";
+    if (!key) throw new Error("Unlock the stock manager first.");
+    pendingUploads += 1;
+    fileInputControl.disabled = true;
+    state.textContent = "Uploading…";
+    state.style.color = "var(--blue-bright)";
+    try {
+      const dataUrl = await fileToJpegDataUrl(file);
+      const response = await fetch("/api/photo-agent", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "x-deal-desk-key": key,
+        },
+        body: JSON.stringify({
+          action: "upload-hero",
+          partNumber: item.partNumber || item.itemNumber || "stock-item",
+          dataUrl,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) throw new Error(data.error || "Image upload failed.");
+      item.imageUrl = data.url;
+      urlInput.value = data.url;
+      setThumb(thumb, data.url);
+      state.textContent = "Uploaded ✓";
+      state.style.color = "#8fe3b1";
+    } finally {
+      pendingUploads = Math.max(0, pendingUploads - 1);
+      fileInputControl.disabled = false;
+    }
+  }
+
+  function makeImageCell(item) {
+    const wrap = document.createElement("div");
+    wrap.className = "ebay-image-cell";
+
+    const thumb = document.createElement("div");
+    thumb.className = "ebay-thumb";
+    setThumb(thumb, item.imageUrl);
+
+    const tools = document.createElement("div");
+    tools.className = "ebay-image-tools";
+    const urlInput = makeInput(item.imageUrl || "", "ebay-image-url", "url");
+    urlInput.placeholder = "eBay image URL";
+    urlInput.dataset.index = String(item._index);
+    urlInput.addEventListener("input", () => {
+      item.imageUrl = urlInput.value.trim();
+      setThumb(thumb, item.imageUrl);
+    });
+
+    const uploadLabel = document.createElement("label");
+    uploadLabel.className = "ebay-upload-label";
+    uploadLabel.textContent = "Upload image";
+    const uploadInput = document.createElement("input");
+    uploadInput.type = "file";
+    uploadInput.accept = "image/jpeg,image/png,image/webp";
+    uploadLabel.appendChild(uploadInput);
+
+    const state = document.createElement("div");
+    state.className = "ebay-upload-state";
+    state.textContent = item.imageUrl ? "eBay/hosted image ready" : "No image selected";
+
+    uploadInput.addEventListener("change", async () => {
+      const file = uploadInput.files?.[0];
+      if (!file) return;
+      try {
+        await uploadRowImage(file, item, thumb, urlInput, state, uploadInput);
+      } catch (error) {
+        state.textContent = error.message || "Image upload failed.";
+        state.style.color = "#ff9d9d";
+      } finally {
+        uploadInput.value = "";
+      }
+    });
+
+    tools.append(urlInput, uploadLabel, state);
+    wrap.append(thumb, tools);
+    return wrap;
+  }
+
   function renderPreview() {
     preview.replaceChildren();
     if (!rows.length) {
@@ -348,7 +524,7 @@
 
     const head = document.createElement("div");
     head.className = "ebay-row head";
-    head.innerHTML = "<span></span><span>eBay listing</span><span>Part number</span><span>Brand</span><span>Category</span><span>Price</span><span>Qty</span>";
+    head.innerHTML = "<span></span><span>eBay listing</span><span>Image</span><span>Part number</span><span>Brand</span><span>Category</span><span>Price</span><span>Qty</span><span>Delivery / checkout</span>";
     preview.appendChild(head);
 
     const categories = [
@@ -363,6 +539,7 @@
     ];
 
     rows.forEach((item, index) => {
+      item._index = index;
       const row = document.createElement("div");
       row.className = "ebay-row";
 
@@ -388,6 +565,7 @@
         titleWrap.appendChild(dup);
       }
 
+      const imageCell = makeImageCell(item);
       const part = makeInput(item.partNumber, "ebay-part");
       part.dataset.index = String(index);
       const brand = makeSelect(brands, brands.includes(item.brand) ? item.brand : "Other", "ebay-brand");
@@ -402,8 +580,10 @@
       qty.min = "1";
       qty.step = "1";
       qty.dataset.index = String(index);
+      const delivery = makeDeliverySelect(item.deliveryMode || "quote", "ebay-delivery");
+      delivery.dataset.index = String(index);
 
-      row.append(checkbox, titleWrap, part, brand, category, price, qty);
+      row.append(checkbox, titleWrap, imageCell, part, brand, category, price, qty, delivery);
       preview.appendChild(row);
     });
 
@@ -423,6 +603,8 @@
       if (control.classList.contains("ebay-category")) item.category = control.value;
       if (control.classList.contains("ebay-price")) item.priceGbp = money(control.value);
       if (control.classList.contains("ebay-qty")) item.quantity = quantity(control.value);
+      if (control.classList.contains("ebay-image-url")) item.imageUrl = control.value.trim();
+      if (control.classList.contains("ebay-delivery")) item.deliveryMode = control.value === "parcel" ? "parcel" : "quote";
     });
   }
 
@@ -468,6 +650,7 @@
           priceGbp: money(cell(rawRow, indices.price)),
           quantity: quantity(cell(rawRow, indices.quantity)),
           imageUrl: firstImage(cell(rawRow, indices.image)),
+          deliveryMode: "quote",
           ebayUrl,
           description: cell(rawRow, indices.description) || buildDescription(title, condition, ebayUrl),
           duplicate: false,
@@ -503,6 +686,7 @@
       priceGbp: item.priceGbp,
       quantity: item.quantity,
       status: "active",
+      deliveryMode: item.deliveryMode === "parcel" ? "parcel" : "quote",
       sortOrder: 100,
       imageUrl: item.imageUrl || "",
       ebayUrl: item.ebayUrl || "",
@@ -541,7 +725,27 @@
     });
   });
 
+  applyDelivery.addEventListener("click", () => {
+    syncEdits();
+    const chosen = bulkDelivery.value === "parcel" ? "parcel" : "quote";
+    let changed = 0;
+    preview.querySelectorAll(".ebay-pick:checked:not(:disabled)").forEach((checkbox) => {
+      const index = Number(checkbox.dataset.index);
+      const item = rows[index];
+      if (!item) return;
+      item.deliveryMode = chosen;
+      const control = preview.querySelector(`.ebay-delivery[data-index="${index}"]`);
+      if (control) control.value = chosen;
+      changed += 1;
+    });
+    setImportStatus(changed ? `Delivery updated for ${changed} selected listing${changed === 1 ? "" : "s"}.` : "Select at least one listing first.", !changed);
+  });
+
   importButton.addEventListener("click", async () => {
+    if (pendingUploads > 0) {
+      setImportStatus("Wait for the current image upload to finish before importing.", true);
+      return;
+    }
     const selected = selectedRows();
     if (!selected.length) {
       setImportStatus("Select at least one new listing to import.", true);
