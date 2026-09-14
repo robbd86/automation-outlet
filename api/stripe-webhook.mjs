@@ -105,7 +105,7 @@ async function processExpiredCheckout(event, channel, secret) {
   if (!reservationId) return json(200, { received: true, ignored: true, reason: "no_reservation" });
 
   try {
-    const states = reservationStates(await listInventoryEvents());
+    const states = reservationStates(await listInventoryEvents(), 0);
     const state = states.get(reservationId);
     if (state?.kind === "reserve") {
       await appendInventoryEvent({
