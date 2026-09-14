@@ -144,7 +144,7 @@ def patch_buyer_discovery() -> None:
         "Used &amp; Surplus PLCs, HMIs &amp; Drives UK | Automation Outlet",
         "Buy and sell new, used and surplus industrial automation parts in the UK. Browse Siemens, Allen-Bradley and Omron PLCs, I/O and drives by part number.")
     html = replace_tag_content(html, r'<h1[^>]*>.*?</h1>',
-        '<h1 style="font-size:clamp(2.2rem,6vw,3.9rem)">Buy &amp; sell <em>surplus PLCs, HMIs &amp; drives</em></h1>', "homepage heading")
+        '<h1 style="font-size:clamp(2.2rem,6vw,3.9rem)">Turning <em>Surplus</em> into Solutions</h1>', "homepage heading")
     html = html.replace(
         '<a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a>',
         '<a href="/buy-stock.html" class="btn big">Browse stock</a><a href="/sell-surplus.html" class="btn big ghost">Sell your surplus</a>')
