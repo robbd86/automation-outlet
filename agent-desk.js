@@ -222,7 +222,11 @@ async function buildBrandedHero(heroIndex) {
     ctx.fillText(label, x + 82, 1455);
   });
 
-  return canvas.toDataURL("image/jpeg", 0.9);
+  const output = document.createElement("canvas");
+  output.width = 1200;
+  output.height = 1200;
+  output.getContext("2d").drawImage(canvas, 0, 0, 1200, 1200);
+  return output.toDataURL("image/jpeg", 0.78);
 }
 
 function downloadDataUrl(dataUrl, filename) {
@@ -583,18 +587,26 @@ async function saveListingDraft(moveNext = false) {
   button.disabled = true;
   button.textContent = brandedHeroDataUrl && !uploadedHeroUrl ? "Uploading hero…" : "Saving…";
   try {
+    let heroWarning = "";
     if (brandedHeroDataUrl && !uploadedHeroUrl) {
-      const uploaded = await photoApi({
-        action: "upload-hero",
-        partNumber: r.partNumber || el("listingPart").value.trim(),
-        dataUrl: brandedHeroDataUrl
-      });
-      uploadedHeroUrl = uploaded.url || "";
-      draft.imageUrl = uploadedHeroUrl;
+      try {
+        const uploaded = await photoApi({
+          action: "upload-hero",
+          partNumber: r.partNumber || el("listingPart").value.trim(),
+          dataUrl: brandedHeroDataUrl
+        });
+        uploadedHeroUrl = uploaded.url || "";
+        draft.imageUrl = uploadedHeroUrl;
+      } catch (heroError) {
+        console.warn("AO hero upload failed; saving draft without image", heroError);
+        heroWarning = "Hero image could not be stored, but the website draft was saved without an image.";
+        draft.imageUrl = "";
+      }
       button.textContent = "Saving…";
     }
     await saveStockDraft(draft);
-    button.textContent = "Draft saved";
+    button.textContent = heroWarning ? "Draft saved – image pending" : "Draft saved";
+    if (heroWarning) setStatus("listingStatus", heroWarning, true);
     const open = document.createElement("a");
     open.className = "btn secondary";
     open.href = "/stock-admin.html";
