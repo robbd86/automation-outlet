@@ -57,7 +57,16 @@ function slugify(value) {
 }
 
 function productSlug(product) {
-  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+  return slugify(product?.slug) || slugify([product?.brand, product?.partNumber].filter(Boolean).join("-"));
+}
+
+function feedTitle(product) {
+  const title = cleanCell(product.title);
+  const brand = cleanCell(product.brand);
+  const part = cleanCell(product.partNumber);
+  const lower = title.toLowerCase();
+  if (brand && lower.startsWith(brand.toLowerCase())) return title;
+  return [brand, part, title].filter(Boolean).join(" ");
 }
 
 function cleanCell(value) {
@@ -132,12 +141,14 @@ export default async function handler(request, response) {
       "condition",
       "brand",
       "mpn",
+      "gtin",
+      "identifier_exists",
       "product_type",
     ];
 
     const rows = products.map((product) => [
       product.id || product.partNumber,
-      `${product.brand} ${product.partNumber} ${product.title}`,
+      feedTitle(product),
       publicDescription(product.description) || `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`,
       `${SITE}/stock/${productSlug(product)}`,
       product.imageUrl,
@@ -145,7 +156,9 @@ export default async function handler(request, response) {
       `${Number(product.priceGbp).toFixed(2)} GBP`,
       googleCondition(product.condition),
       product.brand,
-      product.partNumber,
+      product.mpn || product.partNumber,
+      product.gtin || "",
+      (product.gtin || product.mpn || product.partNumber) ? "yes" : "no",
       product.category || "Industrial Automation",
     ].map(cleanCell).join("\t"));
 
