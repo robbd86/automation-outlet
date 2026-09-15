@@ -28,7 +28,7 @@ export function renderCatalogue(key, products) {
   <div class="shop-grid">${items.map(productCard).join('')||'<p>No matching stock is currently listed. <a href="/obsolete-parts-sourcing.html">Ask us to source your part</a>.</p>'}</div>
   <section style="padding:2rem 0"><h2>Before you order</h2><p class="shop-intro">${html(collection.advice)}</p><p class="shop-intro">Order directly through Automation Outlet. Open the product page for current price, condition and buying options, or contact us with the exact part number for compatibility, trade pricing or delivery questions.</p>
   <a class="btn" href="/obsolete-parts-sourcing.html">Request a hard-to-find part</a> <a href="/buyer-alerts.html">Get stock alerts</a></section></div></section></main>
-  <footer><div class="wrap"><p>Automation Outlet · Industrial automation spares · Cambridgeshire, UK</p><p><a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a> · <a href="https://wa.me/447849506371">07849 506371</a></p><p><a href="/contact.html">Contact</a> · <a href="/privacy.html">Privacy notice</a></p></div></footer>${menuScript}</body></html>`;
+  <footer><div class="wrap"><p>Automation Outlet · Industrial automation spares · Cambridgeshire, UK</p><p><a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a> · <a href="https://wa.me/447849506371">07849 506371</a></p><p><a href="/contact.html">Contact</a> · <a href="/returns.html">Returns &amp; refunds</a> · <a href="/privacy.html">Privacy notice</a></p></div></footer>${menuScript}</body></html>`;
 }
 
 export default async function handler(request,response){
