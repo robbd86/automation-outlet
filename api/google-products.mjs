@@ -123,6 +123,7 @@ export default async function handler(request, response) {
       product.status === "active" &&
       Number(product.quantity) > 0 &&
       product.issueState === "open" &&
+      product.deliveryMode === "parcel" &&
       Number(product.priceGbp) > 0 &&
       product.title &&
       product.partNumber &&

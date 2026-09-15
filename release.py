@@ -9,9 +9,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 ADMIN_PAGES = {"deal-desk.html", "stock-admin.html"}
 ROBOTS_META = re.compile(r'\s*<meta\s+name=["\']robots["\'][^>]*>\s*(?:<!--\s*REMOVE AT LAUNCH\s*-->)?', re.I)
-PRIVACY_FOOTER = (
+POLICY_FOOTER = (
     '<div class="wrap" style="padding-top:.7rem;padding-bottom:1rem;font-size:.82rem;'
-    'color:var(--grey)"><a href="/privacy.html">Privacy notice</a></div>'
+    'color:var(--grey)"><a href="/returns.html">Returns &amp; refunds</a> &middot; '
+    '<a href="/privacy.html">Privacy notice</a></div>'
 )
 
 
@@ -28,8 +29,8 @@ def clean_html() -> None:
                 )
         else:
             text = ROBOTS_META.sub("\n", text)
-            if path.name != "privacy.html" and '/privacy.html">Privacy' not in text and "</footer>" in text:
-                text = text.replace("</footer>", PRIVACY_FOOTER + "\n</footer>", 1)
+            if path.name not in {"privacy.html", "returns.html"} and '/returns.html">Returns' not in text and "</footer>" in text:
+                text = text.replace("</footer>", POLICY_FOOTER + "\n</footer>", 1)
         path.write_text(text, encoding="utf-8")
 
 
