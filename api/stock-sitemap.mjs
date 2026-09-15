@@ -57,7 +57,7 @@ function slugify(value) {
 }
 
 function productSlug(product) {
-  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+  return slugify(product?.slug) || slugify([product?.brand, product?.partNumber].filter(Boolean).join("-"));
 }
 
 function xml(value) {
