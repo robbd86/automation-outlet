@@ -12,7 +12,13 @@ function slugify(value) {
 }
 
 function productSlug(product) {
-  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+  return slugify(product?.slug) || slugify([product?.brand, product?.partNumber].filter(Boolean).join("-"));
+}
+
+function productAliases(product) {
+  return Array.isArray(product?.legacySlugs)
+    ? product.legacySlugs.map(slugify).filter(Boolean)
+    : [];
 }
 
 function html(value) {
@@ -58,7 +64,9 @@ function availability(product) {
 function findProduct(products, requestedSlug) {
   const matches = products.filter((product) => {
     if (!["active", "sold"].includes(product.status)) return false;
-    return productSlug(product) === requestedSlug || String(product.id || "") === requestedSlug;
+    return productSlug(product) === requestedSlug ||
+      productAliases(product).includes(requestedSlug) ||
+      String(product.id || "") === requestedSlug;
   });
 
   matches.sort((a, b) => {
@@ -100,13 +108,18 @@ export function renderPage(product, products = []) {
       ? `<button class="btn big add-basket" type="button" data-add-to-cart data-id="${html(slug)}" data-title="${html(title)}" data-part="${html(part)}" data-brand="${html(brand)}" data-price="${html(price)}" data-delivery="parcel" data-image="${html(product.imageUrl || "")}" data-url="/stock/${html(slug)}" data-quantity-target="#productQty">Add to basket</button>`
       : `<a class="btn big" href="/contact.html?part=${encodeURIComponent(part)}">Request delivery quote</a>`;
 
+  const mpn = text(product.mpn, 120) || part;
+  const gtin = text(product.gtin, 32).replace(/\D/g, "");
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: title,
-    sku: part,
-    mpn: part,
+    sku: text(product.id, 120) || part,
+    mpn,
+    ...(gtin.length === 13 ? { gtin13: gtin } : {}),
     brand: { "@type": "Brand", name: brand },
+    category: text(product.category, 120),
+    model: part,
     description: metaDescription,
     ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
     ...(price ? { offers: {
@@ -137,6 +150,7 @@ export function renderPage(product, products = []) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${html(`${brand} ${part} ${product.category || "Industrial Automation Part"} | Automation Outlet`)}</title>
 <meta name="description" content="${html(metaDescription)}">
+<meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="${canonical}">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="Automation Outlet">
