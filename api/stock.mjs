@@ -46,6 +46,30 @@ function productId(raw, existing) {
   return `${base}-${crypto.randomBytes(2).toString("hex")}`;
 }
 
+function canonicalSlug(raw, existing) {
+  const requested = slugify(raw?.slug);
+  if (requested) return requested;
+
+  const stored = slugify(existing?.slug);
+  if (stored) return stored;
+
+  // Freeze the URL an existing product already has before future edits.
+  const source = existing || raw || {};
+  return slugify([source.brand, source.partNumber].filter(Boolean).join("-"));
+}
+
+function normaliseLegacySlugs(raw, existing, canonical) {
+  const aliases = [
+    ...(Array.isArray(existing?.legacySlugs) ? existing.legacySlugs : []),
+    ...(Array.isArray(raw?.legacySlugs) ? raw.legacySlugs : []),
+  ]
+    .map(slugify)
+    .filter(Boolean)
+    .filter((value) => value !== canonical);
+
+  return [...new Set(aliases)].slice(0, 20);
+}
+
 function githubSettings() {
   return {
     token: process.env.AO_GITHUB_TOKEN,
@@ -110,13 +134,20 @@ function normaliseProduct(raw, existing = null) {
       ? existing.deliveryMode
       : "quote";
 
+  const slug = canonicalSlug(raw, existing);
+  const legacySlugs = normaliseLegacySlugs(raw, existing, slug);
+
   return {
-    schema: 1,
+    schema: 2,
     id: productId(raw, existing),
     createdAt: existing?.createdAt || now,
     updatedAt: now,
+    slug,
+    legacySlugs,
     title: clean(raw?.title ?? existing?.title, 180),
     partNumber: clean(raw?.partNumber ?? existing?.partNumber, 120).toUpperCase(),
+    mpn: clean(raw?.mpn ?? existing?.mpn, 120).toUpperCase(),
+    gtin: clean(raw?.gtin ?? existing?.gtin, 32),
     brand: clean(raw?.brand ?? existing?.brand, 80),
     category: clean(raw?.category ?? existing?.category, 80),
     condition: clean(raw?.condition ?? existing?.condition, 100),
@@ -162,6 +193,9 @@ function renderIssue(product) {
   return `# ${product.title}
 
 - **Part number:** ${product.partNumber}
+- **Manufacturer MPN:** ${product.mpn || product.partNumber}
+- **GTIN:** ${product.gtin || "Not supplied"}
+- **Canonical slug:** ${product.slug}
 - **Brand:** ${product.brand}
 - **Category:** ${product.category}
 - **Condition:** ${product.condition}
