@@ -58,7 +58,15 @@ function slugify(value) {
 }
 
 function productSlug(product) {
-  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+  return slugify(product?.slug) || slugify([product?.brand, product?.partNumber].filter(Boolean).join("-"));
+}
+
+function feedTitle(product) {
+  const title = String(product.title || "").trim();
+  const brand = String(product.brand || "").trim();
+  const part = String(product.partNumber || "").trim();
+  if (brand && title.toLowerCase().startsWith(brand.toLowerCase())) return title;
+  return [brand, part, title].filter(Boolean).join(" ");
 }
 
 function publicDescription(value) {
@@ -127,7 +135,7 @@ export default async function handler(request, response) {
     );
 
     const items = products.map((product) => {
-      const title = `${product.brand} ${product.partNumber} ${product.title}`;
+      const title = feedTitle(product);
       const description =
         publicDescription(product.description) ||
         `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`;
@@ -143,9 +151,10 @@ export default async function handler(request, response) {
         `      <g:price>${xml(`${Number(product.priceGbp).toFixed(2)} GBP`)}</g:price>`,
         `      <g:condition>${xml(googleCondition(product.condition))}</g:condition>`,
         `      <g:brand>${xml(product.brand)}</g:brand>`,
-        `      <g:mpn>${xml(product.partNumber)}</g:mpn>`,
+        `      <g:mpn>${xml(product.mpn || product.partNumber)}</g:mpn>`,
+        ...(product.gtin ? [`      <g:gtin>${xml(product.gtin)}</g:gtin>`] : []),
         `      <g:product_type>${xml(product.category || "Industrial Automation")}</g:product_type>`,
-        "      <g:identifier_exists>yes</g:identifier_exists>",
+        `      <g:identifier_exists>${product.gtin || product.mpn || product.partNumber ? "yes" : "no"}</g:identifier_exists>`,
         "    </item>",
       ].join("\n");
     }).join("\n");
