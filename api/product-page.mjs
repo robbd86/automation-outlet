@@ -1,5 +1,5 @@
 import { listProducts } from "../lib/stock-read.mjs";
-import { header, menuScript, browseLinks, money, publicProducts, available, productCard, shopCss } from "../lib/shop.mjs";
+import { header, menuScript, browseLinks, money, available, productCard, productListingTitle, productSeoTitle, relatedProducts, shopCss } from "../lib/shop.mjs";
 const SITE = "https://www.automation-outlet.co.uk";
 const WA = "447849506371";
 
@@ -92,11 +92,13 @@ export function renderPage(product, products = []) {
   const part = text(product.partNumber, 120);
   const brand = text(product.brand, 80);
   const title = text(product.title, 180) || `${brand} ${part}`;
-  const fallbackDescription = `${brand} ${part} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`;
+  const listingTitle = text(productListingTitle(product), 180) || `${brand} ${part}`;
+  const fallbackDescription = `${listingTitle} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`;
   const cleanDescription = shopDescription(product.description, fallbackDescription);
   const metaDescription = text(cleanDescription, 158);
   const price = money(product);
   const onlineCheckout = product.deliveryMode === "parcel";
+  const shippingRate = price && Number(price) >= 250 ? "0.00" : "7.95";
   const deliverySummary = onlineCheckout ? "UK delivery £7.95 · free over £250" : "Delivery quote required";
   const descriptionHtml = html(cleanDescription || "Contact us for test details, serial confirmation or additional photographs.").replace(/\n/g, "<br>");
   const waText = encodeURIComponent(`Hi, I'm interested in ${part} — ${title}. Is it still available?`);
@@ -113,7 +115,7 @@ export function renderPage(product, products = []) {
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: title,
+    name: listingTitle,
     sku: text(product.id, 120) || part,
     mpn,
     ...(gtin.length === 13 ? { gtin13: gtin } : {}),
@@ -130,6 +132,20 @@ export function renderPage(product, products = []) {
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: conditionSchema(product.condition),
       seller: { "@type": "Organization", name: "Automation Outlet", url: SITE },
+      ...(onlineCheckout ? {
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: { "@type": "MonetaryAmount", value: shippingRate, currency: "GBP" },
+          shippingDestination: { "@type": "DefinedRegion", addressCountry: "GB" },
+        },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "GB",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+        },
+      } : {}),
     }} : {}),
   };
 
@@ -148,13 +164,13 @@ export function renderPage(product, products = []) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${html(`${brand} ${part} ${product.category || "Industrial Automation Part"} | Automation Outlet`)}</title>
+<title>${html(productSeoTitle(product))}</title>
 <meta name="description" content="${html(metaDescription)}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="${canonical}">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="Automation Outlet">
-<meta property="og:title" content="${html(`${brand} ${part} | Automation Outlet`)}">
+<meta property="og:title" content="${html(`${listingTitle} | Automation Outlet`)}">
 <meta property="og:description" content="${html(metaDescription)}">
 <meta property="og:url" content="${canonical}">
 ${product.imageUrl ? `<meta property="og:image" content="${html(product.imageUrl)}">` : ""}
@@ -182,7 +198,7 @@ ${header()}
     <div class="crumbs"><a href="/">Home</a> / <a href="/buy-stock.html">Current stock</a> / ${html(part)}</div>
     <div class="product-layout">
       <div class="gallery-panel">
-        <div class="product-photo">${product.imageUrl ? `<img src="${html(product.imageUrl)}" alt="${html(`${brand} ${part} ${title}`)}">` : `<div class="fallback"><strong>${html(brand)}</strong><span>${html(part)}</span></div>`}</div>
+        <div class="product-photo">${product.imageUrl ? `<img src="${html(product.imageUrl)}" alt="${html(listingTitle)}">` : `<div class="fallback"><strong>${html(brand)}</strong><span>${html(part)}</span></div>`}</div>
         <div class="photo-caption">Actual stock image where supplied. Confirm the complete part number and revision before ordering.</div>
       </div>
       <article class="buy-panel">
@@ -206,8 +222,8 @@ ${header()}
       <details><summary>Delivery &amp; worldwide shipping</summary><div class="detail-body">${onlineCheckout ? "<strong>UK parcel delivery:</strong> £7.95, or free when the product subtotal reaches £250. UK shipping address is collected securely at checkout." : "<strong>Delivery quote required:</strong> this item is large, heavy, awkward or otherwise unsuitable for automatic parcel checkout. Contact Automation Outlet for carriage before payment."}<br>International delivery is quoted separately.</div></details>
       <details><summary>Payment &amp; trade orders</summary><div class="detail-body">${onlineCheckout ? "This item is eligible for Automation Outlet basket and card checkout. Trade buyers can also request a pro-forma invoice or quantity price." : "Card checkout is disabled for this item until delivery has been agreed. Request a delivery/trade quote and we will confirm the total before payment."}</div></details>
     </div>
-    <section style="padding:2.5rem 0 0"><h2>Related automation spares</h2><div class="shop-grid" style="margin-top:1rem">${publicProducts(products).filter(p=>available(p)&&productSlug(p)!==slug&&(p.brand===product.brand||p.category===product.category)).slice(0,4).map(productCard).join('')}</div></section>
-    <section style="padding:2rem 0 0"><h2>Browse more stock</h2>${browseLinks()}</section>
+    <section style="padding:2.5rem 0 0"><h2>Related automation spares</h2><div class="shop-grid" style="margin-top:1rem">${relatedProducts(product,products,4).map(productCard).join('')}</div></section>
+    <section style="padding:2rem 0 0"><h2>Browse more stock</h2>${browseLinks(products)}</section>
   </div>
 </main>
 <footer>
