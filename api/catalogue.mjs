@@ -1,8 +1,23 @@
 import { listProducts } from '../lib/stock-read.mjs';
-import { SITE, collections, html, json, available, publicProducts, productSlug, productCard, header, menuScript, browseLinks, shopCss } from '../lib/shop.mjs';
+import { SITE, collections, html, json, slugify, available, publicProducts, productSlug, productCard, header, menuScript, browseLinks, shopCss } from '../lib/shop.mjs';
+
+export function resolveCollection(key, products) {
+  if (collections[key]) return collections[key];
+  const brands = [...new Set(publicProducts(products).map(p=>String(p.brand||'').trim()).filter(Boolean))];
+  const brand = brands.find(value=>slugify(value)===key);
+  if (!brand) return null;
+  return {
+    name: `${brand} parts`,
+    title: `${brand} Industrial Automation Parts for Sale UK`,
+    intro: `Browse current UK stock of ${brand} industrial automation parts, controls and replacement spares from Automation Outlet.`,
+    advice: `Match the complete ${brand} manufacturer part number, revision and technical specification before ordering. Open each listing for condition, test status, price and delivery details.`,
+    match: p=>slugify(p.brand)===key,
+  };
+}
 
 export function renderCatalogue(key, products) {
-  const collection = collections[key];
+  const collection = resolveCollection(key, products);
+  if (!collection) return null;
   const items = publicProducts(products).filter(p=>available(p)&&collection.match(p));
   const canonical = SITE+'/parts'+(key==='all'?'':'/'+key);
   const schema = {
@@ -24,7 +39,7 @@ export function renderCatalogue(key, products) {
   ${header()}<main><section style="padding:2rem 0 3rem"><div class="wrap"><nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/parts">Parts</a>${key==='all'?'':' / '+html(collection.name)}</nav>
   <h1 class="shop-heading" style="margin-top:1.5rem">${html(collection.title)}</h1><p class="shop-intro">${html(collection.intro)}</p>
   <form action="/buy-stock.html#stock" method="get" role="search"><label for="part-search">Search by part number or description</label><div style="display:flex;gap:.6rem;flex-wrap:wrap"><input id="part-search" type="search" name="q" required style="flex:1;min-width:180px"><button class="btn">Search stock</button></div></form>
-  ${browseLinks()}<p style="margin:1rem 0">${items.length} current stock ${items.length===1?'listing':'listings'}. Open an item for condition and buying details.</p>
+  ${browseLinks(products)}<p style="margin:1rem 0">${items.length} current stock ${items.length===1?'listing':'listings'}. Open an item for condition and buying details.</p>
   <div class="shop-grid">${items.map(productCard).join('')||'<p>No matching stock is currently listed. <a href="/obsolete-parts-sourcing.html">Ask us to source your part</a>.</p>'}</div>
   <section style="padding:2rem 0"><h2>Before you order</h2><p class="shop-intro">${html(collection.advice)}</p><p class="shop-intro">Order directly through Automation Outlet. Open the product page for current price, condition and buying options, or contact us with the exact part number for compatibility, trade pricing or delivery questions.</p>
   <a class="btn" href="/obsolete-parts-sourcing.html">Request a hard-to-find part</a> <a href="/buyer-alerts.html">Get stock alerts</a></section></div></section></main>
@@ -35,9 +50,10 @@ export default async function handler(request,response){
   response.setHeader('Content-Type','text/html; charset=utf-8');
   if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');return response.status(405).send('Method not allowed');}
   const key=String(request.query?.collection||'all');
-  if(!Object.hasOwn(collections,key)){response.setHeader('X-Robots-Tag','noindex, follow');return response.status(404).send('<h1>Category not found</h1><a href="/parts">Browse current parts</a>');}
   try{
     const products=await listProducts();
+    const collection=resolveCollection(key,products);
+    if(!collection){response.setHeader('X-Robots-Tag','noindex, follow');return response.status(404).send('<h1>Category not found</h1><a href="/parts">Browse current parts</a>');}
     response.setHeader('Cache-Control','public, s-maxage=60, stale-while-revalidate=300');
     return response.status(200).send(renderCatalogue(key,products));
   }catch(error){
