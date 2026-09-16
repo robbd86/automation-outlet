@@ -2,7 +2,7 @@ import { listProducts } from '../lib/stock-read.mjs';
 import { SITE, collections, html, json, slugify, available, publicProducts, productSlug, productCard, header, menuScript, browseLinks, shopCss } from '../lib/shop.mjs';
 
 export function resolveCollection(key, products) {
-  if (collections[key]) return collections[key];
+  if (Object.hasOwn(collections,key)) return collections[key];
   const brands = [...new Set(publicProducts(products).map(p=>String(p.brand||'').trim()).filter(Boolean))];
   const brand = brands.find(value=>slugify(value)===key);
   if (!brand) return null;
@@ -50,6 +50,7 @@ export default async function handler(request,response){
   response.setHeader('Content-Type','text/html; charset=utf-8');
   if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');return response.status(405).send('Method not allowed');}
   const key=String(request.query?.collection||'all');
+  if(Object.hasOwn(Object.prototype,key)){response.setHeader('X-Robots-Tag','noindex, follow');return response.status(404).send('<h1>Category not found</h1><a href="/parts">Browse current parts</a>');}
   try{
     const products=await listProducts();
     const collection=resolveCollection(key,products);
