@@ -104,7 +104,17 @@ function renderSitemap(products) {
     })
     .join("\n");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${Object.keys(collections).map(key => `  <url><loc>${SITE}/parts${key === "all" ? "" : "/" + key}</loc></url>`).join("\n")}\n${urls}\n</urlset>\n`;
+  const collectionKeys = new Set(Object.keys(collections));
+  for (const product of products) {
+    const brandSlug = slugify(product.brand);
+    if (brandSlug) collectionKeys.add(brandSlug);
+  }
+  const collectionUrls = [...collectionKeys]
+    .sort((a, b) => a.localeCompare(b))
+    .map(key => `  <url><loc>${SITE}/parts${key === "all" ? "" : "/" + key}</loc></url>`)
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${collectionUrls}\n${urls}\n</urlset>\n`;
 }
 
 export default async function handler(request, response) {

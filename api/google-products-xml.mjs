@@ -1,4 +1,4 @@
-import { publicProducts } from "../lib/shop.mjs";
+import { publicProducts, productListingTitle } from "../lib/shop.mjs";
 
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
@@ -136,7 +136,7 @@ export default async function handler(request, response) {
     );
 
     const items = products.map((product) => {
-      const title = feedTitle(product);
+      const title = productListingTitle(product);
       const description =
         publicDescription(product.description) ||
         `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`;
@@ -150,6 +150,15 @@ export default async function handler(request, response) {
         `      <g:image_link>${xml(product.imageUrl)}</g:image_link>`,
         "      <g:availability>in_stock</g:availability>",
         `      <g:price>${xml(`${Number(product.priceGbp).toFixed(2)} GBP`)}</g:price>`,
+        "      <g:shipping>",
+        "        <g:country>GB</g:country>",
+        "        <g:service>Standard</g:service>",
+        "        <g:price>7.95 GBP</g:price>",
+        "      </g:shipping>",
+        "      <g:free_shipping_threshold>",
+        "        <g:country>GB</g:country>",
+        "        <g:price_threshold>250.00 GBP</g:price_threshold>",
+        "      </g:free_shipping_threshold>",
         `      <g:condition>${xml(googleCondition(product.condition))}</g:condition>`,
         `      <g:brand>${xml(product.brand)}</g:brand>`,
         `      <g:mpn>${xml(product.mpn || product.partNumber)}</g:mpn>`,

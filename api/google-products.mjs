@@ -1,4 +1,4 @@
-import { publicProducts } from "../lib/shop.mjs";
+import { publicProducts, productListingTitle } from "../lib/shop.mjs";
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
 const STOCK_LABEL = "stock-item";
@@ -139,6 +139,8 @@ export default async function handler(request, response) {
       "image_link",
       "availability",
       "price",
+      "shipping(country:service:price)",
+      "free_shipping_threshold(country:price_threshold)",
       "condition",
       "brand",
       "mpn",
@@ -149,12 +151,14 @@ export default async function handler(request, response) {
 
     const rows = products.map((product) => [
       product.id || product.partNumber,
-      feedTitle(product),
+      productListingTitle(product),
       publicDescription(product.description) || `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`,
       `${SITE}/stock/${productSlug(product)}`,
       product.imageUrl,
       "in_stock",
       `${Number(product.priceGbp).toFixed(2)} GBP`,
+      "GB:Standard:7.95 GBP",
+      "GB:250.00 GBP",
       googleCondition(product.condition),
       product.brand,
       product.mpn || product.partNumber,
