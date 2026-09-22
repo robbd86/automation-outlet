@@ -216,10 +216,10 @@ TICKER = '''<div class="ticker" aria-hidden="true">
 TRUST = '''<section style="padding:2.4rem 0">
   <div class="wrap">
     <div class="trust">
-      <div><h4>Free UK collection</h4><p>We can arrange collection anywhere in the UK.</p></div>
-      <div><h4>Same-day quotes</h4><p>Quick, no-obligation quotes &mdash; often same day.</p></div>
-      <div><h4>Single items to clearances</h4><p>One PLC or a complete plant takeout &mdash; both welcome.</p></div>
-      <div><h4>Engineer-run</h4><p>Run by a controls engineer with 10+ years on the tools.</p></div>
+      <div><h4>Engineer-run</h4><p>Industrial controls experience behind every stock and sourcing enquiry.</p></div>
+      <div><h4>Clear test status</h4><p>Tested, untested and parts-or-repair equipment is labelled clearly.</p></div>
+      <div><h4>UK stock + sourcing</h4><p>Buy AO-held stock or ask us to check our wider supplier network.</p></div>
+      <div><h4>Fast human response</h4><p>Send a part number and deal with someone who understands the equipment.</p></div>
     </div>
   </div>
 </section>'''
@@ -227,36 +227,42 @@ TRUST = '''<section style="padding:2.4rem 0">
 # ---- HOME (landing page, not a scroll) ----
 home_body = (
     TICKER
-    + hero("Industrial Automation Solutions &middot; UK Wide",
-           "Turning <em>Surplus</em> into Solutions",
-           "<strong>Cash paid for surplus PLCs, HMIs, drives &amp; control panels.</strong> We buy and sell new, used and surplus industrial automation equipment across the UK &mdash; from a single item to a full plant takeout. Engineer-run, honestly priced, collected free.",
-           [("Sell your surplus", "/sell-surplus.html"), ("Browse stock", "/buy-stock.html")],
-           '''<form action="/buy-stock.html#stock" method="get" role="search" style="margin-top:1rem"><label for="homePartSearch">Looking for a part?</label><div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem"><input id="homePartSearch" name="q" type="search" placeholder="Enter a part number or description" style="flex:1;min-width:0;max-width:30rem" required><button class="btn" type="submit">Search stock</button></div></form>''')
+    + hero("Industrial Automation Parts &middot; Obsolescence Support &middot; UK Wide",
+           "Find the <em>automation part</em> you need. Fast.",
+           "<strong>Search AO stock or send us the exact part number.</strong> We supply new, used and obsolete PLCs, HMIs, drives and controls from our own stock and a growing supplier network. Engineer-run, with clear condition and test status on every item.",
+           [("Browse stock", "/buy-stock.html"), ("Source a part", "/obsolete-parts-sourcing.html")],
+           '''<form action="/buy-stock.html#stock" method="get" role="search" style="margin-top:1rem"><label for="homePartSearch">Search by part number</label><div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem"><input id="homePartSearch" name="q" type="search" placeholder="e.g. 6ES7, 1756, CJ2M, PowerFlex..." style="flex:1;min-width:0;max-width:30rem" required><button class="btn" type="submit">Search AO stock</button></div></form>''')
     + cards([
-        ("Selling <span>surplus?</span>",
-         "Decommissioned panels, spares-store clear-outs, obsolete stock or end-of-project surplus. Fair offers on real market value, quotes often same day, free UK collection.",
-         "List your items", "/sell-surplus.html"),
         ("Buying <span>parts?</span>",
-         "New, used and surplus PLCs, HMIs and drives. Check each listing for its condition, test status and what is included.",
-         "Browse our stock", "/buy-stock.html"),
+         "Search current AO stock with clear condition, test status and pricing. If it is on our shelf, move straight to purchase or enquiry.",
+         "Search AO stock", "/buy-stock.html"),
+        ("Can't find <span>the part?</span>",
+         "Send us the exact part number. We check our own stock, supplier network and surplus channels for obsolete and hard-to-find automation equipment.",
+         "Source a part", "/obsolete-parts-sourcing.html"),
+        ("Selling <span>surplus?</span>",
+         "Turn redundant PLCs, HMIs, drives and control stock into cash or let us market suitable items through our managed resale routes.",
+         "Sell surplus", "/sell-surplus.html"),
     ])
     + BLOCK('home_featured')
     + TRUST
     + cards([
-        ("Obsolete <span>part?</span>",
-         "OEM says end-of-life, distributors say no stock. That's where we start &mdash; sourcing discontinued PLCs, HMIs and drives through our network and the surplus market.",
-         "Obsolete parts sourcing", "/obsolete-parts-sourcing.html"),
+        ("Stock <span>alerts</span>",
+         "Tell us the manufacturers and part numbers you buy. When suitable stock reaches AO or our network, you can hear about it without relying on marketplace searches.",
+         "Join buyer alerts", "/buyer-alerts.html"),
+        ("Critical spares <span>planning</span>",
+         "Remote reviews of PLC, HMI, drive and controls inventories to identify obsolete, difficult-to-source and production-critical gaps.",
+         "Critical spares audit", "/critical-spares-audit.html"),
         ("Engineering <span>services</span>",
-         "PLC and HMI programming, control panel builds and independent bench testing &mdash; 10+ years of factory-floor controls experience.",
+         "PLC and HMI programming, bench testing, obsolescence reviews and controls support from an engineer-run business.",
          "See our services", "/services.html"),
     ])
-    + cta_band("Not sure where to <span>start?</span>",
-               "Tell us what you've got or what you need &mdash; we'll point you the right way, usually the same working day.",
-               "Get in touch", "/contact.html")
+    + cta_band("Need a part that is <span>not listed?</span>",
+               "Send the manufacturer and exact part number. We'll check AO stock and our sourcing network and come back with the best route we can find.",
+               "Request a part", "/obsolete-parts-sourcing.html")
 )
 page("index",
-     "Automation Outlet &mdash; Cash Paid for Surplus PLCs, HMIs &amp; Drives | UK Wide",
-     "Automation Outlet buys and sells new, used and surplus industrial automation equipment across the UK. Same-day quotes, free UK collection. Siemens, Omron, Allen-Bradley, Mitsubishi.",
+     "Industrial Automation Parts &amp; Obsolete PLC Sourcing UK | Automation Outlet",
+     "Buy or source new, used and obsolete industrial automation parts in the UK. Search Automation Outlet stock or request hard-to-find Siemens, Allen-Bradley, Omron, Mitsubishi and drive parts.",
      home_body, active="/", wa_text="Hi%2C%20I%27d%20like%20to%20talk%20about%20automation%20equipment")
 
 # ---- SELL TO US (hosts the multi-line sell form) ----
