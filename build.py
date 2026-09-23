@@ -36,6 +36,7 @@ BLOCK = lambda n: open(f'_blocks/{n}.html').read()
 
 NAV = [
     ("Sell to us", "/sell-surplus.html"),
+    ("Consignment", "/consignment.html"),
     ("Buy stock", "/buy-stock.html"),
     ("Obsolete parts", "/obsolete-parts-sourcing.html"),
     ("Services", "/services.html"),
@@ -43,6 +44,7 @@ NAV = [
 ]
 
 FOOTER_LINKS = [
+    ("Consignment / managed resale", "/consignment.html"),
     ("Sell surplus PLCs", "/sell-surplus-plcs.html"),
     ("Sell control panels", "/sell-control-panels.html"),
     ("Factory clearance", "/factory-clearance.html"),
@@ -270,7 +272,7 @@ sell_body = (
     hero("Sell to us &middot; UK wide",
          "Sell your <em>surplus automation equipment</em>",
          "PLCs, HMIs, drives, control panels and spares-store stock &mdash; working, untested or faulty. List what you've got below and we'll come back with a fair, no-obligation offer, usually the same working day.",
-         [("List your items", "#sell-form"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27ve%20got%20surplus%20equipment%20to%20sell")])
+         [("List your items", "#sell-form"), ("Consignment", "/consignment.html"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27ve%20got%20surplus%20equipment%20to%20sell")])
     + BLOCK('buygrid')
     + BLOCK('how')
     + BLOCK('sell_form_section')
@@ -286,6 +288,47 @@ page("sell-surplus",
      "Sell surplus PLCs, HMIs, drives and control panels anywhere in the UK. Same-day quotes, fair market prices, free collection. List your items online in minutes.",
      sell_body, wa_text="Hi%2C%20I%27ve%20got%20surplus%20equipment%20to%20sell",
      extra_js=BLOCK('sellform_js'))
+
+# ---- CONSIGNMENT / MANAGED RESALE ----
+consignment_body = (
+    hero("Consignment &middot; managed resale &middot; UK wide",
+         "Get more from <em>surplus automation stock</em>",
+         "Keep ownership of suitable PLCs, HMIs, drives and controls while Automation Outlet markets them to industrial buyers. Our standard arrangement gives the seller <strong>80% of net sale proceeds</strong> and Automation Outlet 20%.",
+         [("Submit stock for review", "#consignment-form"), ("Sell outright instead", "/sell-surplus.html")],
+         "No upfront listing fee. In many cases the stock can remain at your premises until it sells.")
+    + cards([
+        ("Keep <span>80%</span>", "Our standard consignment share gives you 80% of net sale proceeds. AO earns 20% for marketing, buyer handling and managing the transaction.", "Start a consignment", "#consignment-form"),
+        ("Keep the <span>stock</span>", "Seller-held consignment means suitable stock can stay with you until a buyer is secured, avoiding unnecessary collection and storage.", "How it works", "#consignment-how"),
+        ("We do the <span>selling</span>", "We create listings, handle enquiries, negotiate with buyers and market suitable stock through AO, eBay and direct trade contacts.", "Send your stock", "#consignment-form"),
+        ("No sale, no <span>commission</span>", "There is no upfront AO commission. We earn our share when an item sells. Any unusual third-party costs are agreed before listing.", "Review the terms", "#consignment-terms"),
+    ])
+    + '<section id="consignment-how" style="padding:3.2rem 0"><div class="wrap"><div class="sec-head"><h2>How consignment <span>works</span></h2><p>A simple route for stock that is worth more than a quick trade-buy price but does not need to sit in your own sales queue.</p></div></div></section>'
+    + steps([
+        ("STEP 01", "Send the stock", "Upload a spreadsheet, add a few part numbers or send photos. We first identify what is genuinely worth marketing."),
+        ("STEP 02", "We review the market", "AO checks realistic resale values, demand and likely selling times rather than relying on optimistic asking prices."),
+        ("STEP 03", "Agree the arrangement", "We confirm the stock, listing approach and seller share before anything is marketed."),
+        ("STEP 04", "AO markets it", "We handle listings, buyer enquiries and negotiation. Suitable stock can remain at your premises while it is for sale."),
+        ("STEP 05", "Get paid", "When cleared buyer funds are received, the seller is paid their agreed share. Our standard seller share is 80% of net sale proceeds."),
+    ])
+    + prose("Why use <span>consignment?</span>", [
+        "An outright trade purchase has to leave enough margin for testing, storage, selling fees, warranty risk and slow-moving stock. Consignment removes much of that upfront resale risk, so suitable equipment can often target a stronger seller return.",
+        "It works particularly well for genuine industrial automation stock with identifiable part numbers: PLCs, HMIs, drives, servo equipment, safety hardware, I/O, power supplies and obsolete spares.",
+        "Not every item is suitable. We would rather decline weak or extremely slow-moving stock than fill your consignment list with equipment that is unlikely to sell."
+    ])
+    + BLOCK('consignment_form_section')
+    + '<section id="consignment-terms" style="padding:3.2rem 0"><div class="wrap"><div class="sec-head"><h2>Simple <span>commercial terms</span></h2><p>The exact scope is agreed before listings go live.</p></div><div class="steps"><div class="step"><div class="n">OWNERSHIP</div><h3>You retain ownership</h3><p>The stock remains yours until it sells. Seller-held stock can stay at your premises where practical.</p></div><div class="step"><div class="n">COMMISSION</div><h3>Standard 80 / 20 split</h3><p>The seller receives 80% of net sale proceeds and Automation Outlet receives 20%. Any unavoidable third-party costs are agreed in advance.</p></div><div class="step"><div class="n">PAYMENT</div><h3>Paid after cleared funds</h3><p>Seller payment is made after buyer funds have cleared, normally within five business days.</p></div><div class="step"><div class="n">LISTING PERIOD</div><h3>30-day rolling exclusivity</h3><p>Our standard arrangement uses a 30-day rolling exclusive marketing period so AO is not being undercut while actively selling the stock.</p></div></div></div></section>'
+    + faq([
+        ("Do I have to send the stock to Automation Outlet?", "Not necessarily. For suitable consignments, the stock can remain with you and ship directly to the buyer or via an agreed AO carrier once sold."),
+        ("Can I send a spreadsheet instead of entering every item?", "Yes. Upload an existing Excel, CSV or PDF list. A rough list is fine as long as part numbers and quantities can be identified."),
+        ("What if I also want a cash offer?", "Use our Sell to us page instead. We can compare an immediate trade purchase with managed resale when both routes make commercial sense."),
+        ("Does every item get listed?", "No. AO reviews demand, resale value and likely selling time first. We focus on stock with a realistic route to a buyer.")
+    ])
+)
+page("consignment",
+     "Industrial Automation Consignment UK | Sell PLCs, HMIs & Drives | Automation Outlet",
+     "Consign surplus PLCs, HMIs, drives and industrial automation stock with Automation Outlet. Standard 80/20 managed resale, seller-held stock available and no upfront commission.",
+     consignment_body, wa_text="Hi%2C%20I%27d%20like%20to%20discuss%20consigning%20automation%20stock",
+     extra_js=BLOCK('consignmentform_js'))
 
 # ---- BUY STOCK ----
 buy_body = (
