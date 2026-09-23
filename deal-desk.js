@@ -603,7 +603,7 @@ function selectEnquiry(issueNumber) {
           </div>
           <div class="field">
             <label for="v-share">Seller share of net proceeds %</label>
-            <input id="v-share" type="number" min="0" max="100" step="1" value="${admin.revenueSharePercent || 70}">
+            <input id="v-share" type="number" min="0" max="100" step="1" value="${admin.revenueSharePercent || 80}">
           </div>
           <div class="field">
             <label for="v-managed-low">Managed resale estimate – low</label>
