@@ -1,0 +1,130 @@
+<link rel="stylesheet" href="/portal.css">
+<section class="quote seller-portal" id="consignment-form">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="portal-kicker">Automation Outlet consignment intake</div>
+      <h2>Send us your <span>stock</span></h2>
+      <p>No polished inventory required. Add the key parts below, upload an existing stock list or a few photos, and we will review what is worth marketing.</p>
+    </div>
+
+    <form id="consignmentForm" class="sell-form" novalidate enctype="multipart/form-data">
+      <input type="text" name="website" id="consignmentWebsite" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <fieldset class="portal-section">
+        <legend><span>01</span> What do you have?</legend>
+        <div class="item-head portal-item-head">
+          <div>Qty</div><div>Type</div><div>Manufacturer</div><div>Part number</div><div>Condition</div><div></div>
+        </div>
+        <div id="consignmentItemRows">
+          <div class="item-row portal-item-row">
+            <input type="number" name="qty" min="1" max="9999" value="1" placeholder="1" aria-label="Quantity">
+            <select name="equipment_type" aria-label="Equipment type">
+              <option value="">Equipment type…</option>
+              <option>PLC / CPU</option>
+              <option>HMI / operator panel</option>
+              <option>Drive / inverter</option>
+              <option>Servo drive / motor</option>
+              <option>I/O / communication module</option>
+              <option>Safety equipment</option>
+              <option>Power supply</option>
+              <option>Control panel / cabinet</option>
+              <option>Mixed spares / job lot</option>
+              <option>Other</option>
+            </select>
+            <input type="text" name="manufacturer" placeholder="Siemens" aria-label="Manufacturer" maxlength="80">
+            <input type="text" name="part" placeholder="6ES7 315-2AG10" aria-label="Part number" maxlength="120">
+            <select name="condition" aria-label="Condition">
+              <option value="">Condition…</option>
+              <option>New / unused</option>
+              <option>New opened box</option>
+              <option>Removed working</option>
+              <option>Used - tested</option>
+              <option>Untested</option>
+              <option>Faulty / parts</option>
+              <option>Mixed / unknown</option>
+            </select>
+            <button type="button" class="item-remove" aria-label="Remove item">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-item" id="addConsignmentItem">+ Add another item</button>
+        <p class="cond-key">For a large mixed lot, one row is enough — choose <b>Mixed spares / job lot</b> and upload your spreadsheet below.</p>
+      </fieldset>
+
+      <fieldset class="portal-section">
+        <legend><span>02</span> Stock and fulfilment</legend>
+        <div class="portal-fields two-col">
+          <div class="field">
+            <label for="c-count">Approximate total items</label>
+            <input id="c-count" name="approx_count" type="number" min="1" max="100000" placeholder="e.g. 30">
+          </div>
+          <div class="field">
+            <label for="c-location">Stock location / postcode</label>
+            <input id="c-location" name="postcode" type="text" autocomplete="postal-code" placeholder="e.g. PE1 or Peterborough" maxlength="100">
+          </div>
+          <div class="field">
+            <label for="c-holding">Where should the stock stay?</label>
+            <select id="c-holding" name="holding">
+              <option value="seller-held">Keep it at our premises until sold</option>
+              <option value="ao-held">Automation Outlet can hold the stock</option>
+              <option value="either">Either option is possible</option>
+              <option value="discuss">Need to discuss logistics</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c-availability">Availability</label>
+            <select id="c-availability" name="availability">
+              <option>Available now</option>
+              <option>Available after decommissioning</option>
+              <option>Still installed / operating</option>
+              <option>Planning a future clearance</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="c-stock-list">Upload a stock list <span style="font-weight:400;color:var(--grey)">(optional)</span></label>
+          <input id="c-stock-list" name="stock_list" type="file" accept=".xlsx,.xls,.csv,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/pdf">
+          <small>Excel, CSV or PDF. If upload is unavailable, your enquiry will still be saved and you can send the file afterwards using your AO reference.</small>
+        </div>
+        <div class="field">
+          <label for="c-photos">Upload photos <span style="font-weight:400;color:var(--grey)">(optional, up to 8)</span></label>
+          <input id="c-photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          <small>Phone photos are fine. Labels and clear overall shots are the most useful.</small>
+        </div>
+      </fieldset>
+
+      <fieldset class="portal-section">
+        <legend><span>03</span> Your details</legend>
+        <div class="portal-fields two-col">
+          <div class="field">
+            <label for="c-name">Name</label>
+            <input id="c-name" name="name" type="text" autocomplete="name" required maxlength="120">
+          </div>
+          <div class="field">
+            <label for="c-company">Company</label>
+            <input id="c-company" name="company" type="text" autocomplete="organization" maxlength="160">
+          </div>
+          <div class="field">
+            <label for="c-phone">Phone</label>
+            <input id="c-phone" name="phone" type="tel" autocomplete="tel" required maxlength="50">
+          </div>
+          <div class="field">
+            <label for="c-email">Email</label>
+            <input id="c-email" name="email" type="email" autocomplete="email" required maxlength="200">
+          </div>
+        </div>
+        <div class="field">
+          <label for="c-notes">Anything else we should know?</label>
+          <textarea id="c-notes" name="notes" maxlength="4000" placeholder="Example: Factory upgrade stock, mixed Siemens S7-300/S7-400 and drives. Happy for stock to remain here and ship direct when sold."></textarea>
+        </div>
+        <label class="consent-row">
+          <input id="c-owner" type="checkbox" required>
+          <span>I confirm that I own the equipment or am authorised to place it into a consignment / managed resale arrangement.</span>
+        </label>
+        <p class="form-note"><strong>Standard AO consignment:</strong> seller receives 80% of net sale proceeds and Automation Outlet receives 20%. Any unusual third-party costs or different terms are agreed before listing.</p>
+        <button type="submit" class="btn big">Submit stock for consignment review</button>
+        <p class="form-status" id="consignmentStatus" role="status" aria-live="polite"></p>
+        <div id="consignmentSuccess" class="portal-success" hidden></div>
+      </fieldset>
+    </form>
+  </div>
+</section>
