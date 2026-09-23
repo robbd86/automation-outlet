@@ -1,0 +1,210 @@
+const consignmentItemRows = document.getElementById("consignmentItemRows");
+const consignmentTemplate = consignmentItemRows.querySelector(".item-row").cloneNode(true);
+
+function resetConsignmentRow(row) {
+  row.querySelectorAll("input").forEach((input) => {
+    input.value = input.name === "qty" ? "1" : "";
+  });
+  row.querySelectorAll("select").forEach((select) => select.selectedIndex = 0);
+}
+
+document.getElementById("addConsignmentItem").addEventListener("click", () => {
+  const clone = consignmentTemplate.cloneNode(true);
+  resetConsignmentRow(clone);
+  consignmentItemRows.appendChild(clone);
+});
+
+consignmentItemRows.addEventListener("click", (event) => {
+  if (!event.target.classList.contains("item-remove")) return;
+  const rows = consignmentItemRows.querySelectorAll(".item-row");
+  const row = event.target.closest(".item-row");
+  if (rows.length > 1) row.remove();
+  else resetConsignmentRow(row);
+});
+
+function collectConsignmentItems() {
+  return Array.from(consignmentItemRows.querySelectorAll(".item-row"))
+    .map((row) => ({
+      quantity: Number(row.querySelector("[name=qty]").value || 1),
+      equipmentType: row.querySelector("[name=equipment_type]").value.trim(),
+      manufacturer: row.querySelector("[name=manufacturer]").value.trim(),
+      partNumber: row.querySelector("[name=part]").value.trim(),
+      condition: row.querySelector("[name=condition]").value.trim(),
+    }))
+    .filter((item) => item.equipmentType || item.manufacturer || item.partNumber || item.condition);
+}
+
+function cValue(id) {
+  return document.getElementById(id).value.trim();
+}
+
+function cFallbackReference() {
+  const stamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `AO-CONS-${stamp}-${random}`;
+}
+
+function consignmentReadableItems(items) {
+  return items.map((item, index) =>
+    `${index + 1}. Qty ${item.quantity || "?"} — ${item.equipmentType || "type not stated"} — ${item.manufacturer || "manufacturer not stated"} ${item.partNumber || ""} — ${item.condition || "condition not stated"}`
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+}
+
+async function sendConsignmentCopy(payload, reference) {
+  const form = new FormData();
+  form.append("_subject", `NEW AO CONSIGNMENT LEAD — ${reference}`);
+  form.append("reference", reference);
+  form.append("enquiry", "Consignment / managed resale");
+  form.append("seller_share", "80% of net sale proceeds");
+  form.append("name", payload.contact.name);
+  form.append("company", payload.contact.company || "-");
+  form.append("phone", payload.contact.phone);
+  form.append("email", payload.contact.email);
+  form.append("location", payload.postcode || "Not stated");
+  form.append("holding", payload.logistics || "Not stated");
+  form.append("availability", payload.availability || "Not stated");
+  form.append("items", "\n" + consignmentReadableItems(payload.items).join("\n"));
+  form.append("notes", payload.notes || "-");
+
+  const stockList = document.getElementById("c-stock-list").files[0];
+  if (stockList) form.append("stock_list", stockList, stockList.name);
+
+  const photos = Array.from(document.getElementById("c-photos").files).slice(0, 8);
+  photos.forEach((file) => form.append("photos", file, file.name));
+
+  const response = await fetch(FORM_ENDPOINT, {
+    method: "POST",
+    body: form,
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error("Attachment copy unavailable");
+}
+
+const consignmentForm = document.getElementById("consignmentForm");
+const consignmentStatus = document.getElementById("consignmentStatus");
+const consignmentSuccess = document.getElementById("consignmentSuccess");
+const consignmentBtn = consignmentForm.querySelector("button[type=submit]");
+
+consignmentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  consignmentStatus.style.color = "";
+  consignmentStatus.textContent = "Creating your consignment enquiry…";
+  consignmentSuccess.hidden = true;
+  consignmentBtn.disabled = true;
+
+  const items = collectConsignmentItems();
+  if (!consignmentForm.reportValidity()) {
+    consignmentStatus.style.color = "#ff9c9c";
+    consignmentStatus.textContent = "Please complete the required contact and ownership fields.";
+    consignmentBtn.disabled = false;
+    return;
+  }
+  if (!items.length) {
+    consignmentStatus.style.color = "#ff9c9c";
+    consignmentStatus.textContent = "Please add at least one item or mixed job lot.";
+    consignmentBtn.disabled = false;
+    return;
+  }
+  if (document.getElementById("c-photos").files.length > 8) {
+    consignmentStatus.style.color = "#ff9c9c";
+    consignmentStatus.textContent = "Please choose no more than 8 photos.";
+    consignmentBtn.disabled = false;
+    return;
+  }
+
+  const count = cValue("c-count");
+  const holding = cValue("c-holding");
+  const sellerNotes = cValue("c-notes");
+  const payload = {
+    website: cValue("consignmentWebsite"),
+    preference: "revenue-share",
+    sellerType: "Business / company",
+    urgency: "flexible",
+    expectedPriceGbp: null,
+    postcode: cValue("c-location"),
+    logistics: holding,
+    availability: cValue("c-availability"),
+    contact: {
+      name: cValue("c-name"),
+      company: cValue("c-company"),
+      phone: cValue("c-phone"),
+      email: cValue("c-email"),
+    },
+    items,
+    notes: [
+      "Consignment lead — standard seller share 80% / AO commission 20%.",
+      count ? `Approximate total items: ${count}.` : "",
+      sellerNotes,
+    ].filter(Boolean).join("\n"),
+  };
+
+  let reference = "";
+  let primarySaved = false;
+  let attachmentSaved = false;
+
+  try {
+    try {
+      const response = await fetch("/api/deal-desk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        reference = data.reference;
+        primarySaved = true;
+      } else if (response.status === 400) {
+        throw new Error(data.error || "Submission could not be accepted");
+      }
+    } catch (error) {
+      if (error.message && /required|valid|accepted/i.test(error.message)) throw error;
+    }
+
+    if (!reference) reference = cFallbackReference();
+
+    try {
+      await sendConsignmentCopy(payload, reference);
+      attachmentSaved = true;
+    } catch (copyError) {
+      console.warn("Consignment email / attachment copy unavailable", copyError);
+    }
+
+    if (!primarySaved && !attachmentSaved) {
+      throw new Error("We could not save the enquiry. Please email info@automation-outlet.co.uk or use WhatsApp.");
+    }
+
+    const hadFiles = Boolean(
+      document.getElementById("c-stock-list").files.length ||
+      document.getElementById("c-photos").files.length
+    );
+
+    const whatsappText = encodeURIComponent(
+      `Hi Automation Outlet, I have just submitted consignment enquiry ${reference}. I would like to send stock photos / a list against this reference.`
+    );
+
+    consignmentForm.reset();
+    Array.from(consignmentItemRows.querySelectorAll(".item-row")).forEach((row, index) => {
+      if (index > 0) row.remove();
+      else resetConsignmentRow(row);
+    });
+
+    consignmentStatus.style.color = "var(--blue-bright)";
+    consignmentStatus.textContent = "Thanks — your consignment enquiry has been received.";
+    consignmentSuccess.hidden = false;
+    consignmentSuccess.innerHTML = `
+      <div>
+        <small>Your reference</small>
+        <strong>${reference}</strong>
+        <p>${hadFiles && attachmentSaved ? "Your selected files were included with the enquiry." : hadFiles ? "Your enquiry is saved. Please send the files on WhatsApp using the same reference." : "Keep this reference if you send photos or a stock spreadsheet afterwards."}</p>
+      </div>
+      <a class="btn" target="_blank" rel="noopener" href="https://wa.me/447849506371?text=${whatsappText}">Send files on WhatsApp</a>
+    `;
+  } catch (error) {
+    consignmentStatus.style.color = "#ff9c9c";
+    consignmentStatus.textContent = error.message || "Something went wrong — please email info@automation-outlet.co.uk.";
+  } finally {
+    consignmentBtn.disabled = false;
+  }
+});
