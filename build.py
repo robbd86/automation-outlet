@@ -302,14 +302,14 @@ consignment_body = (
         ("We do the <span>selling</span>", "We create listings, handle enquiries, negotiate with buyers and market suitable stock through AO, eBay and direct trade contacts.", "Send your stock", "#consignment-form"),
         ("No sale, no <span>commission</span>", "There is no upfront AO commission. We earn our share when an item sells. Any unusual third-party costs are agreed before listing.", "Review the terms", "#consignment-terms"),
     ])
-    + '<section id="consignment-how" style="padding:3.2rem 0"><div class="wrap"><div class="sec-head"><h2>How consignment <span>works</span></h2><p>A simple route for stock that is worth more than a quick trade-buy price but does not need to sit in your own sales queue.</p></div></div></section>'
+    + '<div id="consignment-how"></div>'
     + steps([
         ("STEP 01", "Send the stock", "Upload a spreadsheet, add a few part numbers or send photos. We first identify what is genuinely worth marketing."),
         ("STEP 02", "We review the market", "AO checks realistic resale values, demand and likely selling times rather than relying on optimistic asking prices."),
         ("STEP 03", "Agree the arrangement", "We confirm the stock, listing approach and seller share before anything is marketed."),
         ("STEP 04", "AO markets it", "We handle listings, buyer enquiries and negotiation. Suitable stock can remain at your premises while it is for sale."),
         ("STEP 05", "Get paid", "When cleared buyer funds are received, the seller is paid their agreed share. Our standard seller share is 80% of net sale proceeds."),
-    ])
+    ], "How consignment <span>works</span>")
     + prose("Why use <span>consignment?</span>", [
         "An outright trade purchase has to leave enough margin for testing, storage, selling fees, warranty risk and slow-moving stock. Consignment removes much of that upfront resale risk, so suitable equipment can often target a stronger seller return.",
         "It works particularly well for genuine industrial automation stock with identifiable part numbers: PLCs, HMIs, drives, servo equipment, safety hardware, I/O, power supplies and obsolete spares.",
