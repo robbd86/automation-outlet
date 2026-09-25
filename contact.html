@@ -139,15 +139,82 @@ const FORM_ENDPOINT = "https://formspree.io/f/xqevvvll";
 const form = document.getElementById("quoteForm");
 const statusEl = document.getElementById("formStatus");
 const submitBtn = form.querySelector("button[type=submit]");
+
+// Keep the hard blocklist deliberately narrow: only identities confirmed as fraudulent.
+// Everything else is still delivered, with suspicious procurement/credit wording merely flagged for review.
+const blockedDomains = new Set(["danthermgroups.com"]);
+const blockedPhones = new Set(["07828705752"]);
+
+function emailDomain(value) {
+  const parts = String(value || "").trim().toLowerCase().split("@");
+  return parts.length === 2 ? parts[1].replace(/\.$/, "") : "";
+}
+
+function normalisePhone(value) {
+  let digits = String(value || "").replace(/\D/g, "");
+  if (digits.startsWith("44")) digits = "0" + digits.slice(2);
+  return digits;
+}
+
+function reviewReasons(data) {
+  const text = [
+    data.get("details") || "",
+    data.get("company") || "",
+    data.get("enquiry") || ""
+  ].join(" ").toLowerCase();
+
+  const reasons = [];
+  if (/\bnet\s*(30|45|60|90)\b/.test(text)) reasons.push("credit terms mentioned");
+  if (/\b(payment terms?|credit account|upon (satisfactory )?delivery|procurement director|vendor registration|official quotation)\b/.test(text)) {
+    reasons.push("procurement / post-delivery payment wording");
+  }
+  return [...new Set(reasons)];
+}
+
 form.addEventListener("submit", async function(e){
   e.preventDefault();
-  statusEl.style.color = ""; statusEl.textContent = "Sending\u2026"; submitBtn.disabled = true;
+
+  const data = new FormData(form);
+  const domain = emailDomain(data.get("email"));
+  const phone = normalisePhone(data.get("phone"));
+
+  // Silently accept known scam submissions so the sender is not encouraged to keep changing details.
+  if (blockedDomains.has(domain) || blockedPhones.has(phone)) {
+    form.reset();
+    statusEl.style.color = "var(--blue-bright)";
+    statusEl.textContent = "Thanks — your details are on their way. We'll be in touch, usually the same working day.";
+    return;
+  }
+
+  const reasons = reviewReasons(data);
+  if (reasons.length) {
+    data.append("ao_review", "CHECK BEFORE OFFERING CREDIT OR SHIPPING: " + reasons.join("; "));
+    const subject = String(data.get("_subject") || "Automation Outlet — general enquiry");
+    data.set("_subject", "[REVIEW] " + subject);
+  } else {
+    data.append("ao_review", "No automated fraud flags");
+  }
+
+  statusEl.style.color = "";
+  statusEl.textContent = "Sending…";
+  submitBtn.disabled = true;
+
   try {
-    const res = await fetch(FORM_ENDPOINT, {method:"POST", body:new FormData(form), headers:{"Accept":"application/json"}});
-    if (res.ok) { form.reset(); statusEl.style.color="var(--blue-bright)"; statusEl.textContent="Thanks \u2014 your details are on their way. We'll be in touch, usually the same working day."; }
-    else { statusEl.style.color="#ff8080"; statusEl.textContent="Something went wrong \u2014 please email us directly at info@automation-outlet.co.uk."; }
-  } catch (err) { statusEl.style.color="#ff8080"; statusEl.textContent="Network error \u2014 please email us directly at info@automation-outlet.co.uk."; }
-  finally { submitBtn.disabled = false; }
+    const res = await fetch(FORM_ENDPOINT, {method:"POST", body:data, headers:{"Accept":"application/json"}});
+    if (res.ok) {
+      form.reset();
+      statusEl.style.color = "var(--blue-bright)";
+      statusEl.textContent = "Thanks — your details are on their way. We'll be in touch, usually the same working day.";
+    } else {
+      statusEl.style.color = "#ff8080";
+      statusEl.textContent = "Something went wrong — please email us directly at info@automation-outlet.co.uk.";
+    }
+  } catch (err) {
+    statusEl.style.color = "#ff8080";
+    statusEl.textContent = "Network error — please email us directly at info@automation-outlet.co.uk.";
+  } finally {
+    submitBtn.disabled = false;
+  }
 });
 </script>
 </body>
