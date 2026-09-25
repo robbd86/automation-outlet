@@ -464,6 +464,6 @@ form.addEventListener("submit", async function(e){
   } finally {
     submitBtn.disabled = false;
   }
-});'''
+});''')
 
 print("built:", sorted(f for f in os.listdir('.') if f.endswith('.html')))
