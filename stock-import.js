@@ -623,7 +623,7 @@
       checkbox.type = "checkbox";
       checkbox.className = "ebay-pick";
       checkbox.checked = item.duplicate || item.warning ? false : item.selected !== false;
-      checkbox.disabled = item.duplicate;
+      checkbox.disabled = item.duplicate || Boolean(item.warning);
       checkbox.dataset.index = String(index);
       checkbox.addEventListener("change", () => {
         item.selected = checkbox.checked;
