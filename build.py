@@ -51,6 +51,7 @@ FOOTER_LINKS = [
     ("Obsolete parts sourcing", "/obsolete-parts-sourcing.html"),
     ("PLC &amp; HMI programming", "/plc-programming.html"),
     ("Bench testing", "/bench-testing.html"),
+    ("Terms of sale", "/terms.html"),
     ("Returns &amp; refunds", "/returns.html"),
     ("Privacy notice", "/privacy.html"),
 ]
