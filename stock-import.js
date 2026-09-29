@@ -264,6 +264,13 @@
     ["yaskawa", "Yaskawa"],
     ["sew", "SEW-Eurodrive"],
     ["danfoss", "Danfoss"],
+    ["moxa", "MOXA"],
+    ["ifm", "IFM"],
+    ["sick", "SICK"],
+    ["crouzet", "Crouzet"],
+    ["control techniques", "Control Techniques"],
+    ["eurotherm", "Eurotherm"],
+    ["honeywell", "Honeywell"],
   ];
 
   function inferBrand(title) {
@@ -281,10 +288,23 @@
     if (/industrial pc|\bipc\b|panel pc|box pc/i.test(title)) return "Industrial PC";
     if (/sensor|photoelectric|proximity|encoder/i.test(title)) return "Sensor";
     if (/starter|contactor|soft start|softstart/i.test(title)) return "Motor starter";
+    // Detect controllers before communications: many PLC CPUs include EtherNet/IP,
+    // PROFINET or other network terms in their titles.
+    if (/\bcpu\b|processor|controller|\bplc\b|compactlogix|micrologix|micro8(?:00|50)|s7-?1200|s7-?1500|s7-?300|cj2m|cp2e/i.test(title)) return "PLC CPU";
     if (/ethernet|profibus|profinet|cc-link|communication|comm module|interface module|scanner|adapter/i.test(title)) return "Communication module";
     if (/input|output|\bi\/o\b|\bio\b|digital|analogue|analog|relay output|module/i.test(title) && !/\bcpu\b|processor|controller/i.test(title)) return "PLC I/O module";
-    if (/\bcpu\b|processor|controller|\bplc\b|compactlogix|micrologix|s7-?1200|s7-?1500|s7-?300|cj2m|cp2e/i.test(title)) return "PLC CPU";
     return "Other automation";
+  }
+
+  function importWarning(title) {
+    const lower = String(title || "").toLowerCase();
+    if (/mobility scooter|wheelchair|mobility aid|mobility chair/.test(lower)) {
+      return "Looks like a non-automation listing — review before importing.";
+    }
+    if (/\b(testing|repair|programming|commissioning) service\b|\bservice listing\b/.test(lower)) {
+      return "Looks like a service advert rather than physical stock — review before importing.";
+    }
+    return "";
   }
 
   function inferCondition(raw, title) {
@@ -588,7 +608,8 @@
     const brands = [
       "Siemens", "Omron", "Allen-Bradley", "Mitsubishi", "ABB", "Lenze",
       "Schneider Electric", "Pilz", "Phoenix Contact", "Fanuc", "Sauter",
-      "Beckhoff", "B&R", "Yaskawa", "SEW-Eurodrive", "Danfoss", "Other",
+      "Beckhoff", "B&R", "Yaskawa", "SEW-Eurodrive", "Danfoss", "MOXA", "IFM",
+      "SICK", "Crouzet", "Control Techniques", "Eurotherm", "Honeywell", "Other",
     ];
 
     rows.forEach((item, index) => {
@@ -601,7 +622,7 @@
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.className = "ebay-pick";
-      checkbox.checked = item.duplicate ? false : item.selected !== false;
+      checkbox.checked = item.duplicate || item.warning ? false : item.selected !== false;
       checkbox.disabled = item.duplicate;
       checkbox.dataset.index = String(index);
       checkbox.addEventListener("change", () => {
@@ -609,7 +630,7 @@
         saveDraft();
       });
       const pickText = document.createElement("span");
-      pickText.textContent = item.duplicate ? "Skip" : "Include";
+      pickText.textContent = item.duplicate ? "Skip" : item.warning ? "Review" : "Include";
       pickWrap.append(checkbox, pickText);
 
       const main = document.createElement("div");
@@ -626,10 +647,10 @@
       sub.textContent = item.itemNumber ? `eBay ${item.itemNumber}` : "No item number";
       titleWrap.append(title, sub);
       top.appendChild(titleWrap);
-      if (item.duplicate) {
+      if (item.duplicate || item.warning) {
         const dup = document.createElement("div");
         dup.className = "ebay-dup";
-        dup.textContent = "Already on website — skipped";
+        dup.textContent = item.duplicate ? "Already on website — skipped" : item.warning;
         top.appendChild(dup);
       }
 
@@ -671,7 +692,7 @@
     });
 
     actions.classList.remove("hidden");
-    const selectable = rows.filter((item) => !item.duplicate).length;
+    const selectable = rows.filter((item) => !item.duplicate && !item.warning).length;
     const selectedCount = preview.querySelectorAll(".ebay-pick:checked:not(:disabled)").length;
     selectAll.checked = selectable > 0 && selectedCount === selectable;
     setImportStatus(`${rows.length} active listing${rows.length === 1 ? "" : "s"} loaded. ${selectedCount} selected to import.`);
@@ -738,9 +759,10 @@
           ebayUrl,
           description: cell(rawRow, indices.description) || buildDescription(title, condition, ebayUrl),
           duplicate: false,
+          warning: importWarning(title),
         };
         item.duplicate = Boolean(existingMatch(item, currentProducts));
-        item.selected = !item.duplicate;
+        item.selected = !item.duplicate && !item.warning;
         return item;
       })
       .filter(Boolean);
