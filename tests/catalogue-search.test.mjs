@@ -39,3 +39,8 @@ test('ordinary descriptive search and no-match cases remain supported', () => {
   app.elements.get('stockSearch').value = 'nonexistent-part';
   assert.equal(app.run('currentProducts().length'), 0);
 });
+test('stock cards use a canonical slug when two lots share a part number', () => {
+  const app = catalogue();
+  assert.equal(app.run("productSlug({brand:'Siemens',partNumber:'6ES7132-4BF00-0AA0',slug:'siemens-6es7132-4bf00-0aa0-base'})"), 'siemens-6es7132-4bf00-0aa0-base');
+  assert.equal(app.run("productSlug({brand:'Siemens',partNumber:'6ES7132-4BF00-0AA0'})"), 'siemens-6es7132-4bf00-0aa0');
+});

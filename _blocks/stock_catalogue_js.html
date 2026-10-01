@@ -21,7 +21,7 @@ function slugify(value) {
 }
 
 function productSlug(product) {
-  return slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+  return slugify(product.slug) || slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
 }
 
 function publicDescription(value) {
@@ -139,7 +139,9 @@ function createProductCard(product) {
   price.textContent = gbp.format(Number(product.priceGbp || 0));
   const vat = document.createElement("div");
   vat.className = "stock-qty";
-  vat.textContent = "UK delivery available";
+  vat.textContent = product.deliveryMode === "parcel"
+    ? "UK delivery £7.95 · free over £250"
+    : "Delivery quote required";
   priceRow.append(price, vat);
 
   const actions = document.createElement("div");

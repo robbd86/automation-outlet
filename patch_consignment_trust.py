@@ -14,7 +14,7 @@ HOME_BLOCK = f'''
   <div class="wrap">
     <div class="trust">
       <div>
-        <h4>3 consignment sales this week</h4>
+        <h4>3 recent consignment sales</h4>
         <p>Recent managed-resale activity through Automation Outlet.</p>
       </div>
       <div>
@@ -45,7 +45,7 @@ CONSIGNMENT_BLOCK = f'''
   <div class="wrap">
     <div class="sec-head">
       <div class="eyebrow">Recent consignment activity</div>
-      <h2>3 consignment sales <span>this week</span></h2>
+      <h2>3 recent <span>consignment sales</span></h2>
       <p>Real surplus automation equipment marketed and sold through Automation Outlet's managed-resale service.</p>
     </div>
     <div class="trust">
