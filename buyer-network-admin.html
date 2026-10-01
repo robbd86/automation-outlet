@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AO Buyer Match | Automation Outlet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.admin-shell{padding:2rem 0 4rem}.admin-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-end;margin-bottom:1.25rem}
+.admin-head h1{font-size:clamp(2.1rem,6vw,3.6rem)}.panel{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);padding:1.2rem;margin-bottom:1rem}
+.match-grid{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:.65rem;align-items:end}.buyer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:.85rem}
+.buyer-card{background:var(--navy-card);border:1px solid var(--line);border-radius:var(--radius);padding:1rem}.buyer-card h3{font-size:1.2rem;margin-bottom:.1rem}.sub{color:var(--grey);font-size:.86rem;margin-bottom:.7rem}
+.match-badge{display:inline-block;font:600 .72rem 'IBM Plex Mono';padding:.28rem .48rem;border:1px solid var(--line);border-radius:6px;margin-bottom:.6rem;color:var(--blue-bright)}
+.tags{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}.tag{font:500 .72rem 'IBM Plex Mono';padding:.25rem .42rem;border:1px solid var(--line);border-radius:6px;color:var(--blue-bright);background:var(--navy-deep)}
+.meta{display:grid;gap:.35rem;font-size:.87rem;color:var(--grey)}.meta b{color:var(--white)}.wanted{margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--line);color:var(--grey);font-size:.87rem;white-space:pre-wrap}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}.small{padding:.45rem .6rem;font-size:.78rem}.summary{font:500 .82rem 'IBM Plex Mono';color:var(--blue-bright);margin:.8rem 0}.empty{padding:1.3rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--grey)}
+.lock{max-width:520px}.lock p{color:var(--grey);margin:.4rem 0 1rem}
+@media(max-width:850px){.match-grid{grid-template-columns:1fr 1fr}.match-grid .wide{grid-column:1/-1}}@media(max-width:560px){.match-grid{grid-template-columns:1fr}.match-grid .wide{grid-column:auto}.admin-head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a><nav class="nav-links"><a href="/deal-desk.html">Deal desk</a><a href="/stock-admin.html">Stock manager</a><a href="/buyer-network-admin.html" style="color:var(--white)">Buyer match</a></nav></div></header>
+<main class="admin-shell"><div class="wrap">
+  <div class="admin-head"><div><div class="eyebrow">Private admin</div><h1>AO Buyer <span style="color:var(--blue-bright)">Match</span></h1><p style="color:var(--grey)">Match incoming seller stock against the buyer profiles captured by the website.</p></div><a class="btn ghost" href="/buyer-alerts.html" target="_blank" rel="noopener">View signup page</a></div>
+
+  <section id="lockPanel" class="panel lock">
+    <h3>Unlock buyer matching</h3><p>Use the same admin key as the AO Deal Desk.</p>
+    <div class="field"><label for="keyInput">Admin key</label><input id="keyInput" type="password" autocomplete="current-password"></div>
+    <button id="unlockBtn" class="btn big" type="button">Unlock</button>
+    <p id="lockStatus" role="status"></p>
+  </section>
+
+  <section id="app" hidden>
+    <div class="panel">
+      <div class="eyebrow">Incoming stock</div>
+      <h2 style="margin-bottom:.85rem">Find matching buyers</h2>
+      <div class="match-grid">
+        <div class="field"><label for="manufacturer">Manufacturer</label><input id="manufacturer" type="text" placeholder="e.g. Siemens"></div>
+        <div class="field"><label for="category">Equipment type</label><select id="category"><option value="">Any type</option><option>PLC / CPU</option><option>HMI</option><option>Drives</option><option>Servo</option><option>I/O</option><option>Job lots</option></select></div>
+        <div class="field wide"><label for="keywords">Range / part number / keywords</label><input id="keywords" type="text" placeholder="e.g. Comfort, TP700, 6AV2"></div>
+        <button id="matchBtn" class="btn" type="button">Match buyers</button>
+      </div>
+      <p style="color:var(--grey);font-size:.85rem;margin-top:.75rem">Tip: manufacturer + equipment type gives the strongest base match; add a range or part number to narrow it further.</p>
+    </div>
+    <div id="summary" class="summary"></div>
+    <div id="buyers" class="buyer-grid"></div>
+  </section>
+</div></main>
+<script>
+const state={key:sessionStorage.getItem("aoDealDeskKey")||"",buyers:[]};
+const el=(id)=>document.getElementById(id);
+const esc=(v)=>String(v??"").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const norm=(v)=>String(v??"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+
+async function load(){
+  const r=await fetch("/api/buyer-network-admin",{headers:{Accept:"application/json","x-deal-desk-key":state.key}});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error||"Could not load buyer network");
+  state.buyers=data.buyers||[];
+  sessionStorage.setItem("aoDealDeskKey",state.key);
+  el("lockPanel").hidden=true;el("app").hidden=false;renderMatches();
+}
+
+function scoreBuyer(b){
+  const manufacturer=norm(el("manufacturer").value),category=el("category").value,rawKeywords=el("keywords").value.trim();
+  const terms=rawKeywords.split(/[,;]+/).map(norm).filter(Boolean);
+  const brand=norm(b.brands),wanted=norm(b.wantedParts),all=norm([b.brands,b.wantedParts,b.company,b.buyerType,(b.categories||[]).join(" "),b.buyingVolume].join(" "));
+  let score=0;const reasons=[];
+  if(manufacturer){
+    if(brand.includes(manufacturer)){score+=4;reasons.push("manufacturer");}
+    else if(all.includes(manufacturer)){score+=2;reasons.push("manufacturer mentioned");}
+  }
+  if(category){
+    if((b.categories||[]).includes(category)){score+=4;reasons.push("equipment type");}
+    else if(category==="Job lots" && /job lot|bulk|clearance|inventor/.test(all)){score+=2;reasons.push("bulk buyer");}
+  }
+  let keywordHits=0;
+  for(const term of terms){if(term && (wanted.includes(term)||all.includes(term))){score+=2;keywordHits++;}}
+  if(keywordHits)reasons.push(keywordHits===1?"keyword":"keywords");
+  const hasCriteria=Boolean(manufacturer||category||terms.length);
+  return {score,reasons,hasCriteria};
+}
+
+function label(score){if(score>=8)return "High match";if(score>=4)return "Good match";if(score>0)return "Possible match";return "Buyer profile";}
+
+function renderMatches(){
+  const scored=state.buyers.map((b)=>({b,...scoreBuyer(b)}));
+  const hasCriteria=scored.some((x)=>x.hasCriteria);
+  let rows=hasCriteria?scored.filter((x)=>x.score>0):scored;
+  rows.sort((a,b)=>b.score-a.score||String(b.b.signupDate||b.b.createdTime).localeCompare(String(a.b.signupDate||a.b.createdTime)));
+  el("summary").textContent=hasCriteria?`${rows.length} matching buyer${rows.length===1?"":"s"} from ${state.buyers.length} profiles`:`${state.buyers.length} buyer profile${state.buyers.length===1?"":"s"} loaded · enter stock details above to rank matches`;
+  if(!rows.length){el("buyers").innerHTML='<div class="empty">No buyer profile currently matches those details. Try a broader manufacturer/category search or market the stock publicly.</div>';return;}
+  el("buyers").innerHTML=rows.map(({b,score,reasons})=>{
+    const tags=[...(b.categories||[]),...(b.brands?b.brands.split(",").map((x)=>x.trim()).filter(Boolean):[])].slice(0,10).map((t)=>`<span class="tag">${esc(t)}</span>`).join("");
+    const subject=encodeURIComponent("Automation Outlet stock opportunity");
+    const body=encodeURIComponent(`Hi ${b.name||""},\n\nI have an automation stock opportunity that looks relevant to your AO Buyer Network profile.\n\nRegards,\nAutomation Outlet`);
+    return `<article class="buyer-card"><span class="match-badge">${esc(label(score))}${score?" · "+score:""}</span><h3>${esc(b.company||b.name||"Buyer")}</h3><div class="sub">${esc(b.name||"")}${b.countryRegion?" · "+esc(b.countryRegion):""}</div><div class="tags">${tags||'<span class="tag">General automation</span>'}</div><div class="meta"><div><b>Email:</b> ${esc(b.email||"—")}</div><div><b>Typical buy:</b> ${esc(b.buyingVolume||"—")}</div><div><b>Condition:</b> ${esc(b.condition||"—")}</div><div><b>Opportunity size:</b> ${esc(b.spendBand||"—")}</div>${reasons.length?`<div><b>Matched on:</b> ${esc(reasons.join(", "))}</div>`:""}</div>${b.wantedParts?`<div class="wanted"><b>Wanted list / ranges</b><br>${esc(b.wantedParts)}</div>`:""}<div class="actions"><a class="btn small" href="mailto:${encodeURIComponent(b.email||"")}?subject=${subject}&body=${body}">Email buyer</a></div></article>`;
+  }).join("");
+}
+
+el("unlockBtn").addEventListener("click",async()=>{state.key=el("keyInput").value.trim();el("lockStatus").textContent="Loading buyer profiles…";try{await load();el("lockStatus").textContent="";}catch(e){el("lockStatus").style.color="#ff9c9c";el("lockStatus").textContent=e.message;}});
+el("matchBtn").addEventListener("click",renderMatches);
+for(const id of ["manufacturer","category","keywords"]){el(id).addEventListener(id==="category"?"change":"input",renderMatches);}
+if(state.key){load().catch(()=>{sessionStorage.removeItem("aoDealDeskKey");state.key="";el("lockPanel").hidden=false;el("app").hidden=true;});}
+</script>
+</body>
+</html>
