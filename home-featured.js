@@ -32,7 +32,7 @@
   }
 
   function productUrl(product) {
-    return "/stock/" + slugify([product.brand, product.partNumber].filter(Boolean).join("-"));
+    return "/stock/" + (slugify(product.slug) || slugify([product.brand, product.partNumber].filter(Boolean).join("-")));
   }
 
   const gbp = new Intl.NumberFormat("en-GB", {
