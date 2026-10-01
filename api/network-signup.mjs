@@ -239,6 +239,62 @@ async function notifyFormspree(raw, signup) {
   }
 }
 
+
+function adminAllowed(request) {
+  const expected = clean(process.env.AO_DEAL_DESK_KEY, 500);
+  const supplied = clean(request.headers?.["x-deal-desk-key"], 500);
+  return Boolean(expected && supplied && expected === supplied);
+}
+
+async function listBuyerRecords() {
+  const { token, baseId, tableId } = airtableSettings("buyer-network");
+  if (!token || !baseId || !tableId) {
+    const error = new Error("Buyer network storage is not configured");
+    error.status = 503;
+    throw error;
+  }
+
+  const buyers = [];
+  let offset = "";
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (offset) params.set("offset", offset);
+    const result = await fetch(
+      `${AIRTABLE_API}/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await result.json().catch(() => ({}));
+    if (!result.ok) throw airtableError(data, result.status);
+
+    for (const record of data.records || []) {
+      const fields = record.fields || {};
+      buyers.push({
+        id: record.id,
+        createdTime: record.createdTime || "",
+        name: clean(fields.Name, 120),
+        company: clean(fields.Company, 160),
+        email: clean(fields.Email, 200),
+        phone: clean(fields["Phone / WhatsApp"], 60),
+        buyerType: clean(fields["Buyer Type"], 100),
+        buyingVolume: clean(fields["Typical Requirement"], 100),
+        categories: Array.isArray(fields.Categories) ? fields.Categories.map((value) => clean(value, 100)).filter(Boolean) : [],
+        brands: clean(fields["Preferred Brands"], 500),
+        wantedParts: clean(fields["Wanted Parts / Ranges"], 2000),
+        condition: clean(fields.Condition, 100),
+        preferredContact: clean(fields["Preferred Contact"], 60),
+        countryRegion: clean(fields["Country / Region"], 160),
+        spendBand: clean(fields["Typical Opportunity Size"], 100),
+        status: clean(fields.Status, 60),
+        signupDate: clean(fields["Signup Date"], 80),
+      });
+    }
+
+    offset = clean(data.offset, 300);
+  } while (offset);
+
+  return buyers;
+}
+
 function originAllowed(request) {
   const origin = clean(request.headers?.origin, 500);
   if (!origin) return true;
@@ -273,8 +329,20 @@ function originAllowed(request) {
 }
 
 export default async function handler(request, response) {
-  response.setHeader("Allow", "POST, OPTIONS");
+  response.setHeader("Allow", "GET, POST, OPTIONS");
   if (request.method === "OPTIONS") return response.status(204).end();
+
+  if (request.method === "GET") {
+    if (!adminAllowed(request)) return json(response, 401, { ok: false, error: "Invalid admin key" });
+    try {
+      const buyers = await listBuyerRecords();
+      return json(response, 200, { ok: true, buyers });
+    } catch (error) {
+      console.error("Buyer network admin error", error.message);
+      return json(response, error.status || 500, { ok: false, error: error.message || "Could not load buyers" });
+    }
+  }
+
   if (request.method !== "POST") return json(response, 405, { ok: false, error: "Method not allowed" });
   if (!originAllowed(request)) return json(response, 403, { ok: false, error: "Origin not allowed" });
 
