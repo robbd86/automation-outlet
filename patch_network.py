@@ -26,29 +26,29 @@ def insert_once(path: Path, needle: str, insertion: str, marker: str) -> None:
 def patch_stock_alert_nav() -> None:
     """Put Stock Alerts in both desktop and mobile navigation on public pages."""
     needle = '>Buy stock</a><a href="/obsolete-parts-sourcing.html"'
-    replacement = '>Buy stock</a><a href="/buyer-alerts.html">Stock Alerts</a><a href="/obsolete-parts-sourcing.html"'
+    replacement = '>Buy stock</a><a href="/buyer-alerts.html">Buyer Network</a><a href="/obsolete-parts-sourcing.html"'
     for path in ROOT.glob("*.html"):
         if path.name in ADMIN_PAGES:
             continue
         html = path.read_text(encoding="utf-8")
-        if '/buyer-alerts.html">Stock Alerts</a>' in html:
+        if '/buyer-alerts.html">Buyer Network</a>' in html:
             continue
         if needle not in html:
             continue
         html = html.replace(needle, replacement)
         path.write_text(html, encoding="utf-8")
-        print(f"patched Stock Alerts nav: {path.name}")
+        print(f"patched Buyer Network nav: {path.name}")
 
 
 def patch_home() -> None:
     path = ROOT / "index.html"
     html = path.read_text(encoding="utf-8")
     old_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a></div>'
-    new_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a><a href="/buyer-alerts.html" class="btn big ghost">Stock alerts</a></div>'
+    new_ctas = '<div class="hero-ctas"><a href="/sell-surplus.html" class="btn big">Sell your surplus</a><a href="/buy-stock.html" class="btn big ghost">Browse stock</a><a href="/buyer-alerts.html" class="btn big ghost">Buyer Network</a></div>'
     if old_ctas in html:
         html = html.replace(old_ctas, new_ctas, 1)
         path.write_text(html, encoding="utf-8")
-        print("patched homepage Stock Alerts hero CTA")
+        print("patched homepage Buyer Network hero CTA")
 
     block = '''<section style="padding:2.8rem 0">
   <div class="wrap">
@@ -58,9 +58,9 @@ def patch_home() -> None:
     </div>
     <div class="paths" style="margin:0">
       <div class="path">
-        <h3>AO <span>Stock Alerts</span></h3>
+        <h3>AO <span>Buyer Network</span></h3>
         <p>Tell us the brands, equipment and deal sizes you buy. We can contact you when matching PLCs, HMIs, drives and job lots become available &mdash; often before a public listing.</p>
-        <a class="link" href="/buyer-alerts.html">Join AO Stock Alerts &rarr;</a>
+        <a class="link" href="/buyer-alerts.html">Join AO Buyer Network &rarr;</a>
       </div>
       <div class="path">
         <h3>Supplier <span>network</span></h3>
@@ -78,11 +78,11 @@ def patch_buy() -> None:
     block = '''<section class="quote" style="padding:3rem 0">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">AO Stock Alerts</div>
+      <div class="eyebrow">AO Buyer Network</div>
       <h2>Want first look at <span>incoming stock?</span></h2>
       <p>Tell us the manufacturers, equipment and deal sizes you buy. We can put matching surplus stock in front of you when it arrives, including selected opportunities before wider marketing.</p>
     </div>
-    <a href="/buyer-alerts.html" class="btn big">Join AO Stock Alerts</a>
+    <a href="/buyer-alerts.html" class="btn big">Join AO Buyer Network</a>
     <p class="services-note" style="margin-top:1rem">No general newsletter &mdash; just relevant automation stock matched to your buying profile.</p>
   </div>
 </section>'''
