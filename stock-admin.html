@@ -131,9 +131,9 @@
             </div>
 
             <div class="field">
-              <label for="category">Category</label>
-              <select id="category" required>
-                <option value="">Select category</option>
+              <label for="category">Equipment type (category)</label>
+              <input id="category" list="categoryOptions" maxlength="80" placeholder="e.g. Temperature controller" required>
+              <datalist id="categoryOptions">
                 <option>PLC CPU</option>
                 <option>PLC I/O module</option>
                 <option>Communication module</option>
@@ -145,7 +145,8 @@
                 <option>Sensor</option>
                 <option>Motor starter</option>
                 <option>Other automation</option>
-              </select>
+              </datalist>
+              <p class="admin-note">Type your own equipment type or choose a suggestion.</p>
             </div>
 
             <div class="field">

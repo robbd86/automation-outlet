@@ -600,11 +600,6 @@
       return;
     }
 
-    const categories = [
-      "PLC CPU", "PLC I/O module", "Communication module", "HMI",
-      "Drive / inverter", "Safety module", "Power supply", "Industrial PC",
-      "Sensor", "Motor starter", "Other automation",
-    ];
     const brands = [
       "Siemens", "Omron", "Allen-Bradley", "Mitsubishi", "ABB", "Lenze",
       "Schneider Electric", "Pilz", "Phoenix Contact", "Fanuc", "Sauter",
@@ -659,7 +654,10 @@
       part.dataset.index = String(index);
       const brand = makeSelect(brands, brands.includes(item.brand) ? item.brand : "Other", "ebay-brand");
       brand.dataset.index = String(index);
-      const category = makeSelect(categories, item.category, "ebay-category");
+      const category = makeInput(item.category, "ebay-category");
+      category.setAttribute("list", "categoryOptions");
+      category.maxLength = 80;
+      category.placeholder = "Equipment type";
       category.dataset.index = String(index);
       const price = makeInput(item.priceGbp.toFixed(2), "ebay-price", "number");
       price.min = "0";
@@ -677,7 +675,7 @@
       fields.append(
         makeField("Part number", part),
         makeField("Brand", brand),
-        makeField("Category", category),
+        makeField("Equipment type", category),
         makeField("Price (£)", price),
         makeField("Qty", qty),
         makeField("Delivery / checkout", delivery)
@@ -705,7 +703,7 @@
       if (!item) return;
       if (control.classList.contains("ebay-part")) item.partNumber = control.value.trim().toUpperCase();
       if (control.classList.contains("ebay-brand")) item.brand = control.value;
-      if (control.classList.contains("ebay-category")) item.category = control.value;
+      if (control.classList.contains("ebay-category")) item.category = control.value.trim();
       if (control.classList.contains("ebay-price")) item.priceGbp = money(control.value);
       if (control.classList.contains("ebay-qty")) item.quantity = quantity(control.value);
       if (control.classList.contains("ebay-image-url")) item.imageUrl = control.value.trim();
