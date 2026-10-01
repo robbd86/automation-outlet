@@ -249,9 +249,9 @@ home_body = (
     + BLOCK('home_featured')
     + TRUST
     + cards([
-        ("Buyer <span>network</span>",
+        ("Stock <span>alerts</span>",
          "Tell us the manufacturers and part numbers you buy. When suitable stock reaches AO or our network, you can hear about it without relying on marketplace searches.",
-         "Join the buyer network", "/buyer-alerts.html"),
+         "Join buyer alerts", "/buyer-alerts.html"),
         ("Critical spares <span>planning</span>",
          "Remote reviews of PLC, HMI, drive and controls inventories to identify obsolete, difficult-to-source and production-critical gaps.",
          "Critical spares audit", "/critical-spares-audit.html"),
