@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Add recent consignment proof to the public AO homepage and consignment page.
+"""Add cumulative consignment proof to the public AO homepage and consignment page.
 
 This runs after build.py so the trust messaging survives future rebuilds.
 """
 
 from pathlib import Path
-
-UPDATED = "1 October 2026"
 
 HOME_BLOCK = f'''
 <!-- AO_CONSIGNMENT_TRUST_START -->
@@ -14,8 +12,8 @@ HOME_BLOCK = f'''
   <div class="wrap">
     <div class="trust">
       <div>
-        <h4>3 recent consignment sales</h4>
-        <p>Recent managed-resale activity through Automation Outlet.</p>
+        <h4>Successful consignment sales completed</h4>
+        <p>Proven managed-resale transactions completed for automation sellers.</p>
       </div>
       <div>
         <h4>Seller-held stock</h4>
@@ -31,7 +29,7 @@ HOME_BLOCK = f'''
       </div>
     </div>
     <p class="services-note" style="margin-top:1rem">
-      <strong>Recent consignment activity</strong> &middot; updated {UPDATED}
+      <strong>Proven managed-resale track record</strong>
       &nbsp;&middot;&nbsp; <a href="/consignment.html">See how consignment works &rarr;</a>
     </p>
   </div>
@@ -44,9 +42,9 @@ CONSIGNMENT_BLOCK = f'''
 <section id="consignment-results" style="padding:0 0 2.8rem">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">Recent consignment activity</div>
-      <h2>3 recent <span>consignment sales</span></h2>
-      <p>Real surplus automation equipment marketed and sold through Automation Outlet's managed-resale service.</p>
+      <div class="eyebrow">Proven managed resale</div>
+      <h2>Successful <span>consignment sales completed</span></h2>
+      <p>Real surplus automation equipment marketed, sold and settled through Automation Outlet's managed-resale service.</p>
     </div>
     <div class="trust">
       <div>
@@ -66,7 +64,7 @@ CONSIGNMENT_BLOCK = f'''
         <p>Public case studies do not disclose consignor or buyer identities without permission.</p>
       </div>
     </div>
-    <p class="services-note" style="margin-top:1rem">Recent AO activity &middot; updated {UPDATED}. Results vary by part number, condition, demand and price.</p>
+    <p class="services-note" style="margin-top:1rem">Completed seller transactions through Automation Outlet. Results vary by part number, condition, demand and price.</p>
   </div>
 </section>
 <!-- AO_CONSIGNMENT_TRUST_END -->
