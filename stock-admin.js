@@ -60,7 +60,7 @@ function productPayload() {
     title: el("title").value,
     partNumber: el("partNumber").value,
     brand: el("brand").value,
-    category: el("category").value,
+    category: el("category").value.trim(),
     condition: el("condition").value,
     priceGbp: el("priceGbp").value,
     quantity: el("quantity").value,
