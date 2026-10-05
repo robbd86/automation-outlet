@@ -8,10 +8,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
-# Private operational pages must never be indexed or included in the public sitemap.
-# Any future *-admin.html page is private automatically; desk pages are explicit because
-# they do not use the admin filename suffix.
-PRIVATE_PAGES = {"agent-desk.html", "deal-desk.html"}
+# Private operational/customer-session pages must never be indexed or included in
+# the public sitemap. Any future *-admin.html page is private automatically.
+PRIVATE_PAGES = {
+    "agent-desk.html",
+    "deal-desk.html",
+    "plc-audit-upload.html",
+    "plc-audit-dashboard.html",
+    "plc-audit-audit.html",
+}
+PUBLIC_ROUTE_OVERRIDES = {
+    "plc-audit.html": "plc-audit",
+}
 ROBOTS_META = re.compile(
     r'\s*<meta\s+name=["\']robots["\'][^>]*>\s*(?:<!--\s*REMOVE AT LAUNCH\s*-->)?',
     re.I,
@@ -58,6 +66,12 @@ def clean_html() -> None:
         path.write_text(text, encoding="utf-8")
 
 
+def public_route(page_name: str) -> str:
+    if page_name == "index.html":
+        return ""
+    return PUBLIC_ROUTE_OVERRIDES.get(page_name, page_name)
+
+
 def update_sitemap() -> None:
     # Generate from public pages only. Private/admin pages are denied by classification,
     # not by a fragile hand-maintained list of individual admin filenames.
@@ -68,7 +82,7 @@ def update_sitemap() -> None:
         text = page.read_text(encoding="utf-8")
         if re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex', text, re.I):
             continue
-        route = "" if page.name == "index.html" else page.name
+        route = public_route(page.name)
         urls.append(f"  <url><loc>https://www.automation-outlet.co.uk/{route}</loc></url>")
     (ROOT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'

@@ -36,6 +36,13 @@ jobs:
           node --check deal-desk.js
           node --check stock-admin.js
           node --check stock-import.js
+          node --check plc-audit.js
+          node --check api/plc-audit.mjs
+          node --check lib/plc-audit-auth.mjs
+          node --check lib/plc-audit-blob.mjs
+          node --check lib/plc-audit-model.mjs
+          node --check lib/plc-audit-service.mjs
+          node --check lib/plc-audit-store.mjs
       - name: Test API and catalogue behaviour
         run: node --test tests/*.test.mjs
       - name: Validate public sitemap and private-page indexing
@@ -48,14 +55,21 @@ jobs:
           urls = [node.text for node in ET.parse("sitemap.xml").findall(".//{*}loc")]
           assert "https://www.automation-outlet.co.uk/" in urls
           assert "https://www.automation-outlet.co.uk/buy-stock.html" in urls
+          assert "https://www.automation-outlet.co.uk/plc-audit" in urls
+          assert "https://www.automation-outlet.co.uk/plc-audit.html" not in urls
 
-          private_pages = {"agent-desk.html", "deal-desk.html"}
+          private_pages = {
+              "agent-desk.html",
+              "deal-desk.html",
+              "plc-audit-upload.html",
+              "plc-audit-dashboard.html",
+              "plc-audit-audit.html",
+          }
           private_pages.update(path.name for path in Path(".").glob("*-admin.html"))
 
           for page in sorted(private_pages):
               url = f"https://www.automation-outlet.co.uk/{page}"
               assert url not in urls, f"Private page leaked into sitemap: {page}"
-
               html = Path(page).read_text(encoding="utf-8")
               assert re.search(
                   r'<meta\s+name=["\']robots["\'][^>]*noindex[^>]*>',
