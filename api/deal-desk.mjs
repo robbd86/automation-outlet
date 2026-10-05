@@ -1,6 +1,7 @@
 import dealDeskHandler from "../lib/deal-desk-handler.mjs";
 import agentsHandler from "../lib/agents-handler.mjs";
 import photoAgentHandler, { serveListingImage } from "../lib/photo-agent-handler.mjs";
+import plcAuditHandler from "../lib/plc-audit-handler.mjs";
 
 function isAgentRequest(request) {
   const query = request.query || {};
@@ -20,6 +21,10 @@ function isAgentRequest(request) {
 export default async function handler(request, response) {
   if (request.query?.photoImage) {
     return serveListingImage(request, response);
+  }
+
+  if (String(request.query?.plcAudit || "") === "1") {
+    return plcAuditHandler(request, response);
   }
 
   if (String(request.query?.photo || "") === "1") {

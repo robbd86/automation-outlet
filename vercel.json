@@ -20,6 +20,7 @@
     { "source": "/plc-audit/upload", "destination": "/plc-audit-upload.html" },
     { "source": "/plc-audit/dashboard", "destination": "/plc-audit-dashboard.html" },
     { "source": "/plc-audit/audits/:id", "destination": "/plc-audit-audit.html?id=:id" },
+    { "source": "/api/plc-audit", "destination": "/api/deal-desk?plcAudit=1" },
     { "source": "/api/agents", "destination": "/api/deal-desk" },
     { "source": "/api/photo-agent", "destination": "/api/deal-desk?photo=1" },
     { "source": "/listing-image/:filename", "destination": "/api/deal-desk?photoImage=:filename" },

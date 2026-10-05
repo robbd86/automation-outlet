@@ -37,7 +37,8 @@ jobs:
           node --check stock-admin.js
           node --check stock-import.js
           node --check plc-audit.js
-          node --check api/plc-audit.mjs
+          node --check api/deal-desk.mjs
+          node --check lib/plc-audit-handler.mjs
           node --check lib/plc-audit-auth.mjs
           node --check lib/plc-audit-blob.mjs
           node --check lib/plc-audit-model.mjs
