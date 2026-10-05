@@ -11,6 +11,8 @@ AO PLC Intelligence is implemented inside the existing static Automation Outlet/
 
 Vercel rewrites those clean routes to the static HTML files in the repository. The dynamic audit route is resolved client-side and all audit data is loaded through the authenticated server API.
 
+The public API contract remains `/api/plc-audit`. The Vercel Hobby deployment was already using the 12-function allowance, so this route is rewritten internally to the existing `api/deal-desk.mjs` serverless function with `plcAudit=1`. The deal-desk function delegates to `lib/plc-audit-handler.mjs`; all existing deal-desk, agent and photo-agent behaviours remain intact.
+
 ## Customer identity foundation
 
 The existing Automation Outlet site has an admin-key authentication pattern but no customer-account login system. PLC Intelligence therefore uses a separate signed, HttpOnly customer session cookie (`ao_plc_session`) backed by `AO_PLC_SESSION_SECRET`.
@@ -55,6 +57,8 @@ PLC files do not pass through a Vercel function request body.
 
 Permanent Blob credentials are never returned to the browser and private Blob object URLs are not persisted in customer-visible data.
 
+A private Vercel Blob store named `ao-plc-intelligence-private` is provisioned for the existing Automation Outlet project in region `lhr1`. Vercel injects its `BLOB_READ_WRITE_TOKEN` into production, preview and development.
+
 ## Worker service boundary
 
 The Python engine remains separate. A future worker uses `AO_PLC_WORKER_KEY` against the server boundary:
@@ -64,7 +68,7 @@ The Python engine remains separate. A future worker uses `AO_PLC_WORKER_KEY` aga
 
 The website contains no PLC parser.
 
-For development/preview, set `AO_PLC_ANALYSIS_ADAPTER=mock`. Confirming an upload then generates a deterministic mock SnapshotResult so the complete website flow can be tested without the Python worker.
+For development/preview, set `AO_PLC_ANALYSIS_ADAPTER=mock`. Confirming an upload then generates a deterministic mock SnapshotResult so the complete website flow can be tested without the Python worker. The live production environment does not use the mock adapter.
 
 ## Private reports
 
@@ -80,22 +84,20 @@ Existing variables remain unchanged:
 
 PLC Intelligence adds:
 
-- `AO_PLC_SESSION_SECRET` — at least 32 random characters; production, preview and development as required.
-- `AO_PLC_WORKER_KEY` — long random worker/service credential. Do not expose client-side.
+- `AO_PLC_SESSION_SECRET` — at least 32 random characters; configured as a sensitive Vercel variable.
+- `AO_PLC_WORKER_KEY` — long random worker/service credential; configured as a sensitive Vercel variable and must also be supplied to the Python worker when connected.
 - `BLOB_READ_WRITE_TOKEN` — supplied by the connected private Vercel Blob store.
 
 Optional:
 
-- `AO_PLC_ANALYSIS_ADAPTER=mock` — development/preview only while the Python worker is disconnected.
+- `AO_PLC_ANALYSIS_ADAPTER=mock` — configured only for preview/development while the Python worker is disconnected.
 - `AO_PLC_MOCK_ENGINE_VERSION` — label shown for mock result generation.
 - `AO_PLC_RETENTION_DAYS` — defaults to 30.
 - `AO_PLC_MAX_UPLOAD_BYTES` — defaults to 250 MiB.
 - `AO_PLC_SESSION_TTL_SECONDS` — defaults to 30 days.
 
-## Vercel setup
+## Remaining service configuration
 
-Create/connect a **private** Vercel Blob store to the existing `automation-outlet` project so Vercel injects `BLOB_READ_WRITE_TOKEN`. Do not use a public Blob store for PLC source files.
+The website/storage/session foundation is configured. Production Snapshot jobs remain `QUEUED` until the separate Python analysis worker is connected with the same `AO_PLC_WORKER_KEY`. Do not enable the mock adapter in production as a substitute for the real engineering engine.
 
-Set the PLC environment variables in Vercel. Use a mock adapter only in development/preview unless intentionally testing the mock production flow. When the Python worker is ready, set/rotate `AO_PLC_WORKER_KEY` in both Vercel and the worker environment.
-
-Vercel Blob currently does not provide a storage lifecycle rule in this implementation, so retention is recorded in each AuditJob and deletion is performed by the application. A scheduled retention sweeper can be added when the worker/service is connected.
+The application records a per-job retention deadline and supports customer deletion. A scheduled retention sweeper can be added when the worker/service is connected so expired projects are removed automatically even if the customer never presses Delete.
