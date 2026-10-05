@@ -1,16 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { issueSessionToken, verifySessionToken, authorizeJob } from '../lib/plc-audit-auth.mjs';
+import { originAllowed } from '../lib/plc-audit-handler.mjs';
 import { validateSnapshotResult } from '../lib/plc-audit-model.mjs';
 import { assertAccessibleJob, assertJobStatus, validateUploadRequest } from '../lib/plc-audit-service.mjs';
 import { presignIssuedPermission } from '../lib/plc-audit-blob.mjs';
 
 const originalSecret = process.env.AO_PLC_SESSION_SECRET;
+const originalAllowedOrigin = process.env.AO_ALLOWED_ORIGIN;
+const originalVercelEnv = process.env.VERCEL_ENV;
 process.env.AO_PLC_SESSION_SECRET = 'test-secret-that-is-at-least-thirty-two-characters-long';
 
 test.after(() => {
   if (originalSecret === undefined) delete process.env.AO_PLC_SESSION_SECRET;
   else process.env.AO_PLC_SESSION_SECRET = originalSecret;
+  if (originalAllowedOrigin === undefined) delete process.env.AO_ALLOWED_ORIGIN;
+  else process.env.AO_ALLOWED_ORIGIN = originalAllowedOrigin;
+  if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+  else process.env.VERCEL_ENV = originalVercelEnv;
 });
 
 test('customer session tokens authenticate an opaque account and reject tampering', () => {
@@ -60,6 +67,25 @@ test('invalid upload type is rejected before any signed permission is issued', (
   assert.throws(
     () => validateUploadRequest({ filename: 'passwords.txt', contentType: 'text/plain', size: 100 }),
     (error) => error.status === 415 && error.code === 'INVALID_UPLOAD_TYPE',
+  );
+});
+
+test('upload API rejects foreign origins and accepts the requesting site by default', () => {
+  delete process.env.AO_ALLOWED_ORIGIN;
+  delete process.env.VERCEL_ENV;
+  assert.equal(originAllowed({ headers: { origin: 'https://www.automation-outlet.co.uk', host: 'www.automation-outlet.co.uk' } }), true);
+  assert.equal(originAllowed({ headers: { origin: 'https://attacker.example', host: 'www.automation-outlet.co.uk' } }), false);
+  assert.equal(originAllowed({ headers: { origin: 'not a url', host: 'www.automation-outlet.co.uk' } }), false);
+});
+
+test('signed upload permission cannot be reused for another object pathname', () => {
+  const scope = Buffer.from(JSON.stringify({
+    storeId: 'store_teststore', pathname: 'plc-audits/aud_x/file.ap14', operations: ['put'], validUntil: Date.now() + 60_000,
+  })).toString('base64url');
+  const issued = { delegationToken: `${scope}.server-signature`, clientSigningToken: 'client-secret' };
+  assert.throws(
+    () => presignIssuedPermission(issued, { pathname: 'plc-audits/aud_y/file.ap14', operation: 'put' }),
+    (error) => error.status === 403 && error.code === 'BLOB_SCOPE_MISMATCH',
   );
 });
 
