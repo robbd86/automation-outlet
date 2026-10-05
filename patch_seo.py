@@ -10,6 +10,11 @@ import re
 import json
 
 ROOT = Path(__file__).resolve().parent
+PRIVATE_PAGES = {"agent-desk.html", "deal-desk.html"}
+
+
+def is_private_page(name: str) -> bool:
+    return name in PRIVATE_PAGES or name.endswith("-admin.html")
 
 
 def replace_tag_content(html: str, tag_pattern: str, replacement: str, label: str) -> str:
@@ -169,7 +174,8 @@ def patch_buyer_discovery() -> None:
             html=html.replace(marker,section+marker,1)
         path.write_text(html,encoding='utf-8')
     for path in ROOT.glob('*.html'):
-        if path.name in ('stock-admin.html','deal-desk.html'): continue
+        if is_private_page(path.name):
+            continue
         html=path.read_text(encoding='utf-8')
         if 'id="parts-footer-link"' not in html:
             html=html.replace('</footer>','<div class="wrap" id="parts-footer-link" style="padding-top:1rem"><a href="/parts">Browse industrial automation parts for sale</a></div></footer>',1)
