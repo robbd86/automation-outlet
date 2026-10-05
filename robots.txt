@@ -1,7 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /stock-admin.html
-Disallow: /deal-desk.html
 
 Sitemap: https://www.automation-outlet.co.uk/sitemap.xml
 Sitemap: https://www.automation-outlet.co.uk/sitemap-stock.xml
