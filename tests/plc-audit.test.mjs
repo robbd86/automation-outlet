@@ -36,12 +36,15 @@ test('job ownership is enforced and URL id guessing cannot cross accounts', () =
   assert.throws(() => assertAccessibleJob(job, 'acct_other'), (error) => error.status === 404 && error.code === 'AUDIT_NOT_FOUND');
 });
 
-test('SnapshotResult validates typed engineering metrics and confidence', () => {
+test('SnapshotResult validates typed engineering metrics, PLC identity and maintenance summary', () => {
   const result = validateSnapshotResult({
-    project: { platform: 'Siemens TIA Portal', projectVersion: 'V18', projectName: 'Line 1' },
-    controller: { family: 'S7-1500', model: 'CPU', orderNumber: '', firmware: '' },
-    blockCount: 12,
-    networkCount: 84,
+    project: { platform: 'Siemens TIA Portal', engineeringSoftware: 'TIA Portal V18', projectVersion: 'V18', projectName: 'Line 1' },
+    controller: { manufacturer: 'Siemens', family: 'S7-1500', model: 'CPU 1513-1 PN', orderNumber: '6ES7513-1AL02-0AB0', firmware: 'V2.9', safetyType: 'Standard CPU' },
+    programBreakdown: { organisationBlocks: 4, functionBlocks: 18, functions: 9, dataBlocks: 22, safetyBlocks: 0 },
+    hardwareSummary: { configuredIoPoints: 186, digitalInputs: 72, digitalOutputs: 64, analogueInputs: 8, analogueOutputs: 4, remoteIoStations: 3, networkDevices: 11, communications: ['PROFINET'], ioMappingStatus: 'Partial mapping available' },
+    maintenanceSummary: { headline: 'Legacy line with multiple write paths requiring review', lifecycle: 'Legacy / migration planning recommended', priority: 'ATTENTION', managerPoints: ['Several outputs have more than one write location.'], recommendedActions: ['Review critical outputs before software changes.'], confidence: 'INFERRED' },
+    blockCount: 53,
+    networkCount: 284,
     callCount: 61,
     writeCount: 43,
     multipleWriterCount: 2,
@@ -55,6 +58,12 @@ test('SnapshotResult validates typed engineering metrics and confidence', () => 
   });
   assert.equal(result.valid, true);
   assert.equal(result.value.multipleWriterCount, 2);
+  assert.equal(result.value.schemaVersion, 2);
+  assert.equal(result.value.controller.manufacturer, 'Siemens');
+  assert.equal(result.value.project.engineeringSoftware, 'TIA Portal V18');
+  assert.equal(result.value.hardwareSummary.configuredIoPoints, 186);
+  assert.equal(result.value.programBreakdown.functionBlocks, 18);
+  assert.equal(result.value.maintenanceSummary.confidence, 'INFERRED');
 
   const invalid = validateSnapshotResult({ blockCount: -1, evidenceConfidence: 'CERTAIN' });
   assert.equal(invalid.valid, false);
