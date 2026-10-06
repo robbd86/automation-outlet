@@ -62,7 +62,7 @@ A private Vercel Blob store named `ao-plc-intelligence-private` is provisioned f
 
 ## Worker service boundary
 
-The Python engine remains separate. A future worker uses `AO_PLC_WORKER_KEY` against the server boundary:
+The Python engine remains separate. The AO PLC Audit worker uses `AO_PLC_WORKER_KEY` against the server boundary:
 
 - `GET /api/plc-audit?action=worker-next` — claims the oldest queued (or expired-lease) job, returns a short-lived private project download URL, and returns a one-time worker claim token.
 - `POST /api/plc-audit?action=worker-update` — publishes `COMPLETE`, `REVIEW_REQUIRED` or `FAILED` plus the typed Snapshot result and optional private report artifact pathname. The request must include the current `claimToken`.
@@ -72,6 +72,37 @@ Worker claims are time-limited and the stored job contains only a SHA-256 hash o
 The GitHub-Issues store is intentionally a foundation matching the existing website architecture, not a transactional queue. If the service later runs many parallel workers at meaningful volume, move audit state/queue claiming to a transactional datastore rather than treating GitHub Issues as an exactly-once queue.
 
 The website contains no PLC parser.
+
+`REVIEW_REQUIRED` keeps its review status. When the worker supplies a partial
+`snapshotResult`, the service validates and saves it along with detected platform,
+project version, engine version and completion time. The existing customer result
+page renders this saved Snapshot. Unsupported inputs can still request review
+without a Snapshot. Invalid supplied Snapshots do not release the active claim.
+
+### Connect the Python worker
+
+Configure `AO_PLC_WORKER_KEY` on this Vercel project and supply the same value to
+the Python process. Set `AO_PLC_ANALYSIS_ADAPTER=worker` for the deployment being
+tested so upload confirmation leaves real work in `QUEUED`.
+
+Set `AO_PLC_WEBSITE_URL` on the Python worker to that deployment's HTTPS origin,
+without a path or query. The worker constructs the two `/api/plc-audit` URLs
+above; it does not expose an inbound endpoint and requires no public worker URL.
+`AO_ALLOWED_ORIGIN` is the website's separate browser-origin allowlist, not the
+worker destination. No change to it is needed for a same-origin browser upload.
+
+From the updated worker source with Python 3.10 or newer:
+
+```powershell
+py -m pip install -e .
+py -m ao_plc_audit worker --once
+py -m ao_plc_audit worker --interval 10
+```
+
+Supply secrets through environment variables or a secret manager. The key must
+not be committed or placed in a browser-visible variable. Test one worker first;
+protected previews must allow machine access before polling can succeed.
+Environment changes take effect on a new deployment.
 
 For development/preview, set `AO_PLC_ANALYSIS_ADAPTER=mock`. Confirming an upload then generates a deterministic mock SnapshotResult so the complete website flow can be tested without the Python worker. The live production environment does not use the mock adapter.
 
