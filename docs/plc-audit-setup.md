@@ -41,6 +41,7 @@ Core fields:
 - `reportArtifact`
 - `error`
 - `retention`
+- transient `workerClaim` lease metadata while a worker owns the job
 
 Statuses: `CREATED`, `UPLOADING`, `QUEUED`, `ANALYSING`, `REVIEW_REQUIRED`, `COMPLETE`, `FAILED`, `DELETED`.
 
@@ -63,8 +64,12 @@ A private Vercel Blob store named `ao-plc-intelligence-private` is provisioned f
 
 The Python engine remains separate. A future worker uses `AO_PLC_WORKER_KEY` against the server boundary:
 
-- `GET /api/plc-audit?action=worker-next` — claims the oldest queued job and receives a short-lived private project download URL.
-- `POST /api/plc-audit?action=worker-update` — publishes `COMPLETE`, `REVIEW_REQUIRED` or `FAILED` plus the typed Snapshot result and optional private report artifact pathname.
+- `GET /api/plc-audit?action=worker-next` — claims the oldest queued (or expired-lease) job, returns a short-lived private project download URL, and returns a one-time worker claim token.
+- `POST /api/plc-audit?action=worker-update` — publishes `COMPLETE`, `REVIEW_REQUIRED` or `FAILED` plus the typed Snapshot result and optional private report artifact pathname. The request must include the current `claimToken`.
+
+Worker claims are time-limited and the stored job contains only a SHA-256 hash of the claim token. A crashed worker's `ANALYSING` job becomes claimable again after the lease expires. A stale worker cannot publish over a newer worker claim. This prevents stale-result corruption while the lightweight GitHub-Issues persistence layer is in use.
+
+The GitHub-Issues store is intentionally a foundation matching the existing website architecture, not a transactional queue. If the service later runs many parallel workers at meaningful volume, move audit state/queue claiming to a transactional datastore rather than treating GitHub Issues as an exactly-once queue.
 
 The website contains no PLC parser.
 
@@ -95,6 +100,7 @@ Optional:
 - `AO_PLC_RETENTION_DAYS` — defaults to 30.
 - `AO_PLC_MAX_UPLOAD_BYTES` — defaults to 250 MiB.
 - `AO_PLC_SESSION_TTL_SECONDS` — defaults to 30 days.
+- `AO_PLC_WORKER_LEASE_SECONDS` — defaults to 1800 seconds (30 minutes), clamped between 60 seconds and 6 hours.
 
 ## Remaining service configuration
 
