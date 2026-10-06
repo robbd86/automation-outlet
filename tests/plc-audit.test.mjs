@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { issueSessionToken, verifySessionToken, authorizeJob } from '../lib/plc-audit-auth.mjs';
 import { originAllowed } from '../lib/plc-audit-handler.mjs';
 import { validateSnapshotResult } from '../lib/plc-audit-model.mjs';
-import { assertAccessibleJob, assertJobStatus, assertWorkerClaim, createWorkerClaim, validateUploadRequest } from '../lib/plc-audit-service.mjs';
+import { assertAccessibleJob, assertJobStatus, assertWorkerClaim, createUploadConfirmationRef, createWorkerClaim, parseUploadConfirmationRef, validateUploadRequest } from '../lib/plc-audit-service.mjs';
 import { isWorkerClaimable } from '../lib/plc-audit-store.mjs';
 import { presignIssuedPermission } from '../lib/plc-audit-blob.mjs';
 
@@ -65,6 +65,13 @@ test('upload request allows PLC project formats and normalises MIME type', () =>
   const upload = validateUploadRequest({ filename: 'machine.ap14', contentType: '', size: 1024 });
   assert.equal(upload.extension, 'ap14');
   assert.equal(upload.contentType, 'application/octet-stream');
+});
+
+test('upload confirmation reference is bound to the exact created audit record', () => {
+  const ref = createUploadConfirmationRef(271, 'aud_example');
+  assert.equal(parseUploadConfirmationRef(ref, 'aud_example'), 271);
+  assert.equal(parseUploadConfirmationRef(ref, 'aud_other'), null);
+  assert.equal(parseUploadConfirmationRef('not-a-valid-ref', 'aud_example'), null);
 });
 
 test('invalid upload type is rejected before any signed permission is issued', () => {
