@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { issueSessionToken, verifySessionToken, authorizeJob } from '../lib/plc-audit-auth.mjs';
 import { originAllowed } from '../lib/plc-audit-handler.mjs';
 import { validateSnapshotResult } from '../lib/plc-audit-model.mjs';
-import { assertAccessibleJob, assertJobStatus, validateUploadRequest } from '../lib/plc-audit-service.mjs';
+import { assertAccessibleJob, assertJobStatus, assertWorkerClaim, createWorkerClaim, validateUploadRequest } from '../lib/plc-audit-service.mjs';
+import { isWorkerClaimable } from '../lib/plc-audit-store.mjs';
 import { presignIssuedPermission } from '../lib/plc-audit-blob.mjs';
 
 const originalSecret = process.env.AO_PLC_SESSION_SECRET;
 const originalAllowedOrigin = process.env.AO_ALLOWED_ORIGIN;
 const originalVercelEnv = process.env.VERCEL_ENV;
+const originalWorkerLeaseSeconds = process.env.AO_PLC_WORKER_LEASE_SECONDS;
 process.env.AO_PLC_SESSION_SECRET = 'test-secret-that-is-at-least-thirty-two-characters-long';
 
 test.after(() => {
@@ -18,6 +20,8 @@ test.after(() => {
   else process.env.AO_ALLOWED_ORIGIN = originalAllowedOrigin;
   if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
   else process.env.VERCEL_ENV = originalVercelEnv;
+  if (originalWorkerLeaseSeconds === undefined) delete process.env.AO_PLC_WORKER_LEASE_SECONDS;
+  else process.env.AO_PLC_WORKER_LEASE_SECONDS = originalWorkerLeaseSeconds;
 });
 
 test('customer session tokens authenticate an opaque account and reject tampering', () => {
@@ -103,6 +107,32 @@ test('expired signed upload permission is rejected', () => {
 test('audit status handling rejects illegal transitions', () => {
   assert.equal(assertJobStatus({ status: 'QUEUED' }, ['QUEUED', 'ANALYSING']).status, 'QUEUED');
   assert.throws(() => assertJobStatus({ status: 'COMPLETE' }, ['QUEUED']), (error) => error.status === 409 && error.code === 'INVALID_AUDIT_STATUS');
+});
+
+test('worker claims are lease-bound and stale workers cannot publish', () => {
+  process.env.AO_PLC_WORKER_LEASE_SECONDS = '120';
+  const now = Date.parse('2026-10-06T07:00:00.000Z');
+  const claim = createWorkerClaim(now);
+  const job = { id: 'aud_claimed', status: 'ANALYSING', workerClaim: claim.persisted };
+
+  assert.equal(assertWorkerClaim(job, claim.token, now + 30_000).id, 'aud_claimed');
+  assert.throws(
+    () => assertWorkerClaim(job, 'older-worker-token', now + 30_000),
+    (error) => error.status === 409 && error.code === 'WORKER_CLAIM_STALE',
+  );
+  assert.throws(
+    () => assertWorkerClaim(job, claim.token, now + 121_000),
+    (error) => error.status === 409 && error.code === 'WORKER_CLAIM_EXPIRED',
+  );
+});
+
+test('expired analysing leases become claimable while active leases do not', () => {
+  const now = Date.parse('2026-10-06T07:00:00.000Z');
+  assert.equal(isWorkerClaimable({ status: 'QUEUED' }, now), true);
+  assert.equal(isWorkerClaimable({ status: 'COMPLETE' }, now), false);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING', workerClaim: { leaseUntil: '2026-10-06T06:59:59.000Z' } }, now), true);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING', workerClaim: { leaseUntil: '2026-10-06T07:05:00.000Z' } }, now), false);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING' }, now), false);
 });
 
 test('deleted audits are inaccessible to the original owner', () => {
