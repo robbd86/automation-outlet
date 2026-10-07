@@ -73,6 +73,28 @@ The GitHub-Issues store is intentionally a foundation matching the existing webs
 
 The website contains no PLC parser.
 
+### Manufacturer lifecycle facts
+
+`lib/plc-lifecycle.mjs` contains reviewed manufacturer facts keyed by exact
+order number. The customer API adds `lifecycleAssessment` separately from the
+stored engineering Snapshot, so an existing audit can show a dated lifecycle
+review without rewriting its original analysis.
+
+A match requires verified configured-CPU evidence and the exact manufacturer
+and order number. Unmatched parts stay **Not verified**. The initial reviewed
+record is Siemens `6ES7212-1HE40-0XB0`: its product page showed **Active Product**
+on 7 October 2026. This review expires on 21 October 2026; after that the UI says
+**Needs recheck** and labels the manufacturer status as last checked. Revisit
+the linked manufacturer sources before extending the review or adding parts.
+This is a bounded, reviewed catalogue, not an automatic live status lookup.
+
+The linked Siemens S7-1200 G1 notice is displayed explicitly as a **family
+notice**: phase-out from 1 November 2026 and new-part orders until 30 September
+2027. It does not automatically change this exact part's status. Planned
+spare-part availability is not a guaranteed support end date, and the named
+successor family is not evidence of a direct replacement. Lifecycle describes
+the configured part, not verification of installed hardware.
+
 `REVIEW_REQUIRED` keeps its review status. When the worker supplies a partial
 `snapshotResult`, the service validates and saves it along with detected platform,
 project version, engine version and completion time. The existing customer result
