@@ -77,6 +77,30 @@ test('saved upload locator reaches the API and disabled browser storage still al
   await disabled.context.initAudit();
   assert.match(disabled.root.innerHTML, /COMPLETE/);
 });
+test('pending analysis shows progress instead of empty finished-result cards', async () => {
+  const p = page([{ body: audit('QUEUED') }, { body: audit('ANALYSING') }, { body: audit('REVIEW_REQUIRED') }]);
+  await p.context.initAudit();
+  assert.match(p.root.innerHTML, /Waiting for analysis/);
+  assert.doesNotMatch(p.root.innerHTML, /Machine Controls Snapshot|Shared-write target count: not assessed/);
+  await p.timers.shift()();
+  assert.match(p.root.innerHTML, /Analysing your project/);
+  assert.doesNotMatch(p.root.innerHTML, /Machine Controls Snapshot/);
+  await p.timers.shift()();
+  assert.match(p.root.innerHTML, /Machine Controls Snapshot/);
+  assert.match(p.root.innerHTML, /Retained partial result/);
+  assert.equal(p.timers.length, 0);
+});
+test('terminal analysis without a Snapshot explains the missing result', async () => {
+  const p = page([{ body: { audit: { id: 'aud_new', filename: 'unsupported.zip', status: 'REVIEW_REQUIRED', snapshotResult: null } } }]);
+  await p.context.initAudit();
+  assert.match(p.root.innerHTML, /A structured Snapshot could not be produced/);
+  assert.doesNotMatch(p.root.innerHTML, /Machine Controls Snapshot/);
+  assert.equal(p.timers.length, 0);
+  const failed = page([{ body: { audit: { id: 'aud_new', filename: 'failed.zip', status: 'FAILED', snapshotResult: null } } }]);
+  await failed.context.initAudit();
+  assert.match(failed.root.innerHTML, /Analysis did not complete/);
+  assert.doesNotMatch(failed.root.innerHTML, /Machine Controls Snapshot/);
+});
 test('not-found retries are bounded and session errors do not retry', async () => {
   const p = page(Array.from({ length: 11 }, () => ({ status: 404, body: { code: 'AUDIT_NOT_FOUND', error: 'Audit not found' } })));
   await p.context.initAudit();
