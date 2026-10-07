@@ -13,15 +13,15 @@ conclusions or numeric risk score are used.
 | --- | --- |
 | Overall NOT ASSESSED | No supported block inventory or supported configured CPU evidence; mock results also stay unassessed. A file/platform label alone is insufficient. |
 | Overall HIGH PRIORITY | Current verified exact-part manufacturer status is DISCONTINUED. This prioritises sourcing/recovery planning, not machine failure likelihood. |
-| Overall ATTENTION | Positive shared-write count with VERIFIED or INFERRED writer evidence, or current verified exact-part PHASE_OUT status. |
-| Overall REVIEW | Useful supported source evidence exists, but analysis or recovery verification remains incomplete. Active hardware with a family notice stays REVIEW unless another rule triggers ATTENTION. |
-| Logic ATTENTION | Supported shared-write detection. Intent, execution order and specific control consequences have not been investigated. |
+| Overall ATTENTION | Current verified exact-part PHASE_OUT status. Shared writers alone never raise overall status above REVIEW. |
+| Overall REVIEW | Supported shared-write detection, or useful supported source evidence with incomplete analysis/recovery verification. Active hardware with a family notice stays REVIEW unless an independent rule triggers a higher status. |
+| Logic REVIEW for shared writers | Shared writers may be intentional. Intent, execution order, actual maintainability impact and specific control consequences have not been investigated. |
 | Logic REVIEW | Supported evidence exists but source analysis is incomplete. |
 | Logic LOW CONCERN | Zero detected shared writes only when COMPLETE, 100% supported supplied-source coverage, VERIFIED overall evidence, explicit writer-analysis support, and no additional program limitations. This applies only to shared-write observations in that scope, not code quality. |
 | Recovery REVIEW | Useful supported project evidence exists; live match, backup currency, completeness and replacement strategy remain unverified. Otherwise NOT ASSESSED. |
 | Safety NOT ASSESSED | No live safety engineering assessment exists in this schema. Configured safety type or positive safety-block count can trigger a review area, never a safety conclusion. |
 | Documentation REVIEW | Source information is available but wider recovery documents and backup evidence have not been established. Otherwise NOT ASSESSED. |
-| Complexity NOT ASSESSED | No validated size/complexity thresholds are available. Counts provide context, not risk or code-quality judgement. |
+| Program & Controls Footprint | Scale/structure metrics only. No visible complexity classification or scoring model is applied. |
 
 Writer confidence is the most conservative confidence among supplied writer
 findings: all VERIFIED -> VERIFIED; all VERIFIED/INFERRED -> INFERRED; any UNKNOWN
@@ -41,9 +41,14 @@ family notices. Family dates do not automatically change exact-part status.
   are NOT VERIFIED and UNKNOWN confidence.
 - Some controller/I/O, network/device or safety-related evidence is PARTIAL.
   These fields do not establish a complete hardware/network/safety project.
-- HMI and drive backup evidence is NOT SUPPLIED **in analysed evidence**. The
-  parser/schema cannot establish whether such files exist elsewhere or among
-  unanalysed archive contents.
+- HMI and drive backup presence is NOT ASSESSED by the current parser. No backup
+  absence is inferred from missing fields or unsupported asset parsing.
+- Optional future `backupEvidence.hmiBackup` / `driveParameterBackup` records
+  require explicit `assessed: true`, `scope: ANALYSED_EVIDENCE`, VERIFIED confidence
+  and non-empty evidence. PRESENT can be CONFIRMED. ABSENT can be NOT SUPPLIED
+  only with `scopeComplete: true`; otherwise NOT ASSESSED. These records retain
+  evidence in storage but only generic derived status/detail is sent to customers.
+  Confirmation of presence does not establish currency or recoverability.
 - Live PLC comparison is NOT VERIFIED. Replacement strategy is NOT ASSESSED.
 - NOT APPLICABLE is never inferred from missing data.
 

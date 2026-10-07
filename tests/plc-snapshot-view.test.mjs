@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { deriveSnapshotView, freeSnapshotResult } from '../lib/plc-snapshot-view.mjs';
 import { publicJob, buildAuditJob, createReportDownload } from '../lib/plc-audit-service.mjs';
-import { createMockSnapshotResult } from '../lib/plc-audit-model.mjs';
+import { createMockSnapshotResult, validateSnapshotResult } from '../lib/plc-audit-model.mjs';
 import { issueSessionToken, PLC_SESSION_COOKIE } from '../lib/plc-audit-auth.mjs';
 import handler from '../lib/plc-audit-handler.mjs';
 
@@ -27,14 +27,31 @@ const lifecycle = status => ({ status, label: status, manufacturerStatus: status
 
 test('manager assessments identify supported shared writes without claiming a fault or scoring risk', () => {
   const v = derive();
-  assert.equal(v.overall.label, 'ATTENTION');
-  assert.equal(v.logic.label, 'ATTENTION');
+  assert.equal(v.overall.label, 'REVIEW');
+  assert.equal(v.logic.label, 'REVIEW');
   assert.equal(v.sharedControl.count, 48);
   assert.equal(v.sharedControl.confidence, 'VERIFIED');
   assert.match(v.sharedControl.explanation, /do not automatically indicate a programming fault/);
   assert.equal(v.complexity, 'NOT ASSESSED');
   assert.equal(v.score, undefined);
   assert.ok(v.nextActions.length <= 5);
+});
+test('shared writers alone remain REVIEW even with complete verified supplied-source analysis', () => {
+  const s = base(); s.analysisCoveragePercent = 100; s.evidenceConfidence = 'VERIFIED'; s.unsupportedAreas = ['Live machine behaviour'];
+  const v = derive(s, { status: 'COMPLETE' });
+  assert.equal(v.overall.label, 'REVIEW');
+  assert.equal(v.logic.label, 'REVIEW');
+  assert.ok(v.deeperAreas.some(item => item.title === 'Shared control paths'));
+});
+test('independent lifecycle evidence raises overall priority without treating shared writers as investigated', () => {
+  const s = base();
+  const phaseOut = derive(s, { lifecycle: lifecycle('PHASE_OUT') });
+  assert.equal(phaseOut.overall.label, 'ATTENTION');
+  assert.match(phaseOut.overall.explanation, /manufacturer phase-out/);
+  assert.equal(phaseOut.logic.label, 'REVIEW');
+  const discontinued = derive(s, { lifecycle: lifecycle('DISCONTINUED') });
+  assert.equal(discontinued.overall.label, 'HIGH PRIORITY');
+  assert.equal(discontinued.logic.label, 'REVIEW');
 });
 test('missing evidence, zero coverage and absent snapshots never become low concern', () => {
   const unknown = deriveSnapshotView(null);
@@ -83,14 +100,63 @@ test('recovery statuses describe available evidence without certifying current b
   assert.equal(check('Exact CPU identified').status, 'CONFIRMED');
   assert.equal(check('Hardware configuration identifiable').status, 'PARTIAL');
   assert.equal(check('Network configuration identifiable').status, 'NOT ASSESSED');
-  assert.equal(check('HMI backup supplied').status, 'NOT SUPPLIED');
-  assert.match(check('HMI backup supplied').detail, /analysed evidence/);
-  assert.match(check('HMI backup supplied').detail, /whether a backup exists elsewhere/);
-  assert.equal(check('Drive parameter backup supplied').status, 'NOT SUPPLIED');
+  assert.equal(check('HMI backup supplied').status, 'NOT ASSESSED');
+  assert.equal(check('HMI backup supplied').detail, 'HMI backup presence has not been assessed by the current Snapshot analyser.');
+  assert.equal(check('Drive parameter backup supplied').status, 'NOT ASSESSED');
+  assert.equal(check('Drive parameter backup supplied').detail, 'Drive parameter backup presence has not been assessed by the current Snapshot analyser.');
   assert.equal(check('Project verified against live PLC').status, 'NOT VERIFIED');
   assert.equal(check('Replacement controller strategy assessed').status, 'NOT ASSESSED');
   assert.equal(v.safety.label, 'NOT ASSESSED');
   assert.ok(!v.recoveryChecks.some(item => item.status === 'NOT APPLICABLE'));
+});
+const assessedBackup = (presence = 'PRESENT', overrides = {}) => ({ assessed: true, scope: 'ANALYSED_EVIDENCE',
+  scopeComplete: true, presence, confidence: 'VERIFIED', evidence: [`Scoped asset assessment: ${rawTarget}`], ...overrides });
+test('explicit verified future backup evidence can confirm presence without exposing private asset evidence', () => {
+  const s = base(); s.backupEvidence = { hmiBackup: assessedBackup('PRESENT', { scopeComplete: false }), driveParameterBackup: assessedBackup() };
+  const validated = validateSnapshotResult(s);
+  assert.equal(validated.valid, true);
+  const v = derive(validated.value);
+  for (const label of ['HMI backup supplied', 'Drive parameter backup supplied']) {
+    const check = v.recoveryChecks.find(item => item.label === label);
+    assert.equal(check.status, 'CONFIRMED');
+    assert.equal(check.confidence, 'VERIFIED');
+    assert.match(check.detail, /Currency, completeness and recoverability have not been verified/);
+  }
+  assert.match(JSON.stringify(validated.value.backupEvidence), new RegExp(rawTarget), 'raw evidence is retained');
+  const customer = publicJob({ status: 'COMPLETE', profile: 'SNAPSHOT', snapshotResult: validated.value });
+  assert.equal(customer.snapshotResult.backupEvidence, undefined);
+  assert.doesNotMatch(JSON.stringify(customer), new RegExp(rawTarget));
+});
+test('NOT SUPPLIED requires positively verified absence in a completely assessed scope', () => {
+  const s = base(); s.backupEvidence = { hmiBackup: assessedBackup('ABSENT'), driveParameterBackup: assessedBackup('ABSENT') };
+  const validated = validateSnapshotResult(s);
+  assert.equal(validated.valid, true);
+  for (const label of ['HMI backup supplied', 'Drive parameter backup supplied']) {
+    const check = derive(validated.value).recoveryChecks.find(item => item.label === label);
+    assert.equal(check.status, 'NOT SUPPLIED');
+    assert.match(check.detail, /completely assessed evidence scope/);
+    assert.match(check.detail, /whether a backup exists elsewhere/);
+  }
+});
+test('unsupported, unverified, partial-scope and missing backup evidence cannot imply presence or absence', () => {
+  for (const record of [undefined, assessedBackup('PRESENT', { assessed: false }), assessedBackup('PRESENT', { confidence: 'INFERRED' }),
+    assessedBackup('ABSENT', { scopeComplete: false }), assessedBackup('ABSENT', { evidence: [] }), assessedBackup('UNKNOWN'),
+    assessedBackup('PRESENT', { scope: 'UNASSESSED_FILES' })]) {
+    const s = base(); s.backupEvidence = { hmiBackup: record, driveParameterBackup: record };
+    for (const label of ['HMI backup supplied', 'Drive parameter backup supplied']) {
+      assert.equal(derive(s).recoveryChecks.find(item => item.label === label).status, 'NOT ASSESSED');
+    }
+  }
+  assert.equal(deriveSnapshotView(null).recoveryChecks[0].status, 'NOT ASSESSED', 'lack of upload context does not prove absence');
+});
+test('optional backup records are typed and legacy parser results remain compatible', () => {
+  const legacy = validateSnapshotResult(base());
+  assert.equal(legacy.valid, true);
+  assert.equal(legacy.value.backupEvidence, undefined);
+  for (const bad of [assessedBackup('PRESENT', { assessed: 'true' }), assessedBackup('ABSENT', { evidence: [] }),
+    assessedBackup('INVALID'), assessedBackup('PRESENT', { scopeComplete: 'true' }), assessedBackup('PRESENT', { confidence: 'CERTAIN' })]) {
+    assert.equal(validateSnapshotResult({ ...base(), backupEvidence: { hmiBackup: bad } }).valid, false);
+  }
 });
 test('missing firmware stays unknown and partial identity is never promoted to confirmed', () => {
   const s = base(); s.controller.firmware = ''; s.topFindings[0].confidence = 'INFERRED';
@@ -143,7 +209,7 @@ test('manager-first rendering preserves scope, confidence and metrics and never 
   const html = context.renderSnapshot(legacy, null, v);
   assert.doesNotMatch(html, new RegExp(rawTarget));
   for (const heading of ['Machine Controls Snapshot', 'What this means for your site', 'Machine Recovery Readiness',
-    'Shared Control / Multiple Writers', 'Program &amp; Controls Complexity', 'Top Findings', 'Recommended Next Actions',
+    'Shared Control / Multiple Writers', 'Program &amp; Controls Footprint', 'Top Findings', 'Recommended Next Actions',
     'Areas requiring deeper engineering review', 'Technical Evidence &amp; Analysis Detail']) assert.ok(html.includes(heading));
   assert.ok(html.indexOf('Machine Controls Snapshot') < html.indexOf('Technical Evidence &amp; Analysis Detail'));
   assert.match(html, /<details[^>]+id="technicalEvidence">/);
@@ -151,6 +217,8 @@ test('manager-first rendering preserves scope, confidence and metrics and never 
   assert.match(html, /NOT SUPPLIED/);
   assert.match(html, /NOT ASSESSED/);
   assert.match(html, /Program size alone/);
+  assert.match(html, /scale and structure of the supplied PLC project/);
+  assert.doesNotMatch(html, /Classification:|Program &amp; Controls Complexity/);
   assert.match(html, /Request Engineer Review/);
   assert.doesNotMatch(html, /Discuss Modernisation/);
   assert.match(context.renderSnapshot(free, null, v), /416/);
