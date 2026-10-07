@@ -25,6 +25,58 @@ const base = () => ({ schemaVersion: 2, project: { platform: 'Vendor engineering
 const derive = (s = base(), options = {}) => deriveSnapshotView(s, { status: 'REVIEW_REQUIRED', projectAvailable: true, ...options });
 const lifecycle = status => ({ status, label: status, manufacturerStatus: status, checkedAt: '2026-10-07', sources: [] });
 
+function mitsubishiInventory() {
+  const s = base();
+  s.project = { platform: 'Mitsubishi GX Works2', engineeringSoftware: 'GX Works2', projectName: 'Synthetic', projectVersion: '' };
+  s.controller = { manufacturer: 'Mitsubishi Electric', family: '', model: '', orderNumber: '', firmware: '', safetyType: '', configuredType: 'FX3G' };
+  s.blockCount = 1;
+  s.unassessedCounts = ['networkCount', 'callCount', 'writeCount', 'multipleWriterCount'];
+  for (const key of s.unassessedCounts) s[key] = null;
+  s.programBreakdown = { organisationBlocks: null, functionBlocks: null, functions: null, dataBlocks: null, safetyBlocks: null };
+  s.supportedAreas = ['Project structure', 'Supplied program-unit inventory', 'Configured PLC type from matching project records'];
+  s.topFindings = [s.topFindings[0]];
+  return s;
+}
+
+test('Mitsubishi inventory preserves a PLC-type selection without claiming an exact CPU or assessed logic', () => {
+  const s = mitsubishiInventory(), v = derive(s);
+  assert.equal(v.overall.label, 'REVIEW');
+  assert.equal(v.logic.label, 'NOT ASSESSED');
+  assert.equal(v.sharedControl.count, null);
+  assert.equal(v.sharedControl.confidence, 'UNKNOWN');
+  assert.equal(v.recoveryChecks.find(c => c.label === 'Configured PLC type identified').status, 'CONFIRMED');
+  assert.equal(v.recoveryChecks.find(c => c.label === 'Exact CPU identified').status, 'NOT VERIFIED');
+  assert.equal(v.recoveryChecks.find(c => c.label === 'PLC family identified').status, 'NOT VERIFIED');
+  const free = freeSnapshotResult(s, v);
+  assert.equal(free.controller.configuredType, 'FX3G');
+  assert.equal(free.writeCount, null);
+  assert.deepEqual(free.unassessedCounts, s.unassessedCounts);
+  assert.equal(validateSnapshotResult(s).valid, true);
+  assert.equal(validateSnapshotResult(free).valid, true);
+  assert.equal(s.writeCount, null, 'projection preserves stored unknown counts');
+  const context = vm.createContext({ URL, document: { addEventListener() {} } });
+  vm.runInContext(source, context);
+  const html = context.renderSnapshot(free, null, v);
+  assert.match(html, /Configured PLC type/);
+  assert.match(html, /FX3G/);
+  assert.match(html, /<b>1<\/b><span>Program units<\/span>/);
+  for (const label of ['Networks', 'Calls', 'Writes', 'Shared-write targets']) {
+    assert.ok(html.includes(`<b>—</b><span>${label}</span>`));
+    assert.ok(!html.includes(`<b>0</b><span>${label}</span>`));
+  }
+  assert.doesNotMatch(html, /<span>OBs<\/span>|<span>FBs<\/span>|<span>FCs<\/span>|<span>DBs<\/span>/);
+});
+
+test('null count extension fails closed without an explicit bounded assessment declaration', () => {
+  const s = mitsubishiInventory();
+  assert.equal(validateSnapshotResult({ ...s, unassessedCounts: undefined }).valid, false);
+  for (const list of [null, 'writeCount', ['writeCount', 'writeCount'], ['blockCount'], ['PRIVATE_TARGET'],
+    [...s.unassessedCounts, 'callCount']]) assert.equal(validateSnapshotResult({ ...s, unassessedCounts: list }).valid, false);
+  assert.equal(validateSnapshotResult({ ...s, writeCount: 0 }).valid, false);
+  assert.equal(validateSnapshotResult({ ...s, writeCount: undefined }).valid, false);
+  assert.equal(validateSnapshotResult(base()).valid, true);
+});
+
 test('manager assessments identify supported shared writes without claiming a fault or scoring risk', () => {
   const v = derive();
   assert.equal(v.overall.label, 'REVIEW');
