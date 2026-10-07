@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { assessLifecycle, normaliseSiemensOrderNumber, REVIEWED_LIFECYCLE } from '../lib/plc-lifecycle.mjs';
 import { publicJob } from '../lib/plc-audit-service.mjs';
+import { deriveSnapshotView } from '../lib/plc-snapshot-view.mjs';
 
 const snapshot = { controller: { manufacturer: 'Siemens', model: 'CPU 1212C DC/DC/Rly', orderNumber: '6ES7 212-1HE40-0XB0' },
                    topFindings: [{ id: 'configured-cpu', confidence: 'VERIFIED' }], maintenanceSummary: { lifecycle: 'Not assessed' } };
@@ -44,7 +45,8 @@ test('phase-out and discontinued statuses preserve the manufacturer distinction'
 });
 test('customer API supplies lifecycle separately without changing stored engineering results', () => {
   const result = publicJob({ id: 'aud_fixture', snapshotResult: snapshot });
-  assert.equal(result.snapshotResult, snapshot);
+  assert.deepEqual(result.snapshotResult.controller, snapshot.controller);
+  assert.equal(snapshot.maintenanceSummary.lifecycle, 'Not assessed');
   assert.equal(result.lifecycleAssessment.orderNumber, '6ES7212-1HE40-0XB0');
   assert.equal(result.workerKey, undefined);
 });
@@ -68,10 +70,11 @@ test('dated lifecycle review resolves old summary wording without rewriting engi
   vm.runInContext(script, context);
   const point = 'CPU identity comes from saved project configuration. I/O, safety status and lifecycle remain unassessed.';
   const result = { ...snapshot, maintenanceSummary: { managerPoints: [point] } };
-  const rendered = context.renderSnapshot(result, assessLifecycle(snapshot, day));
-  assert.match(rendered, /I\/O and safety status remain unassessed/);
-  assert.match(rendered, /Manufacturer lifecycle is shown separately with its review date/);
+  const lifecycle = assessLifecycle(snapshot, day);
+  const rendered = context.renderSnapshot(result, lifecycle, deriveSnapshotView(result, { lifecycle }));
+  assert.match(rendered, /Active product/);
+  assert.match(rendered, /No safety integrity/);
   assert.doesNotMatch(rendered, /lifecycle remain unassessed/);
   assert.equal(result.maintenanceSummary.managerPoints[0], point);
-  assert.match(context.renderSnapshot(result, assessLifecycle(null, day)), /lifecycle remain unassessed/);
+  assert.match(context.renderSnapshot(result, assessLifecycle(null, day)), /Not verified/);
 });

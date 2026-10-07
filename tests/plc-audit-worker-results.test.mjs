@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildAuditJob, createWorkerClaim, getCustomerAudit, publishWorkerResult } from '../lib/plc-audit-service.mjs';
 import { createMockSnapshotResult } from '../lib/plc-audit-model.mjs';
+import { deriveSnapshotView, freeSnapshotResult } from '../lib/plc-snapshot-view.mjs';
 
 // Exercise the actual service and persisted Issue records, with GitHub transport isolated.
 test('worker publication retains partial evidence and protects active claims', async (t) => {
@@ -46,7 +47,10 @@ test('worker publication retains partial evidence and protects active claims', a
       assert.ok(saved.completedAt);
       assert.equal(saved.error, null);
       assert.equal(saved.workerClaim, undefined);
-      assert.deepEqual((await getCustomerAudit('acct_owner', job.id)).snapshotResult, snapshot);
+      assert.deepEqual(saved.snapshotResult, snapshot, 'full engineering evidence is retained');
+      assert.deepEqual((await getCustomerAudit('acct_owner', job.id)).snapshotResult,
+        freeSnapshotResult(snapshot, deriveSnapshotView(snapshot, { status: saved.status, projectAvailable: true })),
+        'the customer receives the free Snapshot projection');
       await assert.rejects(getCustomerAudit('acct_other', job.id), error => error.status === 404);
       assert.equal(updates, 1);
     });
