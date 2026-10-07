@@ -62,3 +62,16 @@ test('lifecycle rendering separates family plans and blocks unsafe source links'
   assert.doesNotMatch(context.renderLifecycle({ ...result, sources: [{ title: 'Unsafe', url: 'javascript:alert(1)' }] }), /javascript:/);
   assert.match(context.renderLifecycle(assessLifecycle(snapshot, new Date('2026-11-01'))), /Needs recheck/);
 });
+
+test('dated lifecycle review resolves old summary wording without rewriting engineering evidence', () => {
+  const context = vm.createContext({ URL, document: { addEventListener() {} } });
+  vm.runInContext(script, context);
+  const point = 'CPU identity comes from saved project configuration. I/O, safety status and lifecycle remain unassessed.';
+  const result = { ...snapshot, maintenanceSummary: { managerPoints: [point] } };
+  const rendered = context.renderSnapshot(result, assessLifecycle(snapshot, day));
+  assert.match(rendered, /I\/O and safety status remain unassessed/);
+  assert.match(rendered, /Manufacturer lifecycle is shown separately with its review date/);
+  assert.doesNotMatch(rendered, /lifecycle remain unassessed/);
+  assert.equal(result.maintenanceSummary.managerPoints[0], point);
+  assert.match(context.renderSnapshot(result, assessLifecycle(null, day)), /lifecycle remain unassessed/);
+});
