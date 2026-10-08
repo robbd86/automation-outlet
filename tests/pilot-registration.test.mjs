@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import handler,{normaliseRegistration,validateRegistration} from '../api/pilot-signup.mjs';
+import handler,{normaliseRegistration,validateRegistration} from '../lib/pilot-registration.mjs';
 
 const read = file=>readFileSync(file,'utf8');
 const valid = {
