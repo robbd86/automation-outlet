@@ -95,3 +95,25 @@ and manager-first content. The real ETP local worker round trip verifies the API
 shows the aggregate 48-target finding while retaining the original writer evidence
 privately. Browser checks verify the existing protected test-preview result, source
 links, collapsible evidence, CTAs and responsive layout.
+# Mitsubishi credibility refinements
+
+The current Mitsubishi adapters do not provide a whole-project coverage
+denominator. The free view uses PARTIAL for decoded instruction/source evidence
+and LIMITED for inventory-only evidence. The legacy percentage remains in stored
+Snapshot schema v2 for compatibility; it is not shown as Mitsubishi coverage.
+This presentation never claims complete Mitsubishi analysis.
+
+The public projection marks visual networks and Calls unassessed, including older
+zero placeholders. Write/shared-write counts need the existing supported decoded
+write scope; explicit unassessed declarations always win. Unsupported zero hardware
+and safety metrics become null. Zero source categories remain numeric only where
+the adapter has actually counted those instructions/references. Stored parser
+results are not rewritten, and no new analysis is performed.
+
+Configured PLC type remains in identity/recovery checks, without a duplicate Top
+Finding. When Mitsubishi's exact main unit/order number is unavailable, lifecycle
+guidance asks for the installed PLC label first, then manufacturer verification.
+Technical fallback strings use Unicode em dashes before escaping. Mitsubishi's
+nine summary cards use three columns above the mobile breakpoint; Siemens retains
+its existing layout and coverage/identity behaviour. Free detail filtering,
+ownership checks, parser scope and lifecycle classification are unchanged.

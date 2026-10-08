@@ -21,3 +21,7 @@
 @media(max-width:650px){.plc-controls-grid,.plc-recovery-checks,.plc-service-steps{grid-template-columns:1fr}.plc-section-heading{align-items:flex-start}.plc-result-page .plc-table th,.plc-result-page .plc-table td{padding:.55rem .25rem}.plc-result-page .plc-hero{padding:2rem 0 1.2rem}}
 @media(max-width:980px){.plc-pricing{grid-column:span 6}.plc-metrics{grid-template-columns:repeat(3,1fr)}.plc-evidence{grid-template-columns:1fr}.plc-manager-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.plc-pricing{grid-column:span 12}.plc-metrics{grid-template-columns:repeat(2,1fr)}.plc-card{padding:1.05rem}.plc-hero{padding:3rem 0 2.4rem}.plc-table{font-size:.86rem}.plc-table th,.plc-table td{padding:.55rem}.plc-manager-grid{grid-template-columns:1fr 1fr}}
+
+/* Nine Mitsubishi cards form complete rows; Siemens retains its existing grid. */
+.plc-controls-grid-mitsubishi{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:650px){.plc-controls-grid-mitsubishi{grid-template-columns:1fr}}
