@@ -1,4 +1,4 @@
-import { collections } from "../lib/shop.mjs";
+import { collections, available, publicProducts } from "../lib/shop.mjs";
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
 const STOCK_LABEL = "stock-item";
@@ -104,8 +104,15 @@ function renderSitemap(products) {
     })
     .join("\n");
 
-  const collectionKeys = new Set(Object.keys(collections));
-  for (const product of products) {
+  // Only advertise category routes that have live stock. The catalogue
+  // intentionally noindexes empty categories; do not place those in a sitemap.
+  const liveProducts = publicProducts(products).filter(available);
+  const collectionKeys = new Set(
+    Object.entries(collections)
+      .filter(([, collection]) => liveProducts.some((product) => collection.match(product)))
+      .map(([key]) => key)
+  );
+  for (const product of liveProducts) {
     const brandSlug = slugify(product.brand);
     if (brandSlug) collectionKeys.add(brandSlug);
   }
