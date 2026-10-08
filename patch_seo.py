@@ -292,12 +292,47 @@ def patch_seo_topic_cluster() -> None:
     print("patched: topical SEO links across home, lifecycle hub and sourcing")
 
 
+
+def patch_factory_spares_pilot() -> None:
+    """Prominent home placement and crawlable sitewide discovery for the private pilot."""
+    home = ROOT / "index.html"
+    html = home.read_text(encoding="utf-8")
+    if 'href="/pilot.css"' not in html:
+        html = html.replace('</head>', '<link rel="stylesheet" href="/pilot.css">\n</head>', 1)
+    if 'id="factory-spares-pilot"' not in html:
+        # Immediately after the primary hero: keep existing seller/buyer hero intact.
+        marker = '<section style="padding:2.8rem 0"><div class="wrap"><div class="paths" style="margin:0">'
+        if marker not in html:
+            raise RuntimeError("Could not find homepage post-hero section for pilot")
+        block = (ROOT / "_blocks" / "pilot-home.html").read_text(encoding="utf-8")
+        html = html.replace(marker, block + '\n' + marker, 1)
+    home.write_text(html, encoding="utf-8")
+
+    # This does not add yet another long link to the cramped mobile/desktop nav.
+    # One contextual footer link provides discoverability from other public pages.
+    for path in ROOT.glob("*.html"):
+        if is_private_page(path.name) or path.name == "factory-spares-network.html":
+            continue
+        html = path.read_text(encoding="utf-8")
+        if 'id="pilot-footer-discovery"' in html or "</footer>" not in html:
+            continue
+        link = ('<div class="wrap" id="pilot-footer-discovery" '
+                'style="padding:.65rem 22px;font-size:.87rem">'
+                '<a href="/factory-spares-network.html">Factory Spares Network — private UK pilot</a>'
+                '</div>')
+        html = html.replace("</footer>", link + "\n</footer>", 1)
+        path.write_text(html, encoding="utf-8")
+
+    print("patched: factory spares pilot homepage and public discovery")
+
+
 def main() -> None:
     patch_sell_page()
     patch_buy_page()
     patch_buyer_discovery()
     patch_lifecycle_discovery()
     patch_seo_topic_cluster()
+    patch_factory_spares_pilot()
 
 
 if __name__ == "__main__":

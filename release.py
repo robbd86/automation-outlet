@@ -21,6 +21,7 @@ PRIVATE_PAGES = {
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
 EDITORIAL_LASTMOD = {
     "plc-lifecycle.html": "2026-10-08",
+    "factory-spares-network.html": "2026-10-08",
     "siemens-s7-300-discontinued.html": "2026-10-08",
     "mitsubishi-q-series-discontinued.html": "2026-10-08",
     "omron-cj2m-discontinued.html": "2026-10-08",
@@ -111,7 +112,7 @@ def main() -> None:
     print("production cleanup complete")
     # Run source-level SEO tests after generated pages and sitemap are final.
     import subprocess
-    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs"], check=True)
+    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/pilot-registration.test.mjs"], check=True)
 
 
 if __name__ == "__main__":
