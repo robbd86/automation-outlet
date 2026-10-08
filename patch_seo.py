@@ -165,7 +165,7 @@ def patch_buyer_discovery() -> None:
                "publisher": {"@id": "https://www.automation-outlet.co.uk/#organization"}}
     if 'id="ao-website-schema"' not in html:
         html = html.replace('</head>', '<script id="ao-website-schema" type="application/ld+json">'
-                            + json.dumps(website) + '</script>\\n</head>', 1)
+                            + json.dumps(website) + '</script>\n</head>', 1)
     path.write_text(html, encoding="utf-8")
 
     links = [('All current parts','/parts'),('Siemens','/parts/siemens'),('Allen-Bradley','/parts/allen-bradley'),
