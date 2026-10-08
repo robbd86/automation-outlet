@@ -67,6 +67,33 @@ test('Mitsubishi inventory preserves a PLC-type selection without claiming an ex
   assert.doesNotMatch(html, /<span>OBs<\/span>|<span>FBs<\/span>|<span>FCs<\/span>|<span>DBs<\/span>/);
 });
 
+test('decoded Mitsubishi instructions expose counts and retain private source evidence', () => {
+  const s = mitsubishiInventory();
+  Object.assign(s, { instructionCount: 15, callCount: 0, writeCount: 4, multipleWriterCount: 2,
+    unassessedCounts: ['networkCount'] });
+  s.supportedAreas.push('Decoded Mitsubishi instruction inventory', 'Detected source write sites');
+  s.topFindings.push({ id: 'writers-1', confidence: 'VERIFIED', title: rawTarget, summary: rawTarget, evidence: [rawTarget] });
+  s.instructions = [{ raw: rawTarget }];
+  const v = derive(s), free = freeSnapshotResult(s, v);
+  assert.equal(v.logic.label, 'REVIEW');
+  assert.equal(v.sharedControl.count, 2);
+  assert.equal(free.instructionCount, 15);
+  assert.equal(free.networkCount, null);
+  assert.equal(free.controller.model, '');
+  assert.equal(validateSnapshotResult(s).valid, true);
+  assert.equal(validateSnapshotResult(free).valid, true);
+  assert.ok(!JSON.stringify(free).includes(rawTarget));
+  const context = vm.createContext({ URL, document: { addEventListener() {} } });
+  vm.runInContext(source, context);
+  const html = context.renderSnapshot(free, null, v);
+  assert.ok(html.includes('<b>15</b><span>Instructions</span>'));
+  assert.ok(html.includes('<b>—</b><span>Networks</span>'));
+  for (const value of [null, true, -1, 1.5, '15', Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(validateSnapshotResult({ ...s, instructionCount: value }).valid, false);
+  }
+  assert.equal(validateSnapshotResult(base()).valid, true);
+});
+
 test('null count extension fails closed without an explicit bounded assessment declaration', () => {
   const s = mitsubishiInventory();
   assert.equal(validateSnapshotResult({ ...s, unassessedCounts: undefined }).valid, false);
