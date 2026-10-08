@@ -27,7 +27,7 @@ test('landing page uses one canonical URL, working route and accessible consent'
   assert.match(h,/rel="canonical" href="https:\/\/www\.automation-outlet\.co\.uk\/factory-spares-network\.html"/);
   assert.match(h,/<link rel="stylesheet" href="\/pilot\.css">/);
   assert.match(h,/<form id="pilotSignup"/);
-  assert.match(h,/fetch\("\/api\/pilot-signup"/);
+  assert.match(h,/fetch\("\/api\/network-signup"/);
   assert.match(h,/name="consent" value="yes" required/);
   assert.match(h,/name="interest" value="Find spares" required/);
   assert.match(h,/name="interest" value="Offer surplus"/);
