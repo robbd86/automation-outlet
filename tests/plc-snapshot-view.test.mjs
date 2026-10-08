@@ -45,8 +45,8 @@ test('Mitsubishi inventory preserves a PLC-type selection without claiming an ex
   assert.equal(v.sharedControl.count, null);
   assert.equal(v.sharedControl.confidence, 'UNKNOWN');
   assert.equal(v.recoveryChecks.find(c => c.label === 'Configured PLC type identified').status, 'CONFIRMED');
-  assert.equal(v.recoveryChecks.find(c => c.label === 'Exact CPU identified').status, 'NOT VERIFIED');
-  assert.equal(v.recoveryChecks.find(c => c.label === 'PLC family identified').status, 'NOT VERIFIED');
+  assert.equal(v.recoveryChecks.find(c => c.label === 'Exact physical main unit identified').status, 'NOT VERIFIED');
+  assert.equal(v.recoveryChecks.find(c => c.label === 'PLC family identified').status, 'CONFIRMED');
   const free = freeSnapshotResult(s, v);
   assert.equal(free.controller.configuredType, 'FX3G');
   assert.equal(free.writeCount, null);
