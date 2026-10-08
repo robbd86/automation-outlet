@@ -112,7 +112,7 @@ def main() -> None:
     print("production cleanup complete")
     # Run source-level SEO tests after generated pages and sitemap are final.
     import subprocess
-    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs"], check=True)
+    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/pilot-registration.test.mjs"], check=True)
 
 
 if __name__ == "__main__":
