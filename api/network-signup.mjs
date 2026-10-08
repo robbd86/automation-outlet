@@ -1,3 +1,4 @@
+import pilotRegistrationHandler from "../lib/pilot-registration.mjs";
 const AIRTABLE_API = "https://api.airtable.com/v0";
 const DEFAULT_FORMSPREE_ENDPOINT = "https://formspree.io/f/xqevvvll";
 
@@ -352,6 +353,8 @@ export default async function handler(request, response) {
   } catch {
     return json(response, 400, { ok: false, error: "Malformed JSON" });
   }
+
+  if (clean(raw?.signup_type,40) === "factory-spares-pilot") return pilotRegistrationHandler(request, response);
 
   const signup = normaliseSignup(raw);
   if (signup.website) return json(response, 200, { ok: true, message: "Signup received" });
