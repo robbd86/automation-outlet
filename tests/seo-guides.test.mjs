@@ -61,3 +61,18 @@ test('sitemap and robots policies remain in place', () => {
   const robots = read('robots.txt');
   assert.match(robots, /Sitemap: https:\/\/www\.automation-outlet\.co\.uk\/sitemap.xml/);
 });
+
+test('non-search utility pages are noindexed and omitted from the public sitemap', () => {
+  const sitemap = read('sitemap.xml');
+  for (const page of ['cart.html', 'order-success.html']) {
+    const html = read(page);
+    assert.match(html, /<meta name="robots" content="noindex, nofollow">/);
+    assert.ok(!sitemap.includes(site + page), 'utility URL must be absent from sitemap: ' + page);
+  }
+});
+
+test('stock sitemap only advertises category URLs with live inventory', () => {
+  const stockSitemap = read('api/stock-sitemap.mjs');
+  assert.match(stockSitemap, /publicProducts\(products\)\.filter\(available\)/);
+  assert.match(stockSitemap, /liveProducts\.some\(\(product\) => collection\.match\(product\)\)/);
+});
