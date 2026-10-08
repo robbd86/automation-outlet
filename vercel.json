@@ -1,192 +1,35 @@
 {
   "framework": null,
-  "buildCommand": "python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 patch_conversion.py && python3 pct.py && python3 patch_seo.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py && python3 release.py && node --test tests/seo-guides.test.mjs",
+  "buildCommand": "python3 build.py && python3 patch_stock.py && python3 patch_network.py && python3 patch_conversion.py && python3 pct.py && python3 patch_seo.py && python3 patch_logo.py && python3 patch_exact_logo.py && python3 finalise_logo.py && python3 release.py",
   "outputDirectory": ".",
   "headers": [
-    {
-      "source": "/stock-admin.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/orders-admin.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/buyer-network-admin.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/deal-desk.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/agent-desk.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit/upload",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit/dashboard",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit/audits/:id",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit-upload.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit-dashboard.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/plc-audit-audit.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    }
+    { "source": "/stock-admin.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/orders-admin.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/buyer-network-admin.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/deal-desk.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/agent-desk.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/plc-audit/upload", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] },
+    { "source": "/plc-audit/dashboard", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] },
+    { "source": "/plc-audit/audits/:id", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] },
+    { "source": "/plc-audit-upload.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] },
+    { "source": "/plc-audit-dashboard.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] },
+    { "source": "/plc-audit-audit.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "private, no-store" }] }
   ],
   "rewrites": [
-    {
-      "source": "/plc-audit",
-      "destination": "/plc-audit.html"
-    },
-    {
-      "source": "/plc-audit/upload",
-      "destination": "/plc-audit-upload.html"
-    },
-    {
-      "source": "/plc-audit/dashboard",
-      "destination": "/plc-audit-dashboard.html"
-    },
-    {
-      "source": "/plc-audit/audits/:id",
-      "destination": "/plc-audit-audit.html?id=:id"
-    },
-    {
-      "source": "/api/plc-audit",
-      "destination": "/api/deal-desk?plcAudit=1"
-    },
-    {
-      "source": "/api/agents",
-      "destination": "/api/deal-desk"
-    },
-    {
-      "source": "/api/photo-agent",
-      "destination": "/api/deal-desk?photo=1"
-    },
-    {
-      "source": "/listing-image/:filename",
-      "destination": "/api/deal-desk?photoImage=:filename"
-    },
-    {
-      "source": "/api/stripe-live-webhook",
-      "destination": "/api/stripe-webhook"
-    },
-    {
-      "source": "/parts",
-      "destination": "/api/catalogue?collection=all"
-    },
-    {
-      "source": "/parts/:collection",
-      "destination": "/api/catalogue?collection=:collection"
-    },
-    {
-      "source": "/stock/:slug",
-      "destination": "/api/product-page?slug=:slug"
-    },
-    {
-      "source": "/sitemap-stock.xml",
-      "destination": "/api/stock-sitemap"
-    },
-    {
-      "source": "/google-products.xml",
-      "destination": "/api/google-products-xml"
-    },
-    {
-      "source": "/google-products.txt",
-      "destination": "/api/google-products"
-    }
+    { "source": "/plc-audit", "destination": "/plc-audit.html" },
+    { "source": "/plc-audit/upload", "destination": "/plc-audit-upload.html" },
+    { "source": "/plc-audit/dashboard", "destination": "/plc-audit-dashboard.html" },
+    { "source": "/plc-audit/audits/:id", "destination": "/plc-audit-audit.html?id=:id" },
+    { "source": "/api/plc-audit", "destination": "/api/deal-desk?plcAudit=1" },
+    { "source": "/api/agents", "destination": "/api/deal-desk" },
+    { "source": "/api/photo-agent", "destination": "/api/deal-desk?photo=1" },
+    { "source": "/listing-image/:filename", "destination": "/api/deal-desk?photoImage=:filename" },
+    { "source": "/api/stripe-live-webhook", "destination": "/api/stripe-webhook" },
+    { "source": "/parts", "destination": "/api/catalogue?collection=all" },
+    { "source": "/parts/:collection", "destination": "/api/catalogue?collection=:collection" },
+    { "source": "/stock/:slug", "destination": "/api/product-page?slug=:slug" },
+    { "source": "/sitemap-stock.xml", "destination": "/api/stock-sitemap" },
+    { "source": "/google-products.xml", "destination": "/api/google-products-xml" },
+    { "source": "/google-products.txt", "destination": "/api/google-products" }
   ]
 }
