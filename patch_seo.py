@@ -183,10 +183,57 @@ def patch_buyer_discovery() -> None:
     print('patched: buyer discovery and organisation data')
 
 
+
+def patch_lifecycle_discovery() -> None:
+    """Link the evidence-based PLC lifecycle guide from established public funnels.
+
+    This is a post-build patch because build.py regenerates the home and landing
+    pages on every Vercel deployment. It is deliberately idempotent.
+    """
+    guide = "/plc-lifecycle.html"
+    promo = '''<section id="plc-lifecycle-promo" style="padding:2.6rem 0;border-top:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head"><h2>Is your PLC <span>going obsolete?</span></h2>
+      <p>Check manufacturer-announced lifecycle deadlines for Siemens, Allen-Bradley, Mitsubishi and Omron controllers, with searchable part numbers and linked notices.</p>
+    </div>
+    <a class="btn big" href="/plc-lifecycle.html">Check PLC lifecycle dates</a>
+  </div>
+</section>'''
+    for name in ("index.html", "obsolete-parts-sourcing.html"):
+        path = ROOT / name
+        html = path.read_text(encoding="utf-8")
+        if 'id="plc-lifecycle-promo"' not in html:
+            if name == "index.html":
+                marker = '<section id="browse-parts"'
+                if marker not in html:
+                    raise RuntimeError("Could not locate home browse section for lifecycle guide")
+                html = html.replace(marker, promo + marker, 1)
+            else:
+                if "</main>" not in html:
+                    raise RuntimeError("Could not locate obsolete parts page main")
+                html = html.replace("</main>", promo + "\n</main>", 1)
+            path.write_text(html, encoding="utf-8")
+
+    # A crawlable internal link on every ordinary public page helps visitors
+    # find the guide without expanding an already crowded site header.
+    for path in ROOT.glob("*.html"):
+        if is_private_page(path.name):
+            continue
+        html = path.read_text(encoding="utf-8")
+        if 'id="plc-lifecycle-footer-link"' not in html and "</footer>" in html:
+            footer = ('<div class="wrap" id="plc-lifecycle-footer-link" '
+                      'style="padding-top:.65rem;padding-bottom:.85rem;font-size:.86rem">'
+                      '<a href="/plc-lifecycle.html">PLC lifecycle &amp; obsolescence dates</a>'
+                      '</div>')
+            html = html.replace("</footer>", footer + "</footer>", 1)
+            path.write_text(html, encoding="utf-8")
+    print("patched: PLC lifecycle internal discovery")
+
 def main() -> None:
     patch_sell_page()
     patch_buy_page()
     patch_buyer_discovery()
+    patch_lifecycle_discovery()
 
 
 if __name__ == "__main__":
