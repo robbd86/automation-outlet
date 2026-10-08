@@ -17,6 +17,16 @@ PRIVATE_PAGES = {
     "plc-audit-dashboard.html",
     "plc-audit-audit.html",
 }
+# Manually maintained dates of substantive editorial review. Do not use build
+# timestamps as lastmod: all generated HTML files are rewritten on every deploy.
+EDITORIAL_LASTMOD = {
+    "plc-lifecycle.html": "2026-10-08",
+    "siemens-s7-300-discontinued.html": "2026-10-08",
+    "mitsubishi-q-series-discontinued.html": "2026-10-08",
+    "omron-cj2m-discontinued.html": "2026-10-08",
+    "allen-bradley-slc-500-discontinued.html": "2026-10-08",
+}
+
 PUBLIC_ROUTE_OVERRIDES = {
     "plc-audit.html": "plc-audit",
 }
@@ -83,7 +93,9 @@ def update_sitemap() -> None:
         if re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex', text, re.I):
             continue
         route = public_route(page.name)
-        urls.append(f"  <url><loc>https://www.automation-outlet.co.uk/{route}</loc></url>")
+        lastmod = EDITORIAL_LASTMOD.get(page.name)
+        suffix = f"<lastmod>{lastmod}</lastmod>" if lastmod else ""
+        urls.append(f"  <url><loc>https://www.automation-outlet.co.uk/{route}</loc>{suffix}</url>")
     (ROOT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -97,6 +109,9 @@ def main() -> None:
     clean_html()
     update_sitemap()
     print("production cleanup complete")
+    # Run source-level SEO tests after generated pages and sitemap are final.
+    import subprocess
+    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs"], check=True)
 
 
 if __name__ == "__main__":
