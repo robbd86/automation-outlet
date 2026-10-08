@@ -229,11 +229,67 @@ def patch_lifecycle_discovery() -> None:
             path.write_text(html, encoding="utf-8")
     print("patched: PLC lifecycle internal discovery")
 
+
+def patch_seo_topic_cluster() -> None:
+    """Connect brand-specific, original guides to the existing lifecycle hub.
+
+    Kept in the post-build patch because site HTML is regenerated on deploy.
+    """
+    resources = [
+        ("Siemens S7-300 PM410, 2033 and spare-parts planning", "/siemens-s7-300-discontinued.html"),
+        ("Mitsubishi MELSEC-Q discontinuation: 2026 versus 2029", "/mitsubishi-q-series-discontinued.html"),
+        ("Omron CJ2M 2027 final order dates: global and Europe", "/omron-cj2m-discontinued.html"),
+        ("Allen-Bradley SLC 500 1747-L542/L552/L553 lifecycle", "/allen-bradley-slc-500-discontinued.html"),
+    ]
+
+    def resource_section(section_id):
+        links = "".join(
+            f'<li style="padding:.6rem 0;border-bottom:1px solid var(--line)"><a href="{url}">{name} &rarr;</a></li>'
+            for name, url in resources
+        )
+        return (
+            f'<section id="{section_id}" style="padding:2.5rem 0">'
+            '<div class="wrap"><div class="sec-head"><h2>PLC obsolescence <span>by manufacturer</span></h2>'
+            '<p>Understand exact end-of-order and support dates, plus maintenance and spares decisions for your factory.</p></div>'
+            f'<ul style="list-style:none;padding:0;max-width:900px">{links}</ul></div></section>'
+        )
+
+    home = ROOT / "index.html"
+    html = home.read_text(encoding="utf-8")
+    if 'id="plc-seo-topic-links"' not in html:
+        marker = '<section id="browse-parts"'
+        if marker not in html:
+            raise RuntimeError("Could not add SEO resources to homepage")
+        html = html.replace(marker, resource_section("plc-seo-topic-links") + marker, 1)
+        home.write_text(html, encoding="utf-8")
+
+    hub = ROOT / "plc-lifecycle.html"
+    html = hub.read_text(encoding="utf-8")
+    if 'id="plc-seo-hub-links"' not in html:
+        marker = '<section class="lc-main" id="faq">'
+        if marker not in html:
+            raise RuntimeError("Could not add SEO resources to PLC lifecycle hub")
+        html = html.replace(marker, resource_section("plc-seo-hub-links") + marker, 1)
+        hub.write_text(html, encoding="utf-8")
+
+    obsolete = ROOT / "obsolete-parts-sourcing.html"
+    html = obsolete.read_text(encoding="utf-8")
+    if 'id="plc-seo-sourcing-links"' not in html:
+        marker = "</main>"
+        if marker not in html:
+            raise RuntimeError("Could not add lifecycle guides to obsolete sourcing page")
+        html = html.replace(marker, resource_section("plc-seo-sourcing-links") + marker, 1)
+        obsolete.write_text(html, encoding="utf-8")
+
+    print("patched: topical SEO links across home, lifecycle hub and sourcing")
+
+
 def main() -> None:
     patch_sell_page()
     patch_buy_page()
     patch_buyer_discovery()
     patch_lifecycle_discovery()
+    patch_seo_topic_cluster()
 
 
 if __name__ == "__main__":
