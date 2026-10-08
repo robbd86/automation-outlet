@@ -144,8 +144,9 @@ pilotForm.addEventListener("submit",async event=>{
   payload.utm_source=(campaign.get("utm_source")||"").slice(0,80);
   payload.utm_campaign=(campaign.get("utm_campaign")||"").slice(0,80);
   payload.source_page="factory-spares-network";
+  payload.signup_type="factory-spares-pilot";
   try{
-    const response=await fetch("/api/pilot-signup",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(payload)});
+    const response=await fetch("/api/network-signup",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(payload)});
     const result=await response.json().catch(()=>({}));
     if(!response.ok||result.ok!==true)throw new Error(result.error||"Submission failed");
     pilotForm.reset();pilotStatus.dataset.state="success";
