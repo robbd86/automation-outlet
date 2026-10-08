@@ -21,6 +21,7 @@ PRIVATE_PAGES = {
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
 EDITORIAL_LASTMOD = {
     "plc-lifecycle.html": "2026-10-08",
+    "factory-spares-network.html": "2026-10-08",
     "siemens-s7-300-discontinued.html": "2026-10-08",
     "mitsubishi-q-series-discontinued.html": "2026-10-08",
     "omron-cj2m-discontinued.html": "2026-10-08",
