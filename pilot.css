@@ -1,0 +1,101 @@
+
+/* AO Private Factory Spares Network — theme-matched, isolated styles */
+.pilot-announcement{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(110deg,#0b1c39 0%,#0b2349 58%,#071429 100%);border-top:1px solid rgba(77,148,255,.32);border-bottom:1px solid rgba(77,148,255,.3)}
+.pilot-announcement::before,.pilot-landing-hero::before{content:"";position:absolute;inset:-160px -180px auto auto;width:550px;height:550px;background:radial-gradient(circle,rgba(45,129,255,.2),transparent 70%);pointer-events:none;z-index:-1}
+.pilot-announcement .wrap{max-width:1180px}
+.pilot-home-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(310px,.85fr);gap:2.4rem;align-items:center;padding:4rem 22px}
+.pilot-kicker{display:inline-flex;align-items:center;gap:.55rem;color:#a5caff;letter-spacing:.14em;text-transform:uppercase;font:600 .78rem 'IBM Plex Mono',monospace;margin-bottom:1.25rem}
+.pilot-kicker:before{content:"";width:8px;height:8px;background:#4ae9b1;border-radius:50%;box-shadow:0 0 0 5px rgba(74,233,177,.13)}
+.pilot-announcement h2,.pilot-landing-hero h1{font-size:clamp(2.55rem,5vw,4.5rem);line-height:.97;letter-spacing:-.014em;max-width:850px}
+.pilot-announcement h2 span,.pilot-landing-hero h1 em{display:block;color:#70adff;font-style:normal}
+.pilot-announcement .pilot-lead{font-size:1.1rem;line-height:1.68;color:#ccd9ed;margin:1.3rem 0 1.65rem;max-width:660px}
+.pilot-perks{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:1.8rem}
+.pilot-perks span{font-size:.85rem;color:#d4e4f8;border:1px solid rgba(116,173,255,.25);border-radius:30px;padding:.5rem .85rem;background:rgba(22,52,99,.5)}
+.pilot-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+.pilot-actions .btn{padding:.9rem 1.45rem}
+.pilot-fine{font-size:.83rem;color:#9cafcc;margin-top:1rem}
+.pilot-network-board{position:relative;min-height:385px;padding:1.3rem;border:1px solid rgba(100,164,255,.3);border-radius:22px;background:linear-gradient(135deg,rgba(23,53,99,.92),rgba(8,25,53,.94));box-shadow:0 28px 65px rgba(0,0,0,.24);overflow:hidden}
+.pilot-network-board::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(122,177,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(122,177,255,.055) 1px,transparent 1px);background-size:25px 25px;mask-image:linear-gradient(to bottom,black,transparent 95%);pointer-events:none}
+.pilot-network-board .pilot-board-top{position:relative;z-index:1;display:flex;justify-content:space-between;gap:.7rem;font:500 .7rem 'IBM Plex Mono',monospace;color:#a9c8f3;letter-spacing:.08em;text-transform:uppercase}
+.pilot-board-top small{display:inline-flex;align-items:center;gap:.35rem;color:#80e1b1;font:inherit}
+.pilot-board-top small:before{content:"";width:5px;height:5px;background:#80e1b1;border-radius:50%;box-shadow:0 0 7px #80e1b1}
+.pilot-nodes{position:relative;height:270px;margin:10px auto;max-width:380px}
+.pilot-nodes svg{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.pilot-nodes line,.pilot-nodes path{stroke:#619eeb;stroke-width:1.8;stroke-dasharray:5 9;animation:pilot-flow 19s linear infinite}
+.pilot-node{position:absolute;display:grid;place-items:center;width:100px;min-height:78px;background:#112f5b;border:1px solid rgba(116,182,255,.6);box-shadow:0 10px 25px rgba(0,0,0,.3);border-radius:12px;text-align:center;padding:.7rem .4rem;font:.76rem 'IBM Plex Mono',monospace;color:#e4efff}
+.pilot-node span{font-size:1.45rem;display:block;line-height:1.1}
+.pilot-node-a{top:18px;left:0}.pilot-node-b{top:18px;right:0}.pilot-node-c{bottom:2px;left:50%;transform:translateX(-50%);border-color:rgba(74,233,177,.75)}
+.pilot-node-c:after{content:"AO PRIVATE";font-size:.52rem;letter-spacing:.07em;color:#82f3be;display:block}
+.pilot-board-bottom{position:relative;z-index:1;border-top:1px solid rgba(128,172,228,.24);padding-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.8rem;color:#bcd1eb}
+.pilot-board-bottom strong{font-family:'IBM Plex Mono',monospace;color:#89b7ff;font-size:.73rem}
+@keyframes pilot-flow{to{stroke-dashoffset:-140}}
+.pilot-landing-hero{position:relative;isolation:isolate;background:linear-gradient(125deg,#10294e,#061329 72%);border-bottom:1px solid rgba(120,175,255,.17);padding:4.5rem 0 3.9rem;overflow:hidden}
+.pilot-landing-hero .wrap{max-width:1180px}
+.pilot-landing-hero h1{max-width:870px}
+.pilot-landing-hero p{font-size:1.1rem;color:#c3d1e5;line-height:1.68;max-width:800px;margin-top:1.4rem}
+.pilot-crumb{font-size:.83rem;color:#91aaca;margin-bottom:1.6rem}
+.pilot-crumb a{color:#b9d5ff}
+.pilot-hero-proof{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.7rem}
+.pilot-hero-proof span{font-size:.83rem;color:#d3e5fa;background:rgba(92,157,255,.1);border:1px solid rgba(118,178,255,.2);border-radius:8px;padding:.55rem .8rem}
+.pilot-landing-hero .pilot-actions{margin-top:1.9rem}
+.pilot-strip{background:rgba(20,48,91,.48);border-bottom:1px solid var(--line)}
+.pilot-strip .wrap{padding-top:1rem;padding-bottom:1rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:.7rem;color:#c4d6ec;font-size:.9rem}
+.pilot-strip b{color:#7eb7ff;font-family:'IBM Plex Mono',monospace;font-size:.76rem}
+.pilot-section{padding:4rem 0}
+.pilot-section h2{font-size:clamp(2rem,3.6vw,3rem);margin:0 0 .8rem}
+.pilot-section h2 span{color:var(--blue-bright)}
+.pilot-section .pilot-section-intro{max-width:770px;color:var(--grey);margin-bottom:1.7rem;font-size:1.05rem}
+.pilot-route-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.pilot-route{border-radius:16px;border:1px solid rgba(103,165,251,.23);background:linear-gradient(165deg,#112b4f,#0a1a34);padding:1.5rem;display:flex;flex-direction:column;min-height:285px;box-shadow:0 12px 35px rgba(0,0,0,.09)}
+.pilot-route-number{display:inline-block;font:600 .75rem 'IBM Plex Mono',monospace;color:#78aeed;letter-spacing:.1em;margin-bottom:1.3rem}
+.pilot-route h3{font-size:1.7rem;margin-bottom:.55rem}
+.pilot-route p{color:#b5c9df;font-size:.95rem;margin-bottom:1.7rem;flex:1}
+.pilot-route .btn{font-size:1rem;text-align:center}
+.pilot-privacy-panel{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr);gap:2rem;border:1px solid rgba(94,159,252,.3);background:linear-gradient(135deg,rgba(22,58,107,.6),rgba(8,25,53,.72));border-radius:18px;padding:2.3rem;align-items:center}
+.pilot-privacy-panel h2{margin-bottom:1rem}
+.pilot-privacy-panel p{color:#bbcee5}
+.pilot-privacy-panel ul{list-style:none;padding:0;display:grid;gap:.8rem}
+.pilot-privacy-panel li{padding:.85rem 1rem;background:rgba(5,20,45,.5);border:1px solid rgba(99,165,255,.2);border-radius:9px;color:#d4e4f9;font-size:.93rem}
+.pilot-privacy-panel li:before{content:"✓";font-weight:800;color:#75ecc5;margin-right:.55rem}
+.pilot-process{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.7rem}
+.pilot-step{border-left:2px solid rgba(92,152,239,.5);padding:.4rem 1rem}
+.pilot-step b{font:.75rem 'IBM Plex Mono',monospace;color:#70aaf4}
+.pilot-step h3{margin:.6rem 0;font-size:1.4rem}
+.pilot-step p{color:#a8bcd7;font-size:.93rem}
+.pilot-signup-section{padding:4rem 0 5rem;background:linear-gradient(180deg,#0b1d38,#060e1f);border-top:1px solid var(--line)}
+.pilot-form-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:2.6rem;align-items:start}
+.pilot-form-intro{padding:1rem 0}.pilot-form-intro h2{font-size:clamp(2.1rem,4vw,3.1rem)}
+.pilot-form-intro h2 span{color:#73adff}
+.pilot-form-intro p{margin:1rem 0;color:#bccce3}
+.pilot-form-note{background:rgba(19,49,91,.7);border-left:3px solid #599dff;border-radius:8px;padding:1rem;font-size:.92rem}
+.pilot-signup-card{background:#102444;border:1px solid rgba(110,173,253,.35);border-radius:18px;padding:2rem;box-shadow:0 18px 45px rgba(0,0,0,.22)}
+.pilot-signup-card h3{font-size:1.6rem;margin-bottom:.5rem}
+.pilot-signup-card .pilot-form-helper{font-size:.91rem;color:#adc2de;margin-bottom:1rem}
+.pilot-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:.3rem 1rem}
+.pilot-field{margin-bottom:1rem}
+.pilot-field label,.pilot-field-label{display:block;font-weight:600;color:#e7f1ff;font-size:.91rem;margin-bottom:.4rem}
+.pilot-field input,.pilot-field select,.pilot-field textarea{display:block;width:100%;border-radius:9px;border:1px solid rgba(134,171,225,.32);background:#07172e;padding:.85rem .92rem;font:inherit;color:#f5f8fd;min-height:46px}
+.pilot-field input:focus,.pilot-field select:focus,.pilot-field textarea:focus{border-color:#72aafa;outline:2px solid rgba(100,166,255,.22);outline-offset:1px}
+.pilot-field textarea{min-height:100px;resize:vertical}
+.pilot-required{color:#8cbaff}
+.pilot-interest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;border:0;padding:0;margin:0 0 1.3rem}
+.pilot-interest legend{width:100%;margin:0 0 .45rem;font-size:.94rem;font-weight:700}
+.pilot-interest label{display:block;cursor:pointer}
+.pilot-interest label input{position:absolute;opacity:0;width:1px;height:1px}
+.pilot-interest label span{display:grid;place-items:center;min-height:72px;border:1px solid rgba(115,165,233,.3);border-radius:10px;background:#0b1c37;padding:.7rem .35rem;text-align:center;font-size:.88rem;color:#c1d4ef}
+.pilot-interest input:checked+span{background:rgba(64,134,237,.24);border-color:#72aaff;color:#fff;box-shadow:0 0 0 1px #72aaff}
+.pilot-interest input:focus-visible+span{outline:2px solid white;outline-offset:3px}
+.pilot-consent{display:flex;align-items:flex-start;gap:.7rem;margin:.5rem 0 1.3rem;font-size:.84rem;color:#c0d2e9}
+.pilot-consent input{width:17px;height:17px;flex:none;margin-top:.2rem;accent-color:#2b7fff}
+.pilot-signup-card button.btn{width:100%;font-size:1.2rem;min-height:54px}
+.pilot-form-status{min-height:1.8em;margin-top:.8rem;font-weight:600;font-size:.92rem}
+.pilot-form-status[data-state="error"]{color:#ffb6ba}
+.pilot-form-status[data-state="success"]{color:#87f1c6}
+.pilot-honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.pilot-faq{max-width:850px;margin:0 auto}
+.pilot-faq details{border-bottom:1px solid var(--line);padding:1rem .2rem}
+.pilot-faq summary{cursor:pointer;font-weight:700;font-size:1.03rem}
+.pilot-faq details p{padding:.75rem 0;color:#b7cbe3}
+@media (max-width:900px){.pilot-home-grid{grid-template-columns:1fr;padding:3rem 22px}.pilot-network-board{max-width:500px;width:100%;min-height:355px;margin:auto}.pilot-route-grid{grid-template-columns:1fr}.pilot-route{min-height:0}.pilot-privacy-panel,.pilot-form-layout{grid-template-columns:1fr}.pilot-process{grid-template-columns:1fr}}
+@media (max-width:620px){.pilot-home-grid{gap:1.2rem;padding:2.5rem 18px}.pilot-announcement h2,.pilot-landing-hero h1{font-size:clamp(2.35rem,11vw,3.1rem)}.pilot-landing-hero{padding:2.5rem 0 2.8rem}.pilot-network-board{min-height:340px;padding:1rem}.pilot-board-bottom{font-size:.68rem}.pilot-nodes{height:245px}.pilot-node{width:92px;min-height:70px;font-size:.66rem}.pilot-perks{gap:.4rem}.pilot-perks span{font-size:.75rem}.pilot-privacy-panel{padding:1.3rem}.pilot-signup-card{padding:1.3rem}.pilot-field-grid{grid-template-columns:1fr}.pilot-interest{gap:.35rem}.pilot-interest label span{font-size:.74rem;min-height:67px}.pilot-actions .btn{width:100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){.pilot-nodes line,.pilot-nodes path{animation:none}}
