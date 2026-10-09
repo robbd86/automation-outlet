@@ -41,6 +41,7 @@ Core fields:
 - `reportArtifact`
 - `error`
 - `retention`
+- transient `workerClaim` lease metadata while a worker owns the job
 
 Statuses: `CREATED`, `UPLOADING`, `QUEUED`, `ANALYSING`, `REVIEW_REQUIRED`, `COMPLETE`, `FAILED`, `DELETED`.
 
@@ -61,12 +62,69 @@ A private Vercel Blob store named `ao-plc-intelligence-private` is provisioned f
 
 ## Worker service boundary
 
-The Python engine remains separate. A future worker uses `AO_PLC_WORKER_KEY` against the server boundary:
+The Python engine remains separate. The AO PLC Audit worker uses `AO_PLC_WORKER_KEY` against the server boundary:
 
-- `GET /api/plc-audit?action=worker-next` — claims the oldest queued job and receives a short-lived private project download URL.
-- `POST /api/plc-audit?action=worker-update` — publishes `COMPLETE`, `REVIEW_REQUIRED` or `FAILED` plus the typed Snapshot result and optional private report artifact pathname.
+- `GET /api/plc-audit?action=worker-next` — claims the oldest queued (or expired-lease) job, returns a short-lived private project download URL, and returns a one-time worker claim token.
+- `POST /api/plc-audit?action=worker-update` — publishes `COMPLETE`, `REVIEW_REQUIRED` or `FAILED` plus the typed Snapshot result and optional private report artifact pathname. The request must include the current `claimToken`.
+
+Worker claims are time-limited and the stored job contains only a SHA-256 hash of the claim token. A crashed worker's `ANALYSING` job becomes claimable again after the lease expires. A stale worker cannot publish over a newer worker claim. This prevents stale-result corruption while the lightweight GitHub-Issues persistence layer is in use.
+
+The GitHub-Issues store is intentionally a foundation matching the existing website architecture, not a transactional queue. If the service later runs many parallel workers at meaningful volume, move audit state/queue claiming to a transactional datastore rather than treating GitHub Issues as an exactly-once queue.
 
 The website contains no PLC parser.
+
+### Manufacturer lifecycle facts
+
+`lib/plc-lifecycle.mjs` contains reviewed manufacturer facts keyed by exact
+order number. The customer API adds `lifecycleAssessment` separately from the
+stored engineering Snapshot, so an existing audit can show a dated lifecycle
+review without rewriting its original analysis.
+
+A match requires verified configured-CPU evidence and the exact manufacturer
+and order number. Unmatched parts stay **Not verified**. The initial reviewed
+record is Siemens `6ES7212-1HE40-0XB0`: its product page showed **Active Product**
+on 7 October 2026. This review expires on 21 October 2026; after that the UI says
+**Needs recheck** and labels the manufacturer status as last checked. Revisit
+the linked manufacturer sources before extending the review or adding parts.
+This is a bounded, reviewed catalogue, not an automatic live status lookup.
+
+The linked Siemens S7-1200 G1 notice is displayed explicitly as a **family
+notice**: phase-out from 1 November 2026 and new-part orders until 30 September
+2027. It does not automatically change this exact part's status. Planned
+spare-part availability is not a guaranteed support end date, and the named
+successor family is not evidence of a direct replacement. Lifecycle describes
+the configured part, not verification of installed hardware.
+
+`REVIEW_REQUIRED` keeps its review status. When the worker supplies a partial
+`snapshotResult`, the service validates and saves it along with detected platform,
+project version, engine version and completion time. The existing customer result
+page renders this saved Snapshot. Unsupported inputs can still request review
+without a Snapshot. Invalid supplied Snapshots do not release the active claim.
+
+### Connect the Python worker
+
+Configure `AO_PLC_WORKER_KEY` on this Vercel project and supply the same value to
+the Python process. Set `AO_PLC_ANALYSIS_ADAPTER=worker` for the deployment being
+tested so upload confirmation leaves real work in `QUEUED`.
+
+Set `AO_PLC_WEBSITE_URL` on the Python worker to that deployment's HTTPS origin,
+without a path or query. The worker constructs the two `/api/plc-audit` URLs
+above; it does not expose an inbound endpoint and requires no public worker URL.
+`AO_ALLOWED_ORIGIN` is the website's separate browser-origin allowlist, not the
+worker destination. No change to it is needed for a same-origin browser upload.
+
+From the updated worker source with Python 3.10 or newer:
+
+```powershell
+py -m pip install -e .
+py -m ao_plc_audit worker --once
+py -m ao_plc_audit worker --interval 10
+```
+
+Supply secrets through environment variables or a secret manager. The key must
+not be committed or placed in a browser-visible variable. Test one worker first;
+protected previews must allow machine access before polling can succeed.
+Environment changes take effect on a new deployment.
 
 For development/preview, set `AO_PLC_ANALYSIS_ADAPTER=mock`. Confirming an upload then generates a deterministic mock SnapshotResult so the complete website flow can be tested without the Python worker. The live production environment does not use the mock adapter.
 
@@ -95,6 +153,7 @@ Optional:
 - `AO_PLC_RETENTION_DAYS` — defaults to 30.
 - `AO_PLC_MAX_UPLOAD_BYTES` — defaults to 250 MiB.
 - `AO_PLC_SESSION_TTL_SECONDS` — defaults to 30 days.
+- `AO_PLC_WORKER_LEASE_SECONDS` — defaults to 1800 seconds (30 minutes), clamped between 60 seconds and 6 hours.
 
 ## Remaining service configuration
 

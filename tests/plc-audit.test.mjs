@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { issueSessionToken, verifySessionToken, authorizeJob } from '../lib/plc-audit-auth.mjs';
 import { originAllowed } from '../lib/plc-audit-handler.mjs';
 import { validateSnapshotResult } from '../lib/plc-audit-model.mjs';
-import { assertAccessibleJob, assertJobStatus, validateUploadRequest } from '../lib/plc-audit-service.mjs';
+import { assertAccessibleJob, assertJobStatus, assertWorkerClaim, createUploadConfirmationRef, createWorkerClaim, parseUploadConfirmationRef, validateUploadRequest } from '../lib/plc-audit-service.mjs';
+import { isWorkerClaimable } from '../lib/plc-audit-store.mjs';
 import { presignIssuedPermission } from '../lib/plc-audit-blob.mjs';
 
 const originalSecret = process.env.AO_PLC_SESSION_SECRET;
 const originalAllowedOrigin = process.env.AO_ALLOWED_ORIGIN;
 const originalVercelEnv = process.env.VERCEL_ENV;
+const originalWorkerLeaseSeconds = process.env.AO_PLC_WORKER_LEASE_SECONDS;
 process.env.AO_PLC_SESSION_SECRET = 'test-secret-that-is-at-least-thirty-two-characters-long';
 
 test.after(() => {
@@ -18,6 +20,8 @@ test.after(() => {
   else process.env.AO_ALLOWED_ORIGIN = originalAllowedOrigin;
   if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
   else process.env.VERCEL_ENV = originalVercelEnv;
+  if (originalWorkerLeaseSeconds === undefined) delete process.env.AO_PLC_WORKER_LEASE_SECONDS;
+  else process.env.AO_PLC_WORKER_LEASE_SECONDS = originalWorkerLeaseSeconds;
 });
 
 test('customer session tokens authenticate an opaque account and reject tampering', () => {
@@ -32,12 +36,15 @@ test('job ownership is enforced and URL id guessing cannot cross accounts', () =
   assert.throws(() => assertAccessibleJob(job, 'acct_other'), (error) => error.status === 404 && error.code === 'AUDIT_NOT_FOUND');
 });
 
-test('SnapshotResult validates typed engineering metrics and confidence', () => {
+test('SnapshotResult validates typed engineering metrics, PLC identity and maintenance summary', () => {
   const result = validateSnapshotResult({
-    project: { platform: 'Siemens TIA Portal', projectVersion: 'V18', projectName: 'Line 1' },
-    controller: { family: 'S7-1500', model: 'CPU', orderNumber: '', firmware: '' },
-    blockCount: 12,
-    networkCount: 84,
+    project: { platform: 'Siemens TIA Portal', engineeringSoftware: 'TIA Portal V18', projectVersion: 'V18', projectName: 'Line 1' },
+    controller: { manufacturer: 'Siemens', family: 'S7-1500', model: 'CPU 1513-1 PN', orderNumber: '6ES7513-1AL02-0AB0', firmware: 'V2.9', safetyType: 'Standard CPU' },
+    programBreakdown: { organisationBlocks: 4, functionBlocks: 18, functions: 9, dataBlocks: 22, safetyBlocks: 0 },
+    hardwareSummary: { configuredIoPoints: 186, digitalInputs: 72, digitalOutputs: 64, analogueInputs: 8, analogueOutputs: 4, remoteIoStations: 3, networkDevices: 11, communications: ['PROFINET'], ioMappingStatus: 'Partial mapping available' },
+    maintenanceSummary: { headline: 'Legacy line with multiple write paths requiring review', lifecycle: 'Legacy / migration planning recommended', priority: 'ATTENTION', managerPoints: ['Several outputs have more than one write location.'], recommendedActions: ['Review critical outputs before software changes.'], confidence: 'INFERRED' },
+    blockCount: 53,
+    networkCount: 284,
     callCount: 61,
     writeCount: 43,
     multipleWriterCount: 2,
@@ -51,6 +58,12 @@ test('SnapshotResult validates typed engineering metrics and confidence', () => 
   });
   assert.equal(result.valid, true);
   assert.equal(result.value.multipleWriterCount, 2);
+  assert.equal(result.value.schemaVersion, 2);
+  assert.equal(result.value.controller.manufacturer, 'Siemens');
+  assert.equal(result.value.project.engineeringSoftware, 'TIA Portal V18');
+  assert.equal(result.value.hardwareSummary.configuredIoPoints, 186);
+  assert.equal(result.value.programBreakdown.functionBlocks, 18);
+  assert.equal(result.value.maintenanceSummary.confidence, 'INFERRED');
 
   const invalid = validateSnapshotResult({ blockCount: -1, evidenceConfidence: 'CERTAIN' });
   assert.equal(invalid.valid, false);
@@ -61,6 +74,13 @@ test('upload request allows PLC project formats and normalises MIME type', () =>
   const upload = validateUploadRequest({ filename: 'machine.ap14', contentType: '', size: 1024 });
   assert.equal(upload.extension, 'ap14');
   assert.equal(upload.contentType, 'application/octet-stream');
+});
+
+test('upload confirmation reference is bound to the exact created audit record', () => {
+  const ref = createUploadConfirmationRef(271, 'aud_example');
+  assert.equal(parseUploadConfirmationRef(ref, 'aud_example'), 271);
+  assert.equal(parseUploadConfirmationRef(ref, 'aud_other'), null);
+  assert.equal(parseUploadConfirmationRef('not-a-valid-ref', 'aud_example'), null);
 });
 
 test('invalid upload type is rejected before any signed permission is issued', () => {
@@ -103,6 +123,32 @@ test('expired signed upload permission is rejected', () => {
 test('audit status handling rejects illegal transitions', () => {
   assert.equal(assertJobStatus({ status: 'QUEUED' }, ['QUEUED', 'ANALYSING']).status, 'QUEUED');
   assert.throws(() => assertJobStatus({ status: 'COMPLETE' }, ['QUEUED']), (error) => error.status === 409 && error.code === 'INVALID_AUDIT_STATUS');
+});
+
+test('worker claims are lease-bound and stale workers cannot publish', () => {
+  process.env.AO_PLC_WORKER_LEASE_SECONDS = '120';
+  const now = Date.parse('2026-10-06T07:00:00.000Z');
+  const claim = createWorkerClaim(now);
+  const job = { id: 'aud_claimed', status: 'ANALYSING', workerClaim: claim.persisted };
+
+  assert.equal(assertWorkerClaim(job, claim.token, now + 30_000).id, 'aud_claimed');
+  assert.throws(
+    () => assertWorkerClaim(job, 'older-worker-token', now + 30_000),
+    (error) => error.status === 409 && error.code === 'WORKER_CLAIM_STALE',
+  );
+  assert.throws(
+    () => assertWorkerClaim(job, claim.token, now + 121_000),
+    (error) => error.status === 409 && error.code === 'WORKER_CLAIM_EXPIRED',
+  );
+});
+
+test('expired analysing leases become claimable while active leases do not', () => {
+  const now = Date.parse('2026-10-06T07:00:00.000Z');
+  assert.equal(isWorkerClaimable({ status: 'QUEUED' }, now), true);
+  assert.equal(isWorkerClaimable({ status: 'COMPLETE' }, now), false);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING', workerClaim: { leaseUntil: '2026-10-06T06:59:59.000Z' } }, now), true);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING', workerClaim: { leaseUntil: '2026-10-06T07:05:00.000Z' } }, now), false);
+  assert.equal(isWorkerClaimable({ status: 'ANALYSING' }, now), false);
 });
 
 test('deleted audits are inaccessible to the original owner', () => {
