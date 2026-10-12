@@ -128,6 +128,21 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
   .hero h1{font-size:44px}
 }
 @media(min-width:761px){.filter-panel{display:contents}.filters-toggle{display:none}}
+
+.opportunities{padding:16px 18px 20px;background:linear-gradient(170deg,rgba(17,57,83,.65),rgba(8,23,42,.6));border-bottom:1px solid #294863}
+.opportunity-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.opportunity-head h2{font-size:26px;margin:0}
+.opportunity-head p,.opportunity-foot{font-size:12px;color:#92b4cf;line-height:1.6}
+.top-opportunities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.opportunity{border:1px solid #2d5874;background:#122b45;border-radius:12px;padding:13px;min-width:0}
+.opportunity-rank{display:flex;justify-content:space-between;gap:6px;color:#95bbda;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.opportunity-name{font-size:15px;font-weight:700;margin-top:9px;overflow-wrap:anywhere}
+.opportunity-meta{font-size:12px;color:#b0c8dc;margin-top:4px;overflow-wrap:anywhere}
+.opportunity-cost{font:700 23px "Barlow Condensed",sans-serif;margin-top:13px;color:#fff}
+.opportunity-sub{font-size:12px;color:#a9c4d7;margin-top:3px}
+.opportunity-foot{margin-top:11px}
+@media(max-width:1050px){.top-opportunities{grid-template-columns:1fr}}
+@media(max-width:760px){.opportunities{padding:16px 14px}.opportunity-head{align-items:start;flex-direction:column}.top-opportunities{gap:9px}.opportunity{padding:12px}}
 </style>
 <script src="/supplier-search.js" defer></script>
 </head>
@@ -164,7 +179,7 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 <button type="button" class="chip" data-part="6SL3210-1PE21-1UL0">SINAMICS drive</button>
 </div>
 <div id="searchMessage" class="message" role="status"></div>
-<p id="fxWarning" class="fx-warning" role="status">Warning: an exchange rate of 1 assumes €1 or $1 equals £1. Check the current conversion rate before relying on quoted GBP costs or margins.</p>
+<div id="fxWarning" class="fx-warning" role="status">Currency rates could not be refreshed. Foreign-currency prices will not be converted or ranked until rates are available.</div>
 </section>
 <section class="metrics" aria-label="Search statistics">
 <div class="metric"><span>Exact offers</span><strong id="mExact">—</strong><small>Matching order number</small></div>
@@ -179,7 +194,7 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 <h2>Refine results</h2>
 <label class="s-label" for="conditionFilter">Condition</label><select id="conditionFilter" class="s-select"><option value="all">All conditions</option><option value="New">New / surplus</option><option value="Used">Used</option><option value="Refurbished">Refurbished</option><option value="Other">Other</option></select>
 <label class="s-label" for="locationFilter">Supplier location</label><select id="locationFilter" class="s-select"><option value="all">All locations</option><option value="uk">United Kingdom</option><option value="eu">European Union</option><option value="other">Other / unknown</option></select>
-<label class="s-label" for="sortFilter">Sort by</label><select id="sortFilter" class="s-select"><option value="quantity">Highest stock</option><option value="price">Lowest converted cost</option><option value="updated">Most recently updated</option><option value="supplier">Supplier A–Z</option></select>
+<label class="s-label" for="sortFilter">Sort by</label><select id="sortFilter" class="s-select"><option value="best">Best buying opportunity</option><option value="landed">Lowest estimated landed cost</option><option value="quantity">Highest stock</option><option value="price">Lowest converted cost</option><option value="updated">Most recently updated</option><option value="supplier">Supplier A–Z</option></select>
 <label class="check"><input type="checkbox" id="pricedOnly"> Priced offers only</label>
 </section>
 <section>
@@ -187,19 +202,28 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 <label class="s-label" for="resaleGbp">Target selling price / unit (£)</label><input type="number" inputmode="decimal" min="0" step=".01" class="s-input" id="resaleGbp" placeholder="e.g. 900">
 <label class="s-label" for="additionalGbp">Shipping, import &amp; other costs / unit (£)</label><input type="number" inputmode="decimal" min="0" step=".01" class="s-input" id="additionalGbp" placeholder="e.g. 45">
 <label class="s-label" for="feesPct">Selling fees (%)</label><input type="number" inputmode="decimal" min="0" max="100" step=".1" class="s-input" id="feesPct" value="0">
-<div class="s-label" style="margin-top:18px">Manual exchange rates — £ per unit</div>
+<div class="s-label" style="margin-top:18px">Estimated delivery to the UK / unit</div>
 <div class="fx-grid">
-<div><label class="s-label" for="rateEur">€1 to £</label><input type="number" class="s-input" id="rateEur" min="0" step=".0001" placeholder="Enter"></div>
-<div><label class="s-label" for="rateUsd">$1 to £</label><input type="number" class="s-input" id="rateUsd" min="0" step=".0001" placeholder="Enter"></div>
+<div><label class="s-label" for="shipUk">UK (£)</label><input type="number" class="s-input" id="shipUk" min="0" step=".01" value="15"></div>
+<div><label class="s-label" for="shipEu">EU (£)</label><input type="number" class="s-input" id="shipEu" min="0" step=".01" value="35"></div>
 </div>
+<label class="s-label" for="shipOther">Other / unknown country (£)</label><input type="number" class="s-input" id="shipOther" min="0" step=".01" value="65">
+<label class="s-label" for="importAllowancePct">Overseas import VAT / duty provision (%)</label><input type="number" class="s-input" id="importAllowancePct" min="0" max="100" step=".1" value="20">
+<p class="micro">Shipping and import provisions are editable assumptions, not supplier quotes. Overseas provision is applied to converted item cost plus estimated freight. Set it to 0 where applicable costs are already included. UK supplier prices may exclude VAT: verify VAT treatment, especially if not VAT registered.</p>
+<div class="s-label" style="margin-top:18px">Automatic GBP exchange rates</div>
+<div id="fxStatus" class="micro" role="status">Rates are checked when you search. If unavailable, foreign-currency offers are not ranked by cost.</div>
 
-<p class="micro">GBP offers calculate directly. EUR/USD estimates require your exchange rate. All figures are indicative, excluding VAT handling, duty not entered, finance costs, warranty and returns risk.</p>
 </section>
 </div></details></aside>
 <section class="results s-card" aria-label="Supplier offers">
+<div id="opportunities" class="opportunities" hidden aria-label="Best buying opportunities">
+<div class="opportunity-head"><h2>Best buying opportunities</h2><p>Ranked estimates, not verified purchase offers</p></div>
+<div id="topOpportunities" class="top-opportunities"></div>
+<p class="opportunity-foot">Ranking considers estimated landed cost, condition, stock, location and listing freshness. Confirm availability, supplier legitimacy, invoice VAT and delivered quotation.</p>
+</div>
 <div class="results-head"><div><h2>Supplier offers</h2><p id="resultSubtitle">Search a part number to see available suppliers.</p></div><div class="results-actions"><span id="resultStatus" class="status"></span><button type="button" id="copyButton" class="s-btn secondary small" disabled>Copy shortlist</button></div></div>
 <div class="table-wrap">
-<table><thead><tr><th>Supplier / location</th><th>Manufacturer / part</th><th>Condition &amp; lead time</th><th>Qty</th><th>Supplier unit price</th><th>Est. gross profit / unit</th></tr></thead><tbody id="resultsBody"></tbody></table>
+<table><thead><tr><th>Supplier / location</th><th>Manufacturer / part</th><th>Condition &amp; lead time</th><th>Qty</th><th>Supplier unit price</th><th>Estimated landed cost / unit</th><th>Est. gross profit / unit</th></tr></thead><tbody id="resultsBody"></tbody></table>
 </div><div id="offerCards" class="offer-cards" aria-label="Mobile supplier offers"></div><button id="moreOffersButton" class="s-btn secondary more-offers" type="button" hidden>Show 20 more offers</button>
 <div id="empty" class="empty"><strong>Ready to find parts.</strong>Enter a manufacturer part number or choose an example above.</div>
 <div class="callout"><strong>Trade-only sourcing tool.</strong> These are supplier-advertised offers, not stock held by Automation Outlet. Check availability, exact revision, cost, export restrictions, warranty and buyer terms before quoting. No supplier offer is published on AO's public catalogue.</div>
