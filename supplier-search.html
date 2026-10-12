@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>AO Supplier Search | Private Trade Workspace</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+:root{--bg:#081222;--panel:#0d1c33;--panel2:#122441;--stroke:#27425f;--ink:#f2f7ff;--muted:#a8bad1;--electric:#51a5ff;--positive:#79dcb5;--negative:#ff9a9a}
+*{box-sizing:border-box}
+body{background:radial-gradient(ellipse 80% 45% at 55% -20%,#19446c 0%,transparent 75%),var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif}
+[hidden]{display:none!important}
+a{color:var(--electric)}
+header{position:relative}
+.s-wrap{max-width:1300px;padding:0 22px;margin:0 auto}
+.s-nav{display:flex;gap:20px;align-items:center;justify-content:space-between;min-height:75px}
+.s-logo{display:flex;align-items:center;gap:12px;font-family:"Barlow Condensed";font-size:23px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#fff}
+.s-logo img{width:44px;height:44px;object-fit:contain}
+.s-logo span{color:var(--electric)}
+.s-private{font-size:12px;letter-spacing:.14em;font-weight:700;color:#9bd5ef}
+.s-kicker{font-size:12px;font-family:"IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:#81c3ff}
+.hero{padding:38px 0 24px}
+.hero h1{font:800 clamp(40px,6vw,68px)/.96 "Barlow Condensed",sans-serif;margin:9px 0 16px;text-transform:uppercase}
+.hero h1 em{font-style:normal;color:#5eafff}
+.hero p{max-width:810px;color:var(--muted);font-size:17px}
+.dash-tag{border:1px solid #2c607c;border-radius:999px;padding:7px 12px;color:#9cdefb;font-size:12px;letter-spacing:.05em}
+.s-card{background:linear-gradient(150deg,rgba(19,40,70,.97),rgba(10,26,48,.97));border:1px solid var(--stroke);border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.13)}
+.gate{max-width:570px;margin:28px 0 50px;padding:30px}
+.gate h2{font:700 30px "Barlow Condensed",sans-serif;margin:8px 0 10px}
+.gate p{color:var(--muted);margin-bottom:19px}
+.s-label{display:block;color:#b4c6dd;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px}
+.s-input,.s-select{width:100%;border:1px solid #3a5877;background:#081729;border-radius:9px;padding:13px 13px;color:var(--ink);font:500 15px Barlow,sans-serif;outline:none}
+.s-input:focus,.s-select:focus{border-color:#60b6ff;box-shadow:0 0 0 3px rgba(75,151,244,.16)}
+.s-input::placeholder{color:#8397af}
+.s-btn{border:1px solid #2c76c3;background:#287bd4;color:white;cursor:pointer;border-radius:9px;font-weight:700;font-family:Barlow,sans-serif;padding:13px 18px;white-space:nowrap}
+.s-btn:hover{background:#318ee9}
+.s-btn:disabled{opacity:.5;cursor:wait}
+.s-btn.secondary{background:transparent;color:#b5d4f7;border-color:#355675}
+.s-btn.secondary:hover{background:#193350}
+.s-btn.small{padding:9px 12px;font-size:13px}
+.gate form{display:flex;gap:10px}
+.gate form input{flex:1}
+.gate form button{flex-shrink:0}
+.message{min-height:20px;color:#b3c5db;margin-top:12px;font-size:14px}
+.message.error{color:var(--negative)}
+.search-area{padding:23px;margin-bottom:16px}
+.search-fields{display:flex;gap:12px;align-items:end}
+.search-fields .part-field{flex:1}
+.search-fields button{height:47px}
+.search-hint{color:#8da5bc;font-size:13px;margin-top:9px}
+.chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.chips span{font-size:12px;color:#94aac1;margin-right:5px}
+.chip{border:1px solid #355472;background:#0c213b;color:#c8deef;padding:6px 11px;border-radius:999px;font:500 12px "IBM Plex Mono",monospace;cursor:pointer}
+.chip:hover{border-color:#66aaff;color:#fff}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.metric{padding:20px;border:1px solid #244565;background:#10223d;border-radius:13px}
+.metric span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#a8bfd3}
+.metric strong{display:block;margin-top:5px;font:800 36px "Barlow Condensed",sans-serif;color:#f5faff}
+.metric small{display:block;color:#8ca4bd;margin-top:3px;font-size:12px}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;padding-bottom:64px;align-items:start}
+.sidebar{padding:20px}
+.sidebar h2,.results h2{font:700 25px "Barlow Condensed",sans-serif;margin:0 0 15px}
+.sidebar section+section{border-top:1px solid #29435f;margin-top:20px;padding-top:19px}
+.sidebar .s-label{margin-top:13px}
+.sidebar .s-input,.sidebar .s-select{padding:10px}
+.micro{font-size:12px;color:#8fa9c0;line-height:1.45;margin-top:10px}
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:center;font-size:14px;color:#cbd8e8;margin:10px 0}
+.check input{accent-color:#4ca1fc}
+.results{min-width:0;overflow:hidden}
+.results-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:20px 20px 14px}
+.results-head h2{margin:0}
+.results-head p{color:var(--muted);font-size:13px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:790px;text-align:left}
+th{background:#11233d;color:#a6bfd7;padding:13px 13px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-block:1px solid #27405c}
+td{padding:15px 13px;font-size:13px;vertical-align:top;border-bottom:1px solid #1d3552;color:#e1ebf7}
+td strong{font-size:14px;color:#fff}
+td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
+.mono{font-family:"IBM Plex Mono",monospace}
+.pill{display:inline-block;padding:3px 8px;border-radius:6px;background:#213952;color:#d9ebfa;font-size:11px}
+.pill.New{background:#163d38;color:#a6eed6}.pill.Used{background:#40341d;color:#f8d9a0}.pill.Refurbished{background:#223d64;color:#b7d5ff}
+.gain{color:var(--positive)!important}.loss{color:var(--negative)!important}
+.empty{padding:64px 28px;text-align:center;color:#b1c4d9}
+.empty strong{display:block;font:700 28px "Barlow Condensed";color:#fff;margin-bottom:8px}
+.callout{border:1px solid #254966;padding:14px 17px;border-radius:10px;background:#0d2540;color:#b3cbe2;font-size:13px;line-height:1.55;margin:16px 20px 20px}
+.results-actions{display:flex;gap:10px;align-items:center}
+.status{font-size:12px;color:#90b9de}
+.footer-note{margin:14px 0 40px;color:#819bb5;font-size:12px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px}.sidebar section+section{border:0;margin:0;padding:0}}
+@media(max-width:580px){.s-nav{flex-wrap:wrap;padding:10px 0}.hero{padding:28px 0 15px}.search-fields{align-items:stretch;flex-direction:column}.search-fields button{width:100%}.metrics{gap:8px}.metric{padding:13px}.metric strong{font-size:29px}.layout{gap:12px}.sidebar{display:block}.sidebar section+section{border-top:1px solid #29435f;margin-top:20px;padding-top:19px}.results-head{flex-wrap:wrap}.gate{padding:20px}.gate form{flex-direction:column}}
+</style>
+<script src="/supplier-search.js" defer></script>
+</head>
+<body>
+<header><div class="s-wrap s-nav">
+<a class="s-logo" href="/"><img src="/ao-site-logo.svg" alt="">Automation <span>Outlet</span></a>
+<div style="display:flex;gap:12px;align-items:center"><span class="dash-tag">PRIVATE · PREVIEW</span><button id="lock" class="s-btn secondary small" type="button" hidden>Lock dashboard</button></div>
+</div></header>
+<main class="s-wrap">
+<section class="hero">
+<div class="s-kicker">AO trade intelligence / verified search interface</div>
+<h1>Supplier <em>Search.</em></h1>
+<p>Search third-party industrial automation inventory, compare exact part-number offers and model potential gross profit. No orders, RFQs or public listings are created here.</p>
+</section>
+<section id="gate" class="gate s-card" aria-labelledby="gateHeading">
+<div class="s-kicker">Restricted trade workspace</div>
+<h2 id="gateHeading">Unlock supplier intelligence</h2>
+<p>Use your existing AO Deal Desk key. Your Automa.Net API key stays securely on Vercel and is never shown here.</p>
+<form id="loginForm"><input id="adminKey" class="s-input" type="password" autocomplete="current-password" placeholder="AO Deal Desk key" aria-label="AO Deal Desk key" required><button id="loginButton" class="s-btn" type="submit">Unlock</button></form>
+<div id="loginMessage" class="message" role="status"></div>
+</section>
+<div id="workspace" hidden>
+<section class="search-area s-card" aria-labelledby="searchHeading">
+<form id="searchForm">
+<div class="search-fields">
+<div class="part-field"><label class="s-label" for="partNumber">Manufacturer part number</label><input id="partNumber" class="s-input mono" name="q" autocomplete="off" spellcheck="false" placeholder="e.g. 6ES7315-2AG10-0AB0" minlength="3" maxlength="64" required></div>
+<button id="searchButton" type="submit" class="s-btn">Search suppliers →</button>
+</div>
+</form>
+<p class="search-hint">Exact part-number results only by default. Supplier quantities and prices are not guaranteed until reconfirmed.</p>
+<div class="chips"><span>TRY A SEARCH</span>
+<button type="button" class="chip" data-part="6ES7315-2AG10-0AB0">S7-300 CPU</button>
+<button type="button" class="chip" data-part="1756-L71">ControlLogix</button>
+<button type="button" class="chip" data-part="6SL3210-1PE21-1UL0">SINAMICS drive</button>
+</div>
+<div id="searchMessage" class="message" role="status"></div>
+</section>
+<section class="metrics" aria-label="Search statistics">
+<div class="metric"><span>Exact offers</span><strong id="mExact">—</strong><small>Matching order number</small></div>
+<div class="metric"><span>Showing stock</span><strong id="mAvailable">—</strong><small>Offers listing quantity over zero</small></div>
+<div class="metric"><span>Suppliers</span><strong id="mSuppliers">—</strong><small>Different supplier names / countries</small></div>
+<div class="metric"><span>Quoted prices</span><strong id="mPriced">—</strong><small>Offers with unit price and currency</small></div>
+</section>
+<div class="layout">
+<aside class="sidebar s-card" aria-label="Filters and profit assumptions">
+<section>
+<h2>Refine results</h2>
+<label class="s-label" for="conditionFilter">Condition</label><select id="conditionFilter" class="s-select"><option value="all">All conditions</option><option value="New">New / surplus</option><option value="Used">Used</option><option value="Refurbished">Refurbished</option><option value="Other">Other</option></select>
+<label class="s-label" for="locationFilter">Supplier location</label><select id="locationFilter" class="s-select"><option value="all">All locations</option><option value="uk">United Kingdom</option><option value="eu">European Union</option><option value="other">Other / unknown</option></select>
+<label class="s-label" for="sortFilter">Sort by</label><select id="sortFilter" class="s-select"><option value="quantity">Highest stock</option><option value="price">Lowest converted cost</option><option value="updated">Most recently updated</option><option value="supplier">Supplier A–Z</option></select>
+<label class="check"><input type="checkbox" id="pricedOnly"> Priced offers only</label>
+</section>
+<section>
+<h2>Profit calculator</h2>
+<label class="s-label" for="resaleGbp">Target selling price / unit (£)</label><input type="number" inputmode="decimal" min="0" step=".01" class="s-input" id="resaleGbp" placeholder="e.g. 900">
+<label class="s-label" for="additionalGbp">Shipping, import &amp; other costs / unit (£)</label><input type="number" inputmode="decimal" min="0" step=".01" class="s-input" id="additionalGbp" placeholder="e.g. 45">
+<label class="s-label" for="feesPct">Selling fees (%)</label><input type="number" inputmode="decimal" min="0" max="100" step=".1" class="s-input" id="feesPct" value="0">
+<div class="s-label" style="margin-top:18px">Manual exchange rates — £ per unit</div>
+<div class="fx-grid">
+<div><label class="s-label" for="rateEur">€1 to £</label><input type="number" class="s-input" id="rateEur" min="0" step=".0001" placeholder="Enter"></div>
+<div><label class="s-label" for="rateUsd">$1 to £</label><input type="number" class="s-input" id="rateUsd" min="0" step=".0001" placeholder="Enter"></div>
+</div>
+<p class="micro">GBP offers calculate directly. EUR/USD estimates require your exchange rate. All figures are indicative, excluding VAT handling, duty not entered, finance costs, warranty and returns risk.</p>
+</section>
+</aside>
+<section class="results s-card" aria-label="Supplier offers">
+<div class="results-head"><div><h2>Supplier offers</h2><p id="resultSubtitle">Search a part number to see available suppliers.</p></div><div class="results-actions"><span id="resultStatus" class="status"></span><button type="button" id="copyButton" class="s-btn secondary small" disabled>Copy shortlist</button></div></div>
+<div class="table-wrap">
+<table><thead><tr><th>Supplier / location</th><th>Manufacturer / part</th><th>Condition &amp; lead time</th><th>Qty</th><th>Supplier unit price</th><th>Est. gross profit / unit</th></tr></thead><tbody id="resultsBody"></tbody></table>
+</div>
+<div id="empty" class="empty"><strong>Ready to find parts.</strong>Enter a manufacturer part number or choose an example above.</div>
+<div class="callout"><strong>Trade-only sourcing tool.</strong> These are supplier-advertised offers, not stock held by Automation Outlet. Check availability, exact revision, cost, export restrictions, warranty and buyer terms before quoting. No supplier offer is published on AO's public catalogue.</div>
+</section>
+</div>
+</div>
+<footer class="footer-note">Automation Outlet · Private sourcing pilot · Powered by Automa.Net supplier inventory · Read-only</footer>
+</main>
+</body>
+</html>
