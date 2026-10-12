@@ -40,28 +40,28 @@ def main():
         original=path.read_text(encoding="utf-8")
         if "</head>" not in original:
             continue
-        text=original.replace("</head>",TRACKING_TAG+"\n</head>",1)
-        if name=="obsolete-parts-sourcing.html":
+        text=original if TRACKING_TAG in original else original.replace("</head>",TRACKING_TAG+"\n</head>",1)
+        if name=="obsolete-parts-sourcing.html" and 'lead_type:"sourcing"' not in text:
             text=require_replace(text,"if (res.ok) { partForm.reset();",
                 'if (res.ok) { window.AOAnalytics?.track("generate_lead",{lead_type:"sourcing"}); partForm.reset();',
                 "verified sourcing Formspree response")
-        elif name=="sell-surplus.html":
+        elif name=="sell-surplus.html" and 'lead_type:"seller"' not in text:
             text=require_replace(text,"    sellForm.reset();",
                 '    window.AOAnalytics?.track("generate_lead",{lead_type:"seller"});\n    sellForm.reset();',
                 "saved seller enquiry")
-        elif name=="consignment.html":
+        elif name=="consignment.html" and 'lead_type:"consignment"' not in text:
             text=require_replace(text,"    consignmentForm.reset();",
                 '    window.AOAnalytics?.track("generate_lead",{lead_type:"consignment"});\n    consignmentForm.reset();',
                 "saved consignment enquiry")
-        elif name=="contact.html":
+        elif name=="contact.html" and 'lead_type:"contact"' not in text:
             text=require_replace(text,"    if (res.ok) {\n      form.reset();",
                 '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"contact"});\n      form.reset();',
                 "confirmed contact enquiry")
-        elif name=="cart.html":
+        elif name=="cart.html" and 'AOAnalytics?.track("begin_checkout")' not in text:
             text=require_replace(text,"  if(!response.ok||!data.url) throw new Error(data.error||\"Could not start checkout.\");\n  location.assign(data.url);",
                 '  if(!response.ok||!data.url) throw new Error(data.error||"Could not start checkout.");\n  if(checkoutMode==="live") window.AOAnalytics?.track("begin_checkout");\n  location.assign(data.url);',
                 "Stripe checkout started")
-        elif name=="order-success.html":
+        elif name=="order-success.html" and 'ao-purchase-tracked-' not in text:
             old='  try{localStorage.removeItem("aoCartV1");}catch{}'
             injected='''  // Count only Stripe-verified live purchases, never sandbox/commissioning
   // payments or unacknowledged webhook states. Hash the opaque Stripe
@@ -95,7 +95,8 @@ def main():
       <p style="color:var(--grey);margin-bottom:1rem">Your choice is saved on this device for up to 180 days. Use the <strong>Privacy choices</strong> control on the website to change it at any time. Analytics data may be processed by Google under its service terms. Purchase analytics are based on a verified return to our payment confirmation page and may not capture every completed payment.</p>
       ''')
     if anchor not in body:raise RuntimeError("Privacy notice insertion anchor missing")
-    body=body.replace(anchor,notice+anchor,1)
+    if "Optional <span>website analytics</span>" not in body:
+        body=body.replace(anchor,notice+anchor,1)
     body=body.replace('Last updated: 8 October 2026.','Last updated: 12 October 2026.')
     privacy.write_text(body,encoding="utf-8")
     print(f"Optional analytics hook installed on {tracked} static HTML pages. GA4 configured: {bool(id_value)}")
