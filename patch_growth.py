@@ -193,6 +193,10 @@ def main():
     footer=re.search(r'<footer>.*?</footer>',old,re.S)
     if not header or not footer:raise RuntimeError("Missing original shared header/footer")
     nav=header.group(0).replace('>Obsolete parts</a>','>Source parts</a>')
+    nav=nav.replace('<a href="/sell-surplus.html" class="btn">Get a surplus offer</a>',
+                    '<a href="/obsolete-parts-sourcing.html" class="btn">Source a part</a>')
+    nav=nav.replace('<a href="/sell-surplus.html" class="btn big">Get a surplus offer</a>',
+                    '<a href="/obsolete-parts-sourcing.html" class="btn big">Source a part</a>')
     foot=footer.group(0)
     home=(ROOT/"_blocks/growth_home.html").read_text(encoding="utf-8")
     feature=(ROOT/"_blocks/home_featured.html").read_text(encoding="utf-8")
@@ -201,6 +205,10 @@ def main():
     if old.count("<main>")!=1 or old.count("</main>")!=1:raise RuntimeError("Homepage generated main markers changed")
     fresh=re.sub(r'<main>.*?</main>',lambda m:home,old,flags=re.S,count=1)
     fresh=fresh.replace('>Obsolete parts</a>','>Source parts</a>')
+    fresh=fresh.replace('<a href="/sell-surplus.html" class="btn">Get a surplus offer</a>',
+                        '<a href="/obsolete-parts-sourcing.html" class="btn">Source a part</a>')
+    fresh=fresh.replace('<a href="/sell-surplus.html" class="btn big">Get a surplus offer</a>',
+                        '<a href="/obsolete-parts-sourcing.html" class="btn big">Source a part</a>')
     fresh=fresh.replace('<link rel="stylesheet" href="/styles.css">',
                         '<link rel="stylesheet" href="/styles.css">\n<link rel="stylesheet" href="/growth.css">',1)
     fresh=re.sub(r'<title>.*?</title>','<title>Industrial Automation Spares &amp; PLC Sourcing UK | Automation Outlet</title>',fresh,count=1,flags=re.S)
