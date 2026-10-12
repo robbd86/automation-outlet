@@ -1,6 +1,6 @@
 "use strict";
 
-const state = {key:"",data:null,filtered:[],busy:false};
+const state = {key:"",data:null,filtered:[],busy:false,mobileVisible:20};
 const byId = id => document.getElementById(id);
 
 function message(id,text,isError=false) {
@@ -60,8 +60,91 @@ function domCell(row,text,cls,sub) {
   row.appendChild(td);
   return td;
 }
+
+function updateFxWarning(){
+  const suspicious = ["rateEur","rateUsd"].some(id=>{
+    const n=number(byId(id).value);
+    return n!==null && Math.abs(n-1)<0.0000001;
+  });
+  byId("fxWarning").classList.toggle("visible",suspicious);
+}
+
+function infoBlock(label,value,subtitle="",valueClass=""){
+  const box=document.createElement("div");
+  const labelNode=document.createElement("div");
+  labelNode.className="offer-card-label";
+  labelNode.textContent=label;
+  const valueNode=document.createElement("div");
+  valueNode.className="offer-card-value "+valueClass;
+  valueNode.textContent=String(value??"—");
+  box.append(labelNode,valueNode);
+  if(subtitle){
+    const note=document.createElement("div");
+    note.className="offer-card-note";
+    note.textContent=subtitle;
+    box.appendChild(note);
+  }
+  return box;
+}
+function renderMobileCards(rows){
+  const container=byId("offerCards");
+  const frag=document.createDocumentFragment();
+  for(const item of rows.slice(0,state.mobileVisible)){
+    const card=document.createElement("article");
+    card.className="offer-card";
+    const header=document.createElement("div");
+    header.className="offer-card-header";
+    const supplier=document.createElement("div");
+    const name=document.createElement("div");
+    name.className="offer-card-name";
+    name.textContent=item.supplier;
+    const country=document.createElement("div");
+    country.className="offer-card-location";
+    country.textContent=item.supplierCountry;
+    supplier.append(name,country);
+    const pill=document.createElement("span");
+    pill.className="pill "+item.conditionGroup;
+    pill.textContent=item.conditionGroup;
+    header.append(supplier,pill);
+    const part=document.createElement("div");
+    part.className="offer-card-mpn";
+    part.textContent=(item.brand||"Manufacturer not specified")+" · "+item.mpn;
+    const grid=document.createElement("div");
+    grid.className="offer-card-details";
+    const purchase=gbpCost(item);
+    const equivalent = purchase!==null && item.currency!=="GBP" ?
+      "≈ "+pounds(purchase)+" at entered FX" :
+      item.unitPrice!==null && item.currency!=="GBP" ? "Enter FX for GBP comparison" : "";
+    grid.append(
+      infoBlock("Supplier price",money(item.unitPrice,item.currency),equivalent,"price"),
+      infoBlock("Reported quantity",item.quantity.toLocaleString("en-GB"),item.status),
+      infoBlock("Condition",item.condition),
+      infoBlock("Lead time",item.delivery)
+    );
+    const footer=document.createElement("div");
+    footer.className="offer-card-footer";
+    const margin=profit(item);
+    const profitBox=document.createElement("div");
+    profitBox.appendChild(infoBlock("Est. gross profit / unit",margin?pounds(margin.gross):"—",
+      margin?margin.margin.toFixed(1)+"% estimated margin":"Set selling price and exchange rate",
+      margin?(margin.gross>=0?"gain":"loss"):""));
+    const updated=document.createElement("div");
+    updated.className="offer-card-note";
+    updated.textContent="Updated "+dateStamp(item.updatedAt);
+    footer.append(profitBox,updated);
+    card.append(header,part,grid,footer);
+    frag.appendChild(card);
+  }
+  container.replaceChildren(frag);
+  const more=byId("moreOffersButton");
+  more.hidden=rows.length<=state.mobileVisible;
+  if(!more.hidden) more.textContent="Show 20 more ("+(rows.length-state.mobileVisible)+" remaining)";
+}
+
 function resetView() {
-  state.data=null;state.filtered=[];
+  state.data=null;state.filtered=[];state.mobileVisible=20;
+  byId("offerCards").replaceChildren();
+  byId("moreOffersButton").hidden=true;
   for(const key of ["mExact","mAvailable","mSuppliers","mPriced"])byId(key).textContent="—";
   byId("resultsBody").replaceChildren();
   byId("empty").hidden=false;
@@ -84,6 +167,7 @@ function applyFilters(){
     default: rows.sort((a,b)=>b.quantity-a.quantity);
   }
   state.filtered=rows;
+  updateFxWarning();
   byId("mExact").textContent=state.data.summary.exactOffers.toLocaleString("en-GB");
   byId("mAvailable").textContent=state.data.summary.availableOffers.toLocaleString("en-GB");
   byId("mSuppliers").textContent=state.data.summary.suppliers.toLocaleString("en-GB");
@@ -116,6 +200,7 @@ function applyFilters(){
     frag.appendChild(tr);
   }
   byId("resultsBody").replaceChildren(frag);
+  renderMobileCards(rows);
   byId("empty").hidden=rows.length>0;
   if(rows.length===0) {
     const text=byId("empty");
@@ -167,6 +252,7 @@ async function search(part){
   try {
     const response=await callApi(query,state.key);
     state.data=response;
+    state.mobileVisible=20;
     applyFilters();
     message("searchMessage","Search complete. Confirm supplier prices and available quantities before quoting.");
   }catch(e){
@@ -205,8 +291,21 @@ document.querySelectorAll("[data-part]").forEach(button=>button.addEventListener
   search(button.dataset.part);
 }));
 for(const id of ["conditionFilter","locationFilter","sortFilter","pricedOnly","resaleGbp","additionalGbp","feesPct","rateEur","rateUsd"]){
-  byId(id).addEventListener("input",()=>{if(state.data)applyFilters();});
+  byId(id).addEventListener("input",()=>{
+    if(["conditionFilter","locationFilter","sortFilter","pricedOnly"].includes(id)) state.mobileVisible=20;
+    updateFxWarning();
+    if(state.data)applyFilters();
+  });
 }
+byId("moreOffersButton").addEventListener("click",()=>{
+  state.mobileVisible+=20;
+  if(state.data)renderMobileCards(state.filtered);
+});
+const filterDetail=byId("filtersDetails");
+const mq=window.matchMedia("(max-width:760px)");
+filterDetail.open=!mq.matches;
+if(mq.addEventListener)mq.addEventListener("change",event=>{filterDetail.open=!event.matches;});
+updateFxWarning();
 byId("copyButton").addEventListener("click",copyShortlist);
 resetView();
 const saved=sessionStorage.getItem("aoSupplierDeskKey")||sessionStorage.getItem("aoDealDeskKey");
