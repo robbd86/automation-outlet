@@ -94,6 +94,40 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 .footer-note{margin:14px 0 40px;color:#819bb5;font-size:12px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px}.sidebar section+section{border:0;margin:0;padding:0}}
 @media(max-width:580px){.s-nav{flex-wrap:wrap;padding:10px 0}.hero{padding:28px 0 15px}.search-fields{align-items:stretch;flex-direction:column}.search-fields button{width:100%}.metrics{gap:8px}.metric{padding:13px}.metric strong{font-size:29px}.layout{gap:12px}.sidebar{display:block}.sidebar section+section{border-top:1px solid #29435f;margin-top:20px;padding-top:19px}.results-head{flex-wrap:wrap}.gate{padding:20px}.gate form{flex-direction:column}}
+
+/* Compact mobile offer cards, no horizontal supplier table scrolling. */
+.offer-cards{display:none}
+.offer-card{border:1px solid #2d4b6c;border-radius:13px;background:linear-gradient(140deg,#122740,#0a1a31);padding:16px;display:grid;gap:13px;min-width:0}
+.offer-card-header{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.offer-card-name{font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.offer-card-location{color:#96b4ce;font-size:12px;margin-top:4px}
+.offer-card-mpn{font:500 13px "IBM Plex Mono",monospace;color:#9dcafa;overflow-wrap:anywhere}
+.offer-card-details{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid #2a4561;padding-top:13px}
+.offer-card-label{font-size:10px;color:#93b1cc;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.offer-card-value{font-size:15px;color:#edf6ff;font-weight:700;overflow-wrap:anywhere}
+.offer-card-value.price{font:600 19px "IBM Plex Mono",monospace;color:#fff}
+.offer-card-note{font-size:11px;color:#9bb3cd;line-height:1.45;margin-top:5px}
+.offer-card-footer{border-top:1px solid #2a4561;padding-top:13px;display:flex;gap:9px;align-items:center;justify-content:space-between}
+.offer-card-profit{font-size:18px;font-weight:700}
+.more-offers{display:none;margin:12px auto 5px}
+.fx-warning{display:none;border:1px solid #9e7a32;background:#34280c;color:#fbe1a2;border-radius:8px;padding:11px;font-size:12px;line-height:1.55;margin-top:12px}
+.fx-warning.visible{display:block}
+.filters-toggle{display:none}
+@media(max-width:760px){
+  .table-wrap{display:none}
+  .offer-cards{display:grid;gap:12px;padding:0 14px 8px}
+  .more-offers{display:block}
+  .filters-toggle{display:list-item;cursor:pointer;font:700 21px "Barlow Condensed",sans-serif;list-style:inside;letter-spacing:.03em;padding:4px 0}
+  .filters-toggle::marker{color:#6cbbff}
+  .sidebar{display:block}
+  .filter-panel{padding-top:15px}
+  .results-head{padding:18px 16px 14px}
+  .results-head h2{font-size:24px}
+  .callout{margin:16px}
+  .sidebar .s-label{margin-top:12px}
+  .hero h1{font-size:44px}
+}
+@media(min-width:761px){.filter-panel{display:contents}.filters-toggle{display:none}}
 </style>
 <script src="/supplier-search.js" defer></script>
 </head>
@@ -139,6 +173,7 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 </section>
 <div class="layout">
 <aside class="sidebar s-card" aria-label="Filters and profit assumptions">
+<details id="filtersDetails" open><summary class="filters-toggle">Filters &amp; profit calculator</summary><div class="filter-panel">
 <section>
 <h2>Refine results</h2>
 <label class="s-label" for="conditionFilter">Condition</label><select id="conditionFilter" class="s-select"><option value="all">All conditions</option><option value="New">New / surplus</option><option value="Used">Used</option><option value="Refurbished">Refurbished</option><option value="Other">Other</option></select>
@@ -156,14 +191,15 @@ td small{display:block;margin-top:4px;font-size:12px;color:#8eabc5}
 <div><label class="s-label" for="rateEur">€1 to £</label><input type="number" class="s-input" id="rateEur" min="0" step=".0001" placeholder="Enter"></div>
 <div><label class="s-label" for="rateUsd">$1 to £</label><input type="number" class="s-input" id="rateUsd" min="0" step=".0001" placeholder="Enter"></div>
 </div>
+<p id="fxWarning" class="fx-warning" role="status">Warning: an exchange rate of 1 assumes €1 or $1 equals £1. Check the current conversion rate before relying on quoted GBP costs or margins.</p>
 <p class="micro">GBP offers calculate directly. EUR/USD estimates require your exchange rate. All figures are indicative, excluding VAT handling, duty not entered, finance costs, warranty and returns risk.</p>
 </section>
-</aside>
+</div></details></aside>
 <section class="results s-card" aria-label="Supplier offers">
 <div class="results-head"><div><h2>Supplier offers</h2><p id="resultSubtitle">Search a part number to see available suppliers.</p></div><div class="results-actions"><span id="resultStatus" class="status"></span><button type="button" id="copyButton" class="s-btn secondary small" disabled>Copy shortlist</button></div></div>
 <div class="table-wrap">
 <table><thead><tr><th>Supplier / location</th><th>Manufacturer / part</th><th>Condition &amp; lead time</th><th>Qty</th><th>Supplier unit price</th><th>Est. gross profit / unit</th></tr></thead><tbody id="resultsBody"></tbody></table>
-</div>
+</div><div id="offerCards" class="offer-cards" aria-label="Mobile supplier offers"></div><button id="moreOffersButton" class="s-btn secondary more-offers" type="button" hidden>Show 20 more offers</button>
 <div id="empty" class="empty"><strong>Ready to find parts.</strong>Enter a manufacturer part number or choose an example above.</div>
 <div class="callout"><strong>Trade-only sourcing tool.</strong> These are supplier-advertised offers, not stock held by Automation Outlet. Check availability, exact revision, cost, export restrictions, warranty and buyer terms before quoting. No supplier offer is published on AO's public catalogue.</div>
 </section>
