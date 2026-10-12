@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {classifyCondition, normaliseMpn, normaliseOffers, supplierSearchHandler} from "../lib/supplier-search.mjs";
+import {classifyCondition, normaliseMpn, normaliseOffers, supplierSearchHandler, countryName} from "../lib/supplier-search.mjs";
 
 test("normalises typography without merging different manufacturer part numbers",()=>{
   assert.equal(normaliseMpn(" 6ES7315–2AG10–0AB0 "), "6ES7315-2AG10-0AB0");
@@ -57,4 +57,17 @@ test("restricts supplier data endpoint to preview and authorized admin users",as
     if(original===undefined)delete process.env.VERCEL_ENV;else process.env.VERCEL_ENV=original;
     if(keyOriginal===undefined)delete process.env.AO_DEAL_DESK_KEY;else process.env.AO_DEAL_DESK_KEY=keyOriginal;
   }
+});
+
+test("renders supplier country objects instead of [object Object]",()=>{
+  assert.equal(countryName({name:"United Kingdom",code:"GB"}),"United Kingdom");
+  assert.equal(countryName({code:"DE"}),"DE");
+  assert.equal(countryName({}),'Not specified');
+  assert.equal(countryName("Poland"),"Poland");
+  const res=normaliseOffers({data:{items:[{
+    mpn:"6ES7315-2AG10-0AB0",quantity:3,
+    company:{name:"Test supplier",country:{name:"Germany",code:"DE"}},
+    pricing:{amount:200,currency:"EUR"}
+  }]}},"6ES7315-2AG10-0AB0");
+  assert.equal(res.offers[0].supplierCountry,"Germany");
 });
