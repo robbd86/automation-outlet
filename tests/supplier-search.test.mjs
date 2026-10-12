@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {classifyCondition, normaliseMpn, normaliseOffers, supplierSearchHandler, countryName} from "../lib/supplier-search.mjs";
+import {classifyCondition, normaliseMpn, normaliseOffers, supplierSearchHandler, countryName, parseGbpRates} from "../lib/supplier-search.mjs";
 
 test("normalises typography without merging different manufacturer part numbers",()=>{
   assert.equal(normaliseMpn(" 6ES7315–2AG10–0AB0 "), "6ES7315-2AG10-0AB0");
@@ -70,4 +70,18 @@ test("renders supplier country objects instead of [object Object]",()=>{
     pricing:{amount:200,currency:"EUR"}
   }]}},"6ES7315-2AG10-0AB0");
   assert.equal(res.offers[0].supplierCountry,"Germany");
+});
+
+test("automatic GBP reference rates convert euros and dollars correctly",()=>{
+  const data=parseGbpRates({
+    date:"2026-10-09",base:"EUR",
+    rates:{GBP:0.85,USD:1.13,PLN:4.25}
+  });
+  assert.equal(data.date,"2026-10-09");
+  assert.equal(data.rates.GBP,1);
+  assert.equal(data.rates.EUR,0.85);
+  assert.ok(Math.abs(data.rates.USD-(0.85/1.13))<1e-10);
+  assert.equal(data.rates.PLN,0.2);
+  assert.throws(()=>parseGbpRates({date:"today",rates:{GBP:0.85}}));
+  assert.throws(()=>parseGbpRates({date:"2026-10-09",rates:{GBP:0}}));
 });
