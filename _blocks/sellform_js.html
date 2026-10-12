@@ -37,11 +37,47 @@ function collectItems() {
 }
 
 function readableItems(items) {
-  return items.map((item, index) =>
-    `${index + 1}. Qty ${item.quantity || "?"} — ${item.equipmentType || "type not stated"} — ${item.manufacturer || "manufacturer not stated"} ${item.partNumber || ""} — ${item.condition || "condition not stated"}`
-      .replace(/\s+/g, " ")
-      .trim()
-  );
+  return items.map((item, index) => {
+    const description = [
+      item.manufacturer,
+      item.partNumber,
+      item.equipmentType,
+    ].filter(Boolean).join(" — ") || "Equipment details not supplied";
+    const condition = item.condition ? ` — ${item.condition}` : "";
+    return `${index + 1}. ${item.quantity || 1} × ${description}${condition}`;
+  });
+}
+
+const SALE_ROUTE_LABELS = {
+  "best-option": "Recommend the best option",
+  cash: "Outright trade purchase",
+  "revenue-share": "Managed resale / consignment",
+  brokerage: "Brokerage / find a buyer",
+};
+
+const URGENCY_LABELS = {
+  flexible: "Flexible",
+  "this-month": "Looking to complete this month",
+  "this-week": "Decision needed this week",
+  urgent: "Urgent clearance",
+};
+
+const LOGISTICS_LABELS = {
+  collection: "Automation Outlet collection required",
+  parcel: "Can be packaged and posted",
+  pallet: "Can be palletised",
+  either: "Collection or delivery possible",
+  "site-removal": "Requires site removal / dismantling",
+};
+
+function readableChoice(labels, value) {
+  return labels[value] || value || "Not specified";
+}
+
+function readableGbp(value) {
+  return Number.isFinite(Number(value)) && Number(value) > 0
+    ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(Number(value))
+    : "Not provided";
 }
 
 function formValue(id) {
@@ -59,27 +95,36 @@ async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy
   const leadSummary = [firstItem.manufacturer, firstItem.partNumber || firstItem.equipmentType]
     .filter(Boolean)
     .join(" ");
+  const contact = payload.contact || {};
+  const sourceName = (contact.company || contact.name || "New seller").replace(/[\\r\\n]/g, " ").trim().slice(0, 70);
+  const numberOfItems = payload.items?.length || 0;
   const form = new FormData();
+
   form.append(
     "_subject",
-    `NEW AUTOMATION OUTLET LEAD — ${payload.reference || "new submission"}${leadSummary ? ` — ${leadSummary}` : ""}`
+    `New AO seller enquiry | ${sourceName} | ${numberOfItems} item${numberOfItems === 1 ? "" : "s"} | ${payload.reference || "Pending"}${leadSummary ? ` | ${leadSummary}` : ""}`
   );
-  form.append("reference", payload.reference || "Pending");
-  form.append("capture_route", captureRoute);
-  form.append("enquiry", "Selling surplus equipment");
-  form.append("preferred_route", payload.preference);
-  form.append("seller_type", payload.sellerType);
-  form.append("urgency", payload.urgency);
-  form.append("expected_price", payload.expectedPriceGbp || "Not stated");
-  form.append("postcode", payload.postcode || "Not stated");
-  form.append("logistics", payload.logistics);
-  form.append("availability", payload.availability);
-  form.append("name", payload.contact.name);
-  form.append("company", payload.contact.company || "-");
-  form.append("phone", payload.contact.phone);
-  form.append("email", payload.contact.email);
-  form.append("items", "\n" + readableItems(payload.items).join("\n"));
-  form.append("notes", payload.notes || "-");
+  // Keep the special Formspree 'name' and 'email' fields for sender/reply-to handling.
+  // Other names are human-readable because Formspree displays them as email labels.
+  form.append("Enquiry reference", payload.reference || "Pending");
+  form.append("Capture status", captureRoute === "backup-only"
+    ? "Email backup only — check Deal Desk and add this enquiry if missing"
+    : "Saved in Automation Outlet Deal Desk");
+  form.append("Enquiry type", "Selling surplus automation equipment");
+  form.append("name", contact.name || "Not provided");
+  form.append("Company", contact.company || "Not provided");
+  form.append("email", contact.email || "");
+  form.append("Telephone", contact.phone || "Not provided");
+  form.append("Equipment offered", "\\n" + readableItems(payload.items || []).join("\\n"));
+  form.append("Preferred selling route", readableChoice(SALE_ROUTE_LABELS, payload.preference));
+  form.append("Seller type", payload.sellerType || "Not provided");
+  form.append("Timescale", readableChoice(URGENCY_LABELS, payload.urgency));
+  form.append("Stock availability", payload.availability || "Not specified");
+  form.append("Transport / collection", readableChoice(LOGISTICS_LABELS, payload.logistics));
+  form.append("Collection postcode / area", payload.postcode || "Not provided");
+  form.append("Expected trade price", readableGbp(payload.expectedPriceGbp));
+  form.append("Additional information", payload.notes || "None provided");
+
   const response = await fetch(FORM_ENDPOINT, {
     method: "POST",
     body: form,
