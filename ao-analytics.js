@@ -88,9 +88,16 @@
         referrer=ref.origin+ref.pathname;
       }
     }catch(_){}
+    // Preserve safe campaign attribution while excluding private URL values.
+    const safeLocation=new URL(location.origin+location.pathname);
+    const requested=new URLSearchParams(location.search);
+    for(const key of ["utm_source","utm_medium","utm_campaign"]){
+      const value=requested.get(key)||"";
+      if(/^[a-zA-Z0-9_-]{1,70}$/.test(value))safeLocation.searchParams.set(key,value);
+    }
     window.gtag("config",id,{
       send_page_view:true,anonymize_ip:true,
-      page_location:location.origin+location.pathname,
+      page_location:safeLocation.toString(),
       page_referrer:referrer
     });
     const js=document.createElement("script");
