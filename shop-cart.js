@@ -29,6 +29,7 @@
     if (existing) existing.quantity = Math.min(99, (Number(existing.quantity) || 0) + qty);
     else items.push({ ...item, quantity: qty });
     write(items);
+    window.dispatchEvent(new CustomEvent("ao-cart-add", { detail: { price: Number(item.price || 0), quantity: qty } }));
     return items;
   };
   const update = (id, quantity) => {

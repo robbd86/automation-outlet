@@ -190,6 +190,7 @@ ${shopCss}
 @media(max-width:900px){.product-layout{grid-template-columns:1fr;gap:1.25rem}.product-photo{min-height:360px}.buy-panel{position:static}.purchase-row{grid-template-columns:120px 1fr}}
 @media(max-width:640px){.product-page{padding-top:.9rem;padding-bottom:1.2rem}.crumbs{font-size:.68rem;margin-bottom:.8rem}.product-photo{min-height:260px;border-radius:12px}.product-photo img{max-height:360px}.buy-panel{padding:1.1rem;border-radius:12px}.buy-panel h1{font-size:2rem}.product-price{font-size:2.65rem}.purchase-row{grid-template-columns:108px 1fr}.secondary-actions{grid-template-columns:1fr}.trust-grid{grid-template-columns:1fr 1fr}}
 </style>
+<script src="/ao-analytics.js" defer></script>
 </head>
 <body>
 ${header()}
