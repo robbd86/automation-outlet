@@ -96,7 +96,7 @@ async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy
     .filter(Boolean)
     .join(" ");
   const contact = payload.contact || {};
-  const sourceName = (contact.company || contact.name || "New seller").replace(/[\\r\\n]/g, " ").trim().slice(0, 70);
+  const sourceName = (contact.company || contact.name || "New seller").replace(/[\r\n]/g, " ").trim().slice(0, 70);
   const numberOfItems = payload.items?.length || 0;
   const form = new FormData();
 
@@ -115,7 +115,7 @@ async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy
   form.append("Company", contact.company || "Not provided");
   form.append("email", contact.email || "");
   form.append("Telephone", contact.phone || "Not provided");
-  form.append("Equipment offered", "\\n" + readableItems(payload.items || []).join("\\n"));
+  form.append("Equipment offered", "\n" + readableItems(payload.items || []).join("\n"));
   form.append("Preferred selling route", readableChoice(SALE_ROUTE_LABELS, payload.preference));
   form.append("Seller type", payload.sellerType || "Not provided");
   form.append("Timescale", readableChoice(URGENCY_LABELS, payload.urgency));
