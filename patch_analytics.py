@@ -57,6 +57,16 @@ def main():
             text=require_replace(text,"    if (res.ok) {\n      form.reset();",
                 '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"contact"});\n      form.reset();',
                 "confirmed contact enquiry")
+        elif name=="buyer-alerts.html" and 'lead_type:"buyer_alert"' not in text:
+            text=require_replace(text,
+                "if(!r.ok||!result.ok)throw new Error();form.reset();",
+                'if(!r.ok||!result.ok)throw new Error();window.AOAnalytics?.track("generate_lead",{lead_type:"buyer_alert"});form.reset();',
+                "saved buyer network registration")
+        elif name=="factory-spares-network.html" and 'lead_type:"factory_pilot"' not in text:
+            text=require_replace(text,
+                '    pilotForm.reset();pilotStatus.dataset.state="success";',
+                '    window.AOAnalytics?.track("generate_lead",{lead_type:"factory_pilot"});\\n    pilotForm.reset();pilotStatus.dataset.state="success";',
+                "saved factory pilot registration")
         elif name=="cart.html" and 'AOAnalytics?.track("begin_checkout")' not in text:
             text=require_replace(text,"  if(!response.ok||!data.url) throw new Error(data.error||\"Could not start checkout.\");\n  location.assign(data.url);",
                 '  if(!response.ok||!data.url) throw new Error(data.error||"Could not start checkout.");\n  if(checkoutMode==="live") window.AOAnalytics?.track("begin_checkout");\n  location.assign(data.url);',
