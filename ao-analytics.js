@@ -62,12 +62,37 @@
   }
   window.AOAnalytics = {track,hasConsent:()=>consent==="granted",isConfigured:()=>Boolean(id)};
   function initialiseAnalytics() {
-    if(setup||consent!=="granted"||!id)return;
+    if(setup){
+      if(consent==="granted"){
+        window.gtag?.("consent","update",{analytics_storage:"granted"});
+        enabled=true;
+        queued.splice(0).forEach(([name,properties])=>send(name,properties));
+      }
+      return;
+    }
+    if(consent!=="granted"||!id)return;
     setup=true;
     window.dataLayer=window.dataLayer||[];
     window.gtag=function(){window.dataLayer.push(arguments);};
     window.gtag("js",new Date());
-    window.gtag("config",id,{send_page_view:true,anonymize_ip:true});
+    window.gtag("consent","default",{
+      analytics_storage:"granted",ad_storage:"denied",
+      ad_user_data:"denied",ad_personalization:"denied"
+    });
+    // Strip all query and fragment values (particularly Stripe session IDs)
+    // from GA4 page_location. Also sanitise the source referrer.
+    let referrer="";
+    try{
+      if(document.referrer){
+        const ref=new URL(document.referrer);
+        referrer=ref.origin+ref.pathname;
+      }
+    }catch(_){}
+    window.gtag("config",id,{
+      send_page_view:true,anonymize_ip:true,
+      page_location:location.origin+location.pathname,
+      page_referrer:referrer
+    });
     const js=document.createElement("script");
     js.async=true;
     js.src="https://www.googletagmanager.com/gtag/js?id="+encodeURIComponent(id);
@@ -79,7 +104,13 @@
     consent=value;
     try{localStorage.setItem(CONSENT_KEY,JSON.stringify({choice:value,date:Date.now()}));}catch(_){}
     if(value==="granted")initialiseAnalytics();
-    else queued=[];
+    else {
+      queued=[];
+      if(setup && typeof window.gtag==="function"){
+        window.gtag("consent","update",{analytics_storage:"denied"});
+        enabled=false;
+      }
+    }
   }
   function consentUI() {
     const action=document.createElement("button");
