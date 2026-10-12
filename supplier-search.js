@@ -23,25 +23,65 @@ function dateStamp(d) {
   if (!d || Number.isNaN(Date.parse(d))) return "Date unconfirmed";
   return new Intl.DateTimeFormat("en-GB",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(d));
 }
+
 function rate(currency) {
   if (currency==="GBP") return 1;
-  if (currency==="EUR") {const n=number(byId("rateEur").value);return n>0?n:null;}
-  if (currency==="USD") {const n=number(byId("rateUsd").value);return n>0?n:null;}
-  return null;
+  const n=number(state.data?.fx?.rates?.[String(currency||"").toUpperCase()]);
+  return n!==null && n>0 ? n : null;
 }
 function gbpCost(item) {
   const r=rate(item.currency);
   return item.unitPrice!==null && Number.isFinite(item.unitPrice) && r!==null ? item.unitPrice*r : null;
 }
+function shippingFor(item) {
+  const id=region(item.supplierCountry)==="uk"?"shipUk":region(item.supplierCountry)==="eu"?"shipEu":"shipOther";
+  return Math.max(0,number(byId(id).value,0));
+}
+function landedDetails(item) {
+  const purchase=gbpCost(item);
+  if (purchase===null) return null;
+  const shipping=shippingFor(item);
+  const taxRate=region(item.supplierCountry)==="uk"?0:Math.max(0,Math.min(100,number(byId("importAllowancePct").value,0)));
+  const tax=(purchase+shipping)*taxRate/100;
+  const extra=Math.max(0,number(byId("additionalGbp").value,0));
+  return {purchase,shipping,tax,extra,total:purchase+shipping+tax+extra};
+}
 function profit(item) {
   const resale=number(byId("resaleGbp").value);
   if (resale===null || resale<=0) return null;
-  const purchase=gbpCost(item);
-  if(purchase===null) return null;
-  const extras=Math.max(0,number(byId("additionalGbp").value,0));
+  const landed=landedDetails(item);
+  if(!landed) return null;
   const fee=Math.max(0,Math.min(100,number(byId("feesPct").value,0)));
-  const gross=resale-purchase-extras-resale*(fee/100);
-  return {gross,margin:gross/resale*100,purchase};
+  const gross=resale-landed.total-resale*fee/100;
+  return {gross,margin:gross/resale*100,purchase:landed.purchase,landed:landed.total};
+}
+function opportunityScore(item, cheapest) {
+  const landed=landedDetails(item);
+  if(!landed) return null;
+  const cost=Math.max(0,Math.min(45,45*cheapest/Math.max(landed.total,0.01)));
+  const quality={New:20,Refurbished:13,Used:8,Other:3}[item.conditionGroup] ?? 0;
+  const qty=item.quantity>=10?10:item.quantity>=5?7:item.quantity>=2?5:3;
+  const stamp=Date.parse(item.updatedAt||"");
+  const age=Number.isFinite(stamp) ? Math.max(0,(Date.now()-stamp)/86400000):Infinity;
+  const freshness=age<=2?10:age<=7?7:age<=30?4:0;
+  const area=region(item.supplierCountry);
+  const location=area==="uk"?10:area==="eu"?6:1;
+  const status=/in.stock|available/i.test(item.status)?5:0;
+  return Math.round(cost+quality+qty+freshness+location+status);
+}
+function rankedOffers(rows) {
+  const candidates=rows.filter(x=>landedDetails(x)!==null);
+  const cheapest=Math.min(...candidates.map(x=>landedDetails(x).total));
+  const scored=candidates.map(item=>({...item,score:opportunityScore(item,cheapest)}));
+  // A known negative margin should not outrank a positive-margin opportunity.
+  scored.sort((a,b)=>{
+    const pa=profit(a),pb=profit(b);
+    const aPositive=pa ? pa.gross>0 : true;
+    const bPositive=pb ? pb.gross>0 : true;
+    if(aPositive!==bPositive) return aPositive?-1:1;
+    return b.score-a.score || landedDetails(a).total-landedDetails(b).total;
+  });
+  return scored;
 }
 const EU = new Set(["AT","AUSTRIA","BE","BELGIUM","BG","BULGARIA","HR","CROATIA","CY","CYPRUS","CZ","CZECHIA","CZECH REPUBLIC","DK","DENMARK","EE","ESTONIA","FI","FINLAND","FR","FRANCE","DE","GERMANY","GR","GREECE","HU","HUNGARY","IE","IRELAND","IT","ITALY","LV","LATVIA","LT","LITHUANIA","LU","LUXEMBOURG","MT","MALTA","NL","NETHERLANDS","PL","POLAND","PT","PORTUGAL","RO","ROMANIA","SK","SLOVAKIA","SI","SLOVENIA","ES","SPAIN","SE","SWEDEN"]);
 function region(country) {
@@ -62,13 +102,56 @@ function domCell(row,text,cls,sub) {
 }
 
 function updateFxWarning(){
-  const suspicious = ["rateEur","rateUsd"].some(id=>{
-    const n=number(byId(id).value);
-    return n!==null && Math.abs(n-1)<0.0000001;
-  });
-  byId("fxWarning").classList.toggle("visible",suspicious);
+  const fx=state.data?.fx;
+  const valid=fx?.status==="available";
+  byId("fxWarning").classList.toggle("visible",Boolean(state.data)&&!valid);
+  if(!state.data) {
+    byId("fxStatus").textContent="Rates are checked automatically when you search.";
+    return;
+  }
+  if(!valid){
+    byId("fxStatus").textContent="Rates unavailable. GBP prices remain usable; foreign-currency landed costs cannot be ranked.";
+    return;
+  }
+  const eur=rate("EUR"),usd=rate("USD");
+  const line="Reference rates "+(fx.date||"date unavailable")+". "+
+    (eur!==null?"€1 ≈ "+pounds(eur)+"; ":"")+
+    (usd!==null?"$1 ≈ "+pounds(usd)+". ":"")+
+    "Bank / card FX charges may differ.";
+  byId("fxStatus").textContent=line;
 }
-
+function renderOpportunities(rows) {
+  const available=rankedOffers(rows).filter(item=>{
+    const p=profit(item);
+    return p===null || p.gross>0;
+  });
+  const section=byId("opportunities");
+  section.hidden=available.length===0;
+  const root=byId("topOpportunities");
+  const frag=document.createDocumentFragment();
+  for(const [i,item] of available.slice(0,3).entries()){
+    const card=document.createElement("article");card.className="opportunity";
+    const heading=document.createElement("div");heading.className="opportunity-rank";
+    const rank=document.createElement("span");rank.textContent="#"+(i+1)+" ranked estimate";
+    const score=document.createElement("span");score.textContent=item.score+"/100";
+    heading.append(rank,score);
+    const supplier=document.createElement("div");supplier.className="opportunity-name";
+    supplier.textContent=item.supplier;
+    const meta=document.createElement("div");meta.className="opportunity-meta";
+    meta.textContent=item.condition+" · "+item.quantity+" listed · "+item.supplierCountry;
+    const landed=landedDetails(item);
+    const total=document.createElement("div");total.className="opportunity-cost";
+    total.textContent=pounds(landed.total);
+    const detail=document.createElement("div");detail.className="opportunity-sub";
+    detail.textContent="Estimated landed / unit · "+money(item.unitPrice,item.currency)+" supplier";
+    const p=profit(item);
+    const profitLabel=document.createElement("div");profitLabel.className="opportunity-sub";
+    profitLabel.textContent=p?"Est. profit "+pounds(p.gross)+" ("+p.margin.toFixed(1)+"%)":"Enter target resale price to calculate profit";
+    card.append(heading,supplier,meta,total,detail,profitLabel);
+    frag.appendChild(card);
+  }
+  root.replaceChildren(frag);
+}
 function infoBlock(label,value,subtitle="",valueClass=""){
   const box=document.createElement("div");
   const labelNode=document.createElement("div");
@@ -115,8 +198,10 @@ function renderMobileCards(rows){
     const equivalent = purchase!==null && item.currency!=="GBP" ?
       "≈ "+pounds(purchase)+" at entered FX" :
       item.unitPrice!==null && item.currency!=="GBP" ? "Enter FX for GBP comparison" : "";
+    const landed=landedDetails(item);
     grid.append(
       infoBlock("Supplier price",money(item.unitPrice,item.currency),equivalent,"price"),
+      infoBlock("Est. landed / unit",landed?pounds(landed.total):"—",landed?"Incl. editable shipping and import allowance":"Live FX rate or supplier price unavailable","price"),
       infoBlock("Reported quantity",item.quantity.toLocaleString("en-GB"),item.status),
       infoBlock("Condition",item.condition),
       infoBlock("Lead time",item.delivery)
@@ -145,6 +230,8 @@ function resetView() {
   state.data=null;state.filtered=[];state.mobileVisible=20;
   byId("offerCards").replaceChildren();
   byId("moreOffersButton").hidden=true;
+  byId("opportunities").hidden=true;
+  byId("topOpportunities").replaceChildren();
   for(const key of ["mExact","mAvailable","mSuppliers","mPriced"])byId(key).textContent="—";
   byId("resultsBody").replaceChildren();
   byId("empty").hidden=false;
@@ -161,6 +248,17 @@ function applyFilters(){
   if(location!=="all") rows=rows.filter(x=>region(x.supplierCountry)===location);
   if(byId("pricedOnly").checked) rows=rows.filter(x=>x.unitPrice!==null && x.currency);
   switch(byId("sortFilter").value) {
+    case "best": {
+      const ranks=rankedOffers(rows);
+      const rankMap=new Map(ranks.map((item,index)=>[item.id+"|"+item.supplier+"|"+item.mpn,index]));
+      rows.sort((a,b)=>{
+        const aRank=rankMap.get(a.id+"|"+a.supplier+"|"+a.mpn)??Infinity;
+        const bRank=rankMap.get(b.id+"|"+b.supplier+"|"+b.mpn)??Infinity;
+        return aRank-bRank || b.quantity-a.quantity;
+      });
+      break;
+    }
+    case "landed": rows.sort((a,b)=>(landedDetails(a)?.total??Infinity)-(landedDetails(b)?.total??Infinity) || b.quantity-a.quantity);break;
     case "price": rows.sort((a,b)=>(gbpCost(a)??Infinity)-(gbpCost(b)??Infinity) || b.quantity-a.quantity);break;
     case "updated": rows.sort((a,b)=>Date.parse(b.updatedAt||0)-Date.parse(a.updatedAt||0));break;
     case "supplier": rows.sort((a,b)=>a.supplier.localeCompare(b.supplier));break;
@@ -168,6 +266,7 @@ function applyFilters(){
   }
   state.filtered=rows;
   updateFxWarning();
+  renderOpportunities(rows);
   byId("mExact").textContent=state.data.summary.exactOffers.toLocaleString("en-GB");
   byId("mAvailable").textContent=state.data.summary.availableOffers.toLocaleString("en-GB");
   byId("mSuppliers").textContent=state.data.summary.suppliers.toLocaleString("en-GB");
@@ -188,13 +287,15 @@ function applyFilters(){
     cond.appendChild(pill);
     domCell(tr,item.quantity.toLocaleString("en-GB"));
     const cost=gbpCost(item);
-    domCell(tr,money(item.unitPrice,item.currency),"mono",cost!==null && item.currency!=="GBP"?"≈ "+pounds(cost)+" at entered FX":item.status);
+    domCell(tr,money(item.unitPrice,item.currency),"mono",cost!==null && item.currency!=="GBP"?"≈ "+pounds(cost)+" at automatic FX":item.status);
+    const landed=landedDetails(item);
+    domCell(tr,landed?pounds(landed.total):"—","mono",landed?"Inc. shipping & import provision":"Currency / price unavailable");
     const p=profit(item);
     if(p) {
       const cell=domCell(tr,pounds(p.gross),p.gross>=0?"gain":"loss",p.margin.toFixed(1)+"% indicative margin");
       cell.title="Estimated gross profit per unit before VAT treatment and unentered costs.";
     } else {
-      const reason=item.unitPrice===null?"Price not supplied":item.currency!=="GBP" && rate(item.currency)===null?"Enter conversion rate":"Enter target sale price";
+      const reason=item.unitPrice===null?"Price not supplied":item.currency!=="GBP" && rate(item.currency)===null?"FX unavailable":"Enter target sale price";
       domCell(tr,"—","",reason);
     }
     frag.appendChild(tr);
@@ -264,10 +365,10 @@ async function copyShortlist(){
   if(!state.data || state.filtered.length===0) return;
   const parts=["AO Supplier Search · "+state.data.query,
     "Supplier-reported inventory — verify all offers before quoting.",
-    "Supplier | Country | Part | Condition | Qty | Unit price | Est gross profit"];
+    "Supplier | Country | Part | Condition | Qty | Unit price | Est landed GBP | Est gross profit"];
   for(const x of state.filtered.slice(0,40)){
     const p=profit(x);
-    parts.push([x.supplier,x.supplierCountry,x.mpn,x.condition,x.quantity,money(x.unitPrice,x.currency),p?pounds(p.gross):"—"].join(" | "));
+    parts.push([x.supplier,x.supplierCountry,x.mpn,x.condition,x.quantity,money(x.unitPrice,x.currency),landedDetails(x)?pounds(landedDetails(x).total):"—",p?pounds(p.gross):"—"].join(" | "));
   }
   try{
     await navigator.clipboard.writeText(parts.join("\n"));
@@ -290,7 +391,7 @@ document.querySelectorAll("[data-part]").forEach(button=>button.addEventListener
   byId("partNumber").value=button.dataset.part;
   search(button.dataset.part);
 }));
-for(const id of ["conditionFilter","locationFilter","sortFilter","pricedOnly","resaleGbp","additionalGbp","feesPct","rateEur","rateUsd"]){
+for(const id of ["conditionFilter","locationFilter","sortFilter","pricedOnly","resaleGbp","additionalGbp","feesPct","shipUk","shipEu","shipOther","importAllowancePct"]){
   byId(id).addEventListener("input",()=>{
     if(["conditionFilter","locationFilter","sortFilter","pricedOnly"].includes(id)) state.mobileVisible=20;
     updateFxWarning();
