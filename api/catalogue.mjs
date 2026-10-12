@@ -1,4 +1,5 @@
 import { listProducts } from '../lib/stock-read.mjs';
+import { runAutomaProbe } from '../lib/automa-probe.mjs';
 import { SITE, collections, html, json, slugify, available, publicProducts, productSlug, productCard, header, menuScript, browseLinks, shopCss } from '../lib/shop.mjs';
 
 export function resolveCollection(key, products) {
@@ -47,6 +48,7 @@ export function renderCatalogue(key, products) {
 }
 
 export default async function handler(request,response){
+  if (request.query?.automaProbe === '1') return runAutomaProbe(request,response);
   response.setHeader('Content-Type','text/html; charset=utf-8');
   if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');return response.status(405).send('Method not allowed');}
   const key=String(request.query?.collection||'all');
