@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 const $=id=>document.getElementById(id);
-const state={key:"",requests:[],metrics:{},current:""};
+const state={key:"",requests:[],metrics:{},pilot:{},pilotParts:[],current:""};
 function notify(msg,kind="success"){$("desk-message").textContent=msg;$("desk-message").dataset.kind=kind;}
 function el(tag,cls,text){const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=String(text);return x;}
 function currency(x){return Number(x||0).toLocaleString("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:2});}
@@ -26,6 +26,40 @@ function metricCards(){
    const d=el("div","desk-stat");d.append(el("b","",n),el("span","",label));return d;
  }));
 }
+function pilotCards(){
+ const p=state.pilot||{};
+ $("pilot-count").textContent=String(p.current||0)+" / "+String(p.total||0)+" current evidence";
+ const entries=[["Part numbers",p.total],["Sourced records",p.sourced],["Current evidence",p.current],["Needs research",p.unknown]];
+ $("pilot-stats").replaceChildren(...entries.map(([name,val])=>{
+  const card=el("div","desk-stat");card.append(el("b","",val||0),el("span","",name));return card;
+ }));
+ renderPilotParts();
+}
+function renderPilotParts(){
+ const raw=$("pilot-filter").value.trim().toUpperCase().replace(/\s+/g,"");
+ const selectedMake=$("pilot-make").value;
+ const records=state.pilotParts.filter(p=>
+  (selectedMake==="all"||p.manufacturer===selectedMake)&&
+  (!raw||p.code.toUpperCase().replace(/\s+/g,"").includes(raw)));
+ const box=$("pilot-results");box.replaceChildren();
+ if(!records.length){box.append(el("p","desk-muted","No matching part numbers in this 100-part sample."));return;}
+ for(const p of records.slice(0,100)){
+  const card=el("div","desk-part");
+  const heading=el("strong","",p.code+" · "+p.manufacturer);
+  const status=p.source?(p.lifecycle+" · published manufacturer source · "+p.region):"Unknown — check · requires research";
+  card.append(heading,el("p","",status));
+  if(p.successor)card.append(el("p","","Suggested successor: "+p.successor+" (compatibility unverified)"));
+  if(p.source){
+   const link=el("a","","View official manufacturer evidence ↗");
+   link.href=p.source;link.target="_blank";link.rel="noopener noreferrer";card.append(link);
+  }
+  const controls=el("div","desk-actions");
+  const search=el("a","desk-tag","Check this part");search.href="/obsolescence-check.html?part="+encodeURIComponent(p.code)+"&make="+encodeURIComponent(p.manufacturer);
+  const quote=el("a","desk-tag","Request spare quote");quote.href="/obsolete-parts-sourcing.html?part="+encodeURIComponent(p.code)+"&utm_source=quick_check_pilot";
+  controls.append(search,quote);card.append(controls);box.append(card);
+ }
+}
+
 function selected(){return state.requests.find(x=>x.id===state.current);}
 function listCards(){
  const q=$("desk-search").value.toLowerCase().trim();
@@ -127,9 +161,9 @@ function renderDetail(){
 }
 async function reload(preserve){
  const data=await api();
- state.requests=data.requests;state.metrics=data.metrics;
+ state.requests=data.requests;state.metrics=data.metrics;state.pilot=data.pilot||{};state.pilotParts=data.pilotParts||[];
  if(!preserve||!state.requests.some(x=>x.id===state.current))state.current=state.requests[0]?.id||"";
- metricCards();listCards();renderDetail();
+ metricCards();pilotCards();listCards();renderDetail();
 }
 $("desk-login").addEventListener("submit",async e=>{
  e.preventDefault();state.key=$("desk-key").value;$("desk-key").value="";
@@ -137,6 +171,8 @@ $("desk-login").addEventListener("submit",async e=>{
  catch(err){state.key="";notify(err.message,"error");}
 });
 $("desk-search").addEventListener("input",listCards);
+$("pilot-filter").addEventListener("input",renderPilotParts);
+$("pilot-make").addEventListener("change",renderPilotParts);
 $("desk-refresh").addEventListener("click",async()=>{try{await reload(true);notify("Enquiries and lifecycle cache refreshed.");}catch(e){notify(e.message,"error");}});
 $("desk-verify-form").addEventListener("submit",async e=>{
  e.preventDefault();if(!selected())return;
