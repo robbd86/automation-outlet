@@ -50,12 +50,17 @@ test("stores a permitted buyer enquiry without triggering outgoing email",async(
     token:process.env.AIRTABLE_ACCESS_TOKEN,
     base:process.env.AO_QUICK_CHECK_BASE_ID,
     table:process.env.AO_QUICK_CHECK_TABLE_ID,
-    enabled:process.env.AO_QUICK_CHECK_ENABLED
+    enabled:process.env.AO_QUICK_CHECK_ENABLED,
+    autoreply:process.env.AO_QC_AUTOREPLY_ENABLED,
+    ownerAlert:process.env.AO_QC_OWNER_NOTIFY_ENABLED
   };
   process.env.AIRTABLE_ACCESS_TOKEN="test-token";
   process.env.AO_QUICK_CHECK_BASE_ID="app60WbULZ9PbuKQv";
   process.env.AO_QUICK_CHECK_TABLE_ID="tblwv21sLnCvovQ9S";
   process.env.AO_QUICK_CHECK_ENABLED="true";
+  // This test checks storage-only behavior even when production email flags are enabled.
+  process.env.AO_QC_AUTOREPLY_ENABLED="false";
+  process.env.AO_QC_OWNER_NOTIFY_ENABLED="false";
   let calls=0,stored;
   globalThis.fetch=async(url,init)=>{
     calls++;
@@ -80,7 +85,7 @@ test("stores a permitted buyer enquiry without triggering outgoing email",async(
     assert.match(stored["Part Numbers"],/6ES7 315/);
   }finally{
     globalThis.fetch=oldFetch;
-    for(const [key,name] of Object.entries({token:"AIRTABLE_ACCESS_TOKEN",base:"AO_QUICK_CHECK_BASE_ID",table:"AO_QUICK_CHECK_TABLE_ID",enabled:"AO_QUICK_CHECK_ENABLED"})){
+    for(const [key,name] of Object.entries({token:"AIRTABLE_ACCESS_TOKEN",base:"AO_QUICK_CHECK_BASE_ID",table:"AO_QUICK_CHECK_TABLE_ID",enabled:"AO_QUICK_CHECK_ENABLED",autoreply:"AO_QC_AUTOREPLY_ENABLED",ownerAlert:"AO_QC_OWNER_NOTIFY_ENABLED"})){
       if(before[key]===undefined)delete process.env[name];else process.env[name]=before[key];
     }
   }
