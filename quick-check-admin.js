@@ -139,8 +139,8 @@ function renderDetail(){
  updateFollowup();
  $("desk-ack").textContent="To: "+item.acknowledgement.email+"\nSubject: "+item.acknowledgement.subject+"\n\n"+item.acknowledgement.body;
  $("desk-ready").textContent=item.report.ready?
-  "All "+item.report.lines.length+" part(s) have current official-source records. Review stock information and approve the draft before sending.":
-  item.report.pendingCount+" part(s) need source verification. Keep this draft internal until verified.";
+  (item.report.lines.length===1?"The part has":"All "+item.report.lines.length+" parts have")+" current official-source records. Review stock information and approve the draft before sending.":
+  item.report.pendingCount+" "+(item.report.pendingCount===1?"part needs":"parts need")+" source verification. Keep this draft internal until verified.";
  $("desk-report").textContent="To: "+item.report.email+"\nSubject: "+item.report.subject+"\n\n"+(item.draft||item.report.body);
  const approved=Boolean(item.reviewedAt&&["Summary ready","Summary sent","Quote requested","Quoted","Order won","Closed"].includes(item.status));
  $("desk-open-outlook-report").disabled=!approved;
