@@ -16,7 +16,7 @@ ROOT=Path(__file__).resolve().parent
 TRACKING_TAG='<script src="/ao-analytics.js" defer></script>'
 EXCLUDED={
     "agent-desk.html","deal-desk.html","stock-admin.html","orders-admin.html",
-    "buyer-network-admin.html","plc-audit-upload.html","plc-audit-dashboard.html",
+    "buyer-network-admin.html","quick-check-unsubscribe.html","quick-check-admin.html","plc-audit-upload.html","plc-audit-dashboard.html",
     "plc-audit-audit.html",
 }
 

@@ -18,6 +18,7 @@ PRIVATE_PAGES = {
     "plc-audit-audit.html",
     "cart.html",
     "order-success.html",
+    "quick-check-unsubscribe.html",
 }
 # Manually maintained dates of substantive editorial review. Do not use build
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
@@ -114,7 +115,9 @@ def main() -> None:
     print("production cleanup complete")
     # Run source-level SEO tests after generated pages and sitemap are final.
     import subprocess
-    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/pilot-registration.test.mjs"], check=True)
+    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/pilot-registration.test.mjs", "tests/obsolescence-check.test.mjs", "tests/quick-check-desk.test.mjs", "tests/quick-check-unsubscribe.test.mjs", "tests/quick-check-pilot.test.mjs", "tests/quick-check-research.test.mjs"], check=True)
+    for script in ("obsolescence-check.js", "quick-check-admin.js"):
+        subprocess.run(["node", "--check", script], check=True)
 
 
 if __name__ == "__main__":

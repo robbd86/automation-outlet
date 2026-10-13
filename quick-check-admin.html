@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow">
+<title>AO Quick Check Desk — Private</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.desk-wrap{max-width:1180px;margin:auto;padding:30px 20px 65px}
+.desk-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.desk-panel{background:#10223f;border:1px solid #334f72;border-radius:14px;padding:20px;margin-bottom:16px}
+.desk-panel h2{font-size:1.7rem;margin-bottom:10px}
+.desk-muted{color:#b5c7df}
+.desk-mini{font:.77rem 'IBM Plex Mono',monospace;color:#92bff6;text-transform:uppercase;letter-spacing:.09em}
+.desk-field{display:grid;gap:5px;margin:12px 0}
+.desk-field>label{font-weight:600;color:#e5efff}
+.desk-field input,.desk-field textarea,.desk-field select,#desk-search{font:inherit;background:#061731;border:1px solid #466581;border-radius:8px;color:#f0f5ff;padding:10px 12px;width:100%;min-height:44px}
+.desk-field textarea{resize:vertical;min-height:90px;line-height:1.45}
+.desk-field :focus-visible{outline:2px solid #72a8ff}
+.desk-cols{display:grid;grid-template-columns:minmax(250px,.85fr) minmax(0,1.5fr);gap:18px;align-items:start}
+.desk-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:19px}
+.desk-stat{border:1px solid #304d71;border-radius:11px;padding:14px;background:#102b4e}
+.desk-stat b{font:800 1.75rem 'Barlow Condensed',sans-serif;display:block;color:#fff}
+.desk-stat span{font-size:.8rem;color:#a8c5e5}
+.desk-list{display:grid;gap:9px;margin-top:13px;max-height:710px;overflow:auto}
+.desk-lead{display:block;text-align:left;width:100%;background:#0a1b34;color:#e8f0ff;border:1px solid #2d4c74;border-radius:9px;padding:12px;cursor:pointer;font:inherit}
+.desk-lead[aria-pressed=true]{border-color:#72a8ff;background:#173659}
+.desk-lead b{display:block}
+.desk-lead small{display:block;color:#b3cae5;margin-top:5px}
+.desk-tags{display:flex;gap:7px;flex-wrap:wrap}
+.desk-tag{padding:3px 8px;border-radius:20px;border:1px solid #547499;color:#d2e3ff;font-size:.74rem}
+.desk-danger{border-color:#c67b60;color:#ffd7bd}
+.desk-actions{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}
+.desk-actions button{font:700 .85rem 'Barlow',sans-serif;background:#2269c9;border:0;border-radius:7px;color:white;padding:10px 14px;cursor:pointer;min-height:41px}
+.desk-actions button.secondary{background:#173457;border:1px solid #496e9a}
+.desk-actions button:disabled{opacity:.55}
+.desk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.desk-part{background:#091a30;border:1px solid #314e6b;border-radius:8px;padding:12px;margin:8px 0}
+.desk-part strong{font-family:'IBM Plex Mono',monospace;color:#f5f9ff}
+.desk-part p{color:#b5cae5;font-size:.85rem}
+.desk-draft{white-space:pre-wrap;overflow-wrap:anywhere;background:#061a30;border:1px solid #315272;border-radius:9px;padding:16px;max-height:550px;overflow:auto;font: .87rem/1.6 'Barlow',sans-serif;color:#e1eaff}
+.desk-notice{margin:16px 0;padding:12px;background:#332817;border:1px solid #806043;color:#f9dfae;border-radius:8px}
+#desk-message{display:none;padding:12px;border-radius:8px;margin:14px 0}
+#desk-message[data-kind=success]{display:block;background:#103b2e;color:#d6ffe6}
+#desk-message[data-kind=error]{display:block;background:#47252b;color:#ffe0e3}
+#desk-gate{max-width:530px}
+[hidden]{display:none!important}
+@media(max-width:930px){.desk-cols{grid-template-columns:1fr}.desk-metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:550px){.desk-metrics{grid-template-columns:repeat(2,1fr)}.desk-grid{grid-template-columns:1fr}}
+@media print{
+header,.desk-top,.desk-metrics,#desk-gate,#desk-controls,#desk-list-panel,#desk-verify-panel,#desk-actions-panel,#desk-message,.desk-notice,#desk-ack-panel{display:none!important}
+body{background:white;color:black}.desk-wrap,.desk-cols{display:block;padding:0}
+#desk-draft-panel{border:none;background:white;padding:0}
+#desk-draft-panel .desk-actions{display:none!important}
+#desk-report{background:white;color:black;border:none;max-height:none;overflow:visible;font-size:12pt;white-space:pre-wrap}
+}
+</style></head><body>
+<header><div class="wrap nav"><a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a><nav class="nav-links"><a href="/deal-desk.html">Deal desk</a><a href="/buyer-network-admin.html">Buyer match</a><a href="/quick-check-admin.html" style="color:white">Quick Check desk</a></nav></div></header>
+<main class="desk-wrap">
+<div class="desk-top"><div><div class="desk-mini">Automation Outlet / private enquiries</div><h1 style="font-size:clamp(2.1rem,5vw,3.4rem)">Obsolescence <span style="color:#79b3ff">review desk</span></h1><p class="desk-muted">Verify exact codes. Prepare the report. Approve before sending. Track quotes and margin.</p></div>
+<a href="/obsolescence-check.html" class="btn ghost">Customer page ↗</a></div>
+<div id="desk-gate" class="desk-panel"><h2>Unlock enquiries</h2><p class="desk-muted">Use the same private AO deal-desk access key. It is kept in browser memory for this tab only.</p><form id="desk-login"><div class="desk-field"><label for="desk-key">Admin key</label><input id="desk-key" type="password" autocomplete="off" required></div><button class="btn" type="submit">Open review desk</button></form></div>
+<div id="desk-message" role="status" aria-live="polite"></div>
+<div id="desk-content" hidden>
+<div id="desk-metrics" class="desk-metrics"></div>
+<section id="pilot-panel" class="desk-panel" style="margin-bottom:20px">
+<div class="desk-top" style="margin-bottom:10px"><div><div class="desk-mini">Source-verified research pilot</div><h2>100-part lifecycle catalogue</h2><p class="desk-muted">Exact order codes, manufacturer sources, checked dates and unresolved cases. Dated snapshots are not a live API or proof of stock.</p></div><span id="pilot-count" class="desk-tag"></span></div>
+<div id="pilot-stats" class="desk-metrics" style="margin:12px 0"></div>
+<details><summary style="cursor:pointer;color:#a7d0ff;font-weight:700;padding:12px 0">Explore manufacturer records and outstanding research</summary>
+<div class="desk-field"><label for="pilot-filter">Find an exact part number</label><input id="pilot-filter" type="search" placeholder="e.g. FX2N-48MR-ES/UL or 6ES7315"></div>
+<div class="desk-field"><label for="pilot-make">Manufacturer</label><select id="pilot-make"><option value="all">All manufacturers</option><option>Siemens</option><option>Allen-Bradley</option><option>Mitsubishi</option></select></div>
+<div id="pilot-results" class="desk-list" style="max-height:450px"></div>
+</details>
+<p class="desk-muted" style="font-size:.83rem;margin-top:10px">Manufacturer data may be country-specific, can change, and must be checked for relevant revisions before final approval. No stock is assumed.</p>
+</section>
+
+<div class="desk-cols">
+<section id="desk-list-panel" class="desk-panel"><h2>Enquiries</h2><div class="desk-field"><label for="desk-search">Search company / part / reference</label><input id="desk-search" type="search" placeholder="Search…"></div><div class="desk-actions" style="margin:4px 0"><button id="desk-refresh" class="secondary" type="button">Refresh</button></div><div id="desk-list" class="desk-list"></div></section>
+<div>
+<section id="desk-controls" class="desk-panel" hidden>
+<div class="desk-mini" id="desk-reference"></div><h2 id="desk-name"></h2><div id="desk-meta" class="desk-muted"></div><div id="desk-parts"></div>
+<div class="desk-notice">Manufacturer lifecycle values are only accepted with a recent official source URL. An "Unknown — check" result is never silently marked safe. Customer acknowledgements may be sent automatically when enabled. Technical lifecycle reports are never sent without your review.</div>
+</section>
+<section id="desk-verify-panel" class="desk-panel" hidden>
+<h2>Verify a part</h2><p class="desk-muted">One exact code at a time. Look it up in the manufacturer's official source, then save its verified details. Each saved record can be reused for a future enquiry.</p>
+<form id="desk-verify-form">
+<div class="desk-grid"><div class="desk-field"><label for="v-code">Exact part number</label><input id="v-code" required maxlength="40"></div>
+<div class="desk-field"><label for="v-make">Manufacturer</label><select id="v-make"><option>Siemens</option><option>Allen-Bradley</option><option>Omron</option><option>Mitsubishi</option><option>Other</option></select></div>
+<div class="desk-field"><label for="v-status">Manufacturer lifecycle</label><select id="v-status"><option>Unknown — check</option><option>Active</option><option>Mature</option><option>Phase-out</option><option>Discontinued</option></select></div>
+<div class="desk-field"><label for="v-supply">AO supply route</label><select id="v-supply"><option>Not checked</option><option>Sourcing possible</option><option>Not currently</option><option>Listed</option></select></div></div>
+<div class="desk-field"><label for="v-source">Exact manufacturer source URL</label><input id="v-source" type="url" maxlength="600" placeholder="https://support.industry.siemens.com/…"></div>
+<div class="desk-field"><label for="v-successor">Published successor (only if verified)</label><input id="v-successor" maxlength="120"></div>
+<div class="desk-field"><label for="v-notes">Engineer notes</label><textarea id="v-notes" rows="2" maxlength="500" placeholder="Exact order code checked, limitations, revision notes…"></textarea></div>
+<div class="desk-actions"><button type="button" id="desk-research-rockwell" class="secondary">Look up Rockwell lifecycle</button><button type="submit">Save verified record</button></div><p class="desk-muted" style="font-size:.83rem">Manufacturer HTML retrieval is a research suggestion only. Check the linked official page before saving any result.</p></form></section>
+<section id="desk-ack-panel" class="desk-panel" hidden><h2>Acknowledgement draft</h2><p class="desk-muted">Customer acknowledgements are automatic when the email service is enabled. This draft is for reference or manual resend; using these controls does not send an email.</p><div class="desk-draft" id="desk-ack"></div><div class="desk-actions"><button type="button" id="desk-copy-ack" class="secondary">Copy acknowledgement</button><button type="button" id="desk-mailto-ack" class="secondary">Open email draft</button></div></section>
+<section id="desk-draft-panel" class="desk-panel" hidden><h2>Report draft</h2><div id="desk-ready" class="desk-muted"></div><p class="desk-muted" style="margin:9px 0">The draft is generated from verified cache entries. Check each line, source and supply route before use. The Outlook button opens a draft for your review — it never sends automatically.</p><div class="desk-draft" id="desk-report"></div><div class="desk-actions"><button id="desk-open-outlook-report" type="button">Open approved report in Outlook</button><button id="desk-copy-report" type="button" class="secondary">Copy report</button><button id="desk-print-report" type="button" class="secondary">Print / Save PDF</button></div></section>
+<section id="desk-marketing-panel" class="desk-panel" hidden><h2>Optional follow-up drafts</h2><p class="desk-muted">Available only with explicit marketing consent. Do not use before the summary is sent and an unsubscribe link works.</p>
+<div class="desk-field"><label for="desk-followup">Choose follow-up</label><select id="desk-followup"><option value="A3">A3 — day 3, sourcing check-in</option><option value="A4">A4 — day 10, full audit option</option><option value="A5">A5 — day 30, relevant spares alert</option></select></div>
+<div class="desk-draft" id="desk-followup-preview"></div><div class="desk-actions"><button id="desk-copy-followup" type="button" class="secondary">Copy opted-in email draft</button></div></section>
+<section id="desk-actions-panel" class="desk-panel" hidden><h2>Track this enquiry</h2>
+<div class="desk-grid"><div class="desk-field"><label for="desk-status">Status</label><select id="desk-status"><option>New</option><option>Researching</option><option>Summary ready</option><option>Summary sent</option><option>Quote requested</option><option>Quoted</option><option>Order won</option><option>Closed</option></select></div>
+<div class="desk-field"><label for="desk-quote">Quote value (£)</label><input id="desk-quote" type="number" min="0" step=".01"></div>
+<div class="desk-field"><label for="desk-profit">Order gross profit (£)</label><input id="desk-profit" type="number" min="0" step=".01"></div></div><div class="desk-field"><label for="desk-research-minutes">Research / report time (minutes)</label><input id="desk-research-minutes" type="number" min="0" step="1" placeholder="e.g. 12"></div>
+<div class="desk-field"><label for="desk-notes">Internal review notes</label><textarea id="desk-notes" maxlength="2000" rows="3"></textarea></div>
+<label style="display:flex;gap:10px;color:#d0dfef;align-items:flex-start;margin:12px 0"><input id="desk-accept-unknown" type="checkbox" style="width:19px;height:19px;flex:none;margin-top:4px"><span>Only if some results remain Unknown: I have checked what I can, explained the unresolved parts in the notes (at least 40 characters), and approve sending them as <strong>Unknown — check</strong>, not as verified statuses.</span></label>
+<div class="desk-actions"><button type="button" id="desk-save-status">Save progress / approve report</button></div>
+<p class="desk-muted" style="font-size:.83rem">"Summary ready" requires every part to have a recent official source. "Summary sent" records your manual send, not an automated email.</p>
+</section></div></div>
+</div>
+</main><script src="/quick-check-admin.js" defer></script></body></html>

@@ -137,6 +137,12 @@ navToggle.addEventListener("click", () => {
 });
 
 const partForm = document.getElementById("partForm");
+const partParam=(new URLSearchParams(location.search).get("part")||"").trim().toUpperCase();
+if(/^[A-Z0-9.+/-]{4,40}$/.test(partParam)){
+  const field=document.getElementById("p-part");
+  if(field)field.value=partParam;
+}
+
 if (partForm) {
   const partStatus = document.getElementById("partStatus");
   const partBtn = partForm.querySelector("button[type=submit]");
