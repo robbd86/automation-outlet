@@ -27,7 +27,7 @@ test("source lookup cannot fetch any arbitrary URL and only returns research sug
   const x=await researchRockwell("1747-L542");
   assert.equal(x.status,"suggested");
   assert.equal(x.lifecycle,"Discontinued");
-  assert.match(x.message,/review/i);
+  assert.match(x.message,/verify/i);
   assert.equal(path,"https://www.rockwellautomation.com/en-us/products/details.1747-l542.html");
   await assert.rejects(()=>researchRockwell("https://other.test/"),/Invalid exact Rockwell/);
  }finally{globalThis.fetch=saved;}
