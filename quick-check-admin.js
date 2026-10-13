@@ -21,7 +21,7 @@ async function copy(text){
 function mailto(email,subject,body){const url="mailto:"+encodeURIComponent(email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);window.location.href=url;}
 function metricCards(){
  const m=state.metrics;
- const stats=[["Enquiries",m.enquiries],["Open",m.active],["Quotes",m.quotes],["Orders won",m.orders],["Gross profit",currency(m.grossProfit)]];
+ const stats=[["Enquiries",m.enquiries],["Open",m.active],["Quotes",m.quotes],["Orders won",m.orders],["Gross profit",currency(m.grossProfit)],["Research mins",m.totalResearchMinutes||0],["Verified on enquiries",m.partsWithCurrentEvidence||0],["Research queue",m.partsWithoutCurrentEvidence||0]];
  $("desk-metrics").replaceChildren(...stats.map(([label,n])=>{
    const d=el("div","desk-stat");d.append(el("b","",n),el("span","",label));return d;
  }));
@@ -151,6 +151,7 @@ function renderDetail(){
  $("desk-status").value=item.status||"New";
  $("desk-quote").value=item.quoteValue||"";
  $("desk-profit").value=item.orderGrossProfit||"";
+ $("desk-research-minutes").value=item.researchMinutes??"";
  $("desk-notes").value=item.notes||"";
  $("v-code").value="";
  $("v-source").value="";
@@ -234,7 +235,7 @@ $("desk-save-status").addEventListener("click",async()=>{
  if(status==="Summary sent"&&!confirm("Have you already manually emailed this reviewed summary to the customer?"))return;
  if(status==="Summary ready"&&!confirm("Have you checked every official source and the drafted wording? This saves an approved DRAFT; it does not send it."))return;
  const payload={action:"updateLead",id:x.id,status,notes:$("desk-notes").value,acceptUnknown:$("desk-accept-unknown").checked,
-    quoteValue:$("desk-quote").value,orderGrossProfit:$("desk-profit").value};
+    quoteValue:$("desk-quote").value,orderGrossProfit:$("desk-profit").value,researchMinutes:$("desk-research-minutes").value};
  try{await api("POST",payload);await reload(true);notify("Progress saved: "+status+". No email was sent.");}
  catch(err){notify(err.message,"error");}
 });
