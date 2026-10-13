@@ -4,6 +4,19 @@
   "outputDirectory": ".",
   "headers": [
     {
+      "source": "/quick-check-admin.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
       "source": "/stock-admin.html",
       "headers": [
         {
@@ -128,6 +141,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/quick-check-admin",
+      "destination": "/api/network-signup?quickDesk=1"
+    },
     {
       "source": "/api/obsolescence-check",
       "destination": "/api/network-signup?quickCheck=1"
