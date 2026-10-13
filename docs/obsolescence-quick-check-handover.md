@@ -155,3 +155,14 @@ No auto marketing emails are enabled. The signed unsubscribe path must be tested
 
 ## Eight-week success scorecard
 Count unique factory enquiries, requirements for sourcing, manufacturer statuses verified from cache, follow-up quotes, won orders, gross margin and engineer time spent. Do not treat test submissions or vanity website traffic as sales. A useful pilot should generate actual buying enquiries without becoming unpaid manual engineering work.
+
+
+## Approved sender and manual Outlook report handoff (13 October)
+- Owner confirmed: **automatic service acknowledgements must come from Automation Outlet <info@automation-outlet.co.uk>**. The API now enforces this sender and sets Reply-To to info@automation-outlet.co.uk; callers cannot override the address with form input.
+- Resend's Idempotency-Key uses the AQC request reference to suppress duplicate A1 email sends across retries for the provider's supported retention window. Resend sends on behalf of the verified domain; this is not a Microsoft Outlook Sent Items message.
+- The private Quick Check review desk now has an **Open approved report in Outlook** action: it launches an Outlook web compose draft with recipient, subject and short text body prefilled after engineer approval. It never clicks Send. Reports longer than the safe deep-link length must be copied into an Outlook draft manually using **Copy report**.
+- The currently connected Outlook account was confirmed as info@automation-outlet.co.uk.
+- Vercel project environment inventory does **not** currently contain a RESEND_API_KEY or AO_QC_AUTOREPLY_ENABLED flag. The configuration cannot send automatic customer acknowledgements at this point. Do not set AO_QC_AUTOREPLY_ENABLED=true until the operator has completed vendor registration, verified the automation-outlet.co.uk domain, added the key to Vercel, and tested one controlled delivery.
+- For acknowledgement enablement, the required config is RESEND_API_KEY (secret) and AO_QC_AUTOREPLY_ENABLED=true (production only). Sender and Reply-To are pinned in code; AO_QC_FROM_EMAIL is no longer used.
+- Initial email provider setup requires a Resend account and DNS ownership proof in the domain DNS host, currently believed to be IONOS. Add the exact DNS records given by Resend, preserving existing Microsoft 365 MX and SPF/DKIM records rather than guessing or overwriting them. The owner must approve DNS changes and the first test send.
+- No change has been merged into main or published to the production AO website by this work.
