@@ -18,6 +18,7 @@ PRIVATE_PAGES = {
     "plc-audit-audit.html",
     "cart.html",
     "order-success.html",
+    "quick-check-unsubscribe.html",
 }
 # Manually maintained dates of substantive editorial review. Do not use build
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
