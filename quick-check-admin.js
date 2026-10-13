@@ -174,6 +174,31 @@ $("desk-search").addEventListener("input",listCards);
 $("pilot-filter").addEventListener("input",renderPilotParts);
 $("pilot-make").addEventListener("change",renderPilotParts);
 $("desk-refresh").addEventListener("click",async()=>{try{await reload(true);notify("Enquiries and lifecycle cache refreshed.");}catch(e){notify(e.message,"error");}});
+$("desk-research-rockwell").addEventListener("click",async()=>{
+ const code=$("v-code").value.trim().toUpperCase();
+ if($("v-make").value!=="Allen-Bradley"){notify("Select Allen-Bradley to use the official Rockwell product-page researcher.","error");return;}
+ if(!/^[A-Z0-9-]{5,40}$/.test(code)){notify("Enter the exact Rockwell order code before researching.","error");return;}
+ const button=$("desk-research-rockwell");
+ button.disabled=true;
+ try{
+  const result=await api("POST",{action:"researchPart",code});
+  const data=result.research;
+  if(data?.status!=="suggested"){
+    notify(data?.message||"No reliable exact result returned; verify manually.","error");return;
+  }
+  $("v-code").value=data.code;
+  $("v-status").value=data.lifecycle;
+  $("v-source").value=data.url;
+  $("v-successor").value=data.suggestedSuccessor||"";
+  $("v-notes").value=("Research suggestion on "+new Date(data.checkedAt).toLocaleDateString("en-GB")+
+   ". Published status: "+data.reportedStatus+
+   (data.discontinuedDate?", discontinued "+data.discontinuedDate:"")+
+   ". Human reviewed official page and exact revision: PENDING").slice(0,500);
+  $("v-source").focus();
+  notify("Official page suggests "+data.lifecycle+". Check the linked manufacturer page, edit the note, then explicitly Save verified record. Nothing has been stored yet.");
+ }catch(error){notify(error.message,"error");}
+ finally{button.disabled=false;}
+});
 $("desk-verify-form").addEventListener("submit",async e=>{
  e.preventDefault();if(!selected())return;
  const payload={action:"verifyPart",code:$("v-code").value,manufacturer:$("v-make").value,
