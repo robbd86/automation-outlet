@@ -63,6 +63,17 @@ body{background:white;color:black}.desk-wrap,.desk-cols{display:block;padding:0}
 <div id="desk-message" role="status" aria-live="polite"></div>
 <div id="desk-content" hidden>
 <div id="desk-metrics" class="desk-metrics"></div>
+<section id="pilot-panel" class="desk-panel" style="margin-bottom:20px">
+<div class="desk-top" style="margin-bottom:10px"><div><div class="desk-mini">Source-verified research pilot</div><h2>100-part lifecycle catalogue</h2><p class="desk-muted">Exact order codes, manufacturer sources, checked dates and unresolved cases. Dated snapshots are not a live API or proof of stock.</p></div><span id="pilot-count" class="desk-tag"></span></div>
+<div id="pilot-stats" class="desk-metrics" style="margin:12px 0"></div>
+<details><summary style="cursor:pointer;color:#a7d0ff;font-weight:700;padding:12px 0">Explore manufacturer records and outstanding research</summary>
+<div class="desk-field"><label for="pilot-filter">Find an exact part number</label><input id="pilot-filter" type="search" placeholder="e.g. FX2N-48MR-ES/UL or 6ES7315"></div>
+<div class="desk-field"><label for="pilot-make">Manufacturer</label><select id="pilot-make"><option value="all">All manufacturers</option><option>Siemens</option><option>Allen-Bradley</option><option>Mitsubishi</option></select></div>
+<div id="pilot-results" class="desk-list" style="max-height:450px"></div>
+</details>
+<p class="desk-muted" style="font-size:.83rem;margin-top:10px">Manufacturer data may be country-specific, can change, and must be checked for relevant revisions before final approval. No stock is assumed.</p>
+</section>
+
 <div class="desk-cols">
 <section id="desk-list-panel" class="desk-panel"><h2>Enquiries</h2><div class="desk-field"><label for="desk-search">Search company / part / reference</label><input id="desk-search" type="search" placeholder="Search…"></div><div class="desk-actions" style="margin:4px 0"><button id="desk-refresh" class="secondary" type="button">Refresh</button></div><div id="desk-list" class="desk-list"></div></section>
 <div>
