@@ -109,6 +109,7 @@ function renderDetail(){
   item.report.pendingCount+" part(s) need source verification. Keep this draft internal until verified.";
  $("desk-report").textContent="To: "+item.report.email+"\nSubject: "+item.report.subject+"\n\n"+(item.draft||item.report.body);
  const approved=Boolean(item.reviewedAt&&["Summary ready","Summary sent","Quote requested","Quoted","Order won","Closed"].includes(item.status));
+ $("desk-open-outlook-report").disabled=!approved;
  $("desk-copy-report").disabled=!approved;
  $("desk-print-report").disabled=!approved;
  $("desk-ready").textContent+=approved?" Approved for manual delivery.":" Report copy/print disabled until status is approved as Summary ready.";
@@ -144,6 +145,19 @@ $("desk-verify-form").addEventListener("submit",async e=>{
    source:$("v-source").value,successor:$("v-successor").value,notes:$("v-notes").value};
  try{const r=await api("POST",payload);await reload(true);notify("Saved "+r.part+" in the verified lifecycle cache. Review draft updated.");}
  catch(err){notify(err.message,"error");}
+});
+// The Outlook web compose deep link creates a draft — sending always requires an Outlook action.
+// Keep short enough for reliable deep links. Longer reports remain available via Copy / Print.
+$("desk-open-outlook-report").addEventListener("click",()=>{
+ const item=selected();
+ const approved=Boolean(item?.reviewedAt&&["Summary ready","Summary sent","Quote requested","Quoted","Order won","Closed"].includes(item.status));
+ if(!approved){notify("Please review and approve the report first.","error");return;}
+ const body=item.draft||item.report.body;
+ const url="https://outlook.office.com/mail/deeplink/compose?to="+encodeURIComponent(item.email)+
+   "&subject="+encodeURIComponent(item.report.subject)+"&body="+encodeURIComponent(body);
+ if(url.length>3500){notify("This report is too long for an Outlook draft link. Use Copy report and paste it into Outlook.","error");return;}
+ window.open(url,"_blank","noopener,noreferrer");
+ notify("Outlook draft opened for manual review. No message has been sent.");
 });
 $("desk-copy-report").addEventListener("click",()=>{
  const x=selected();if(x)copy("To: "+x.email+"\nSubject: "+x.report.subject+"\n\n"+(x.draft||x.report.body));
