@@ -25,7 +25,7 @@
   function cleanParams(type, properties) {
     const p = properties && typeof properties==="object" ? properties : {};
     const out = {};
-    if (type==="generate_lead" && ["sourcing","seller","consignment","contact","buyer_alert","factory_pilot"].includes(p.lead_type)) out.lead_type=p.lead_type;
+    if (type==="generate_lead" && ["sourcing","seller","consignment","contact","buyer_alert","factory_pilot","quick_check"].includes(p.lead_type)) out.lead_type=p.lead_type;
     if (type==="quote_request_open") out.quote_type="sourcing";
     if (type==="stock_search") {
       out.search_area="current_stock";
