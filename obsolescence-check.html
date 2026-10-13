@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free PLC Obsolescence Check UK | Automation Outlet</title>
+<meta name="description" content="Check up to 5 PLC, HMI or drive part numbers for lifecycle and spares options. Free engineer-led review with practical sourcing help from Automation Outlet UK.">
+<link rel="canonical" href="https://www.automation-outlet.co.uk/obsolescence-check.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Automation Outlet">
+<meta property="og:title" content="Free PLC Obsolescence Check UK | Automation Outlet">
+<meta property="og:description" content="Send up to 5 automation part numbers for a free engineer-led lifecycle and sourcing check.">
+<meta property="og:url" content="https://www.automation-outlet.co.uk/obsolescence-check.html">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.qc-shell{max-width:1140px;margin:auto;padding:0 22px}
+.qc-hero{padding:62px 0 52px;background:radial-gradient(850px 440px at 90% 12%,rgba(43,127,255,.19),transparent),linear-gradient(135deg,#07142b,#0c1e3a);border-bottom:1px solid var(--line)}
+.qc-kicker{font:500 .76rem 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#78b4ff}
+.qc-hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.qc-hero h1{font-size:clamp(2.5rem,5.5vw,4.5rem);max-width:680px;margin:16px 0}
+.qc-hero h1 em{font-style:normal;color:#67a6ff}
+.qc-lead{font-size:1.14rem;color:#bac9dc;max-width:650px;line-height:1.55}
+.qc-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.qc-actions a{display:inline-flex;align-items:center}
+.qc-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+.qc-badges span{padding:7px 10px;border:1px solid #395374;border-radius:40px;font-size:.82rem;color:#d1dcf0}
+.qc-preview{border:1px solid #295384;border-radius:18px;background:rgba(9,28,54,.94);padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.12)}
+.qc-preview-header{display:flex;justify-content:space-between;gap:12px;color:#b5cbee;font-family:'IBM Plex Mono',monospace;font-size:.72rem}
+.qc-preview h2{font-size:1.8rem;margin:24px 0 8px}
+.qc-code{font:600 1rem 'IBM Plex Mono',monospace;color:#e4edff}
+.qc-preview p{color:#acc3df;font-size:.91rem}
+.qc-status{background:#142d50;border:1px solid #365981;border-radius:10px;padding:12px;margin:12px 0;color:#d7e6fa}
+.qc-status strong{color:#a8d0ff}
+.qc-mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.qc-mini div{border:1px solid #274564;padding:10px;border-radius:8px;color:#c1d1e7;font-size:.82rem}
+.qc-mini b{display:block;color:#fff}
+.qc-form-section{padding:56px 0;background:linear-gradient(180deg,#071223,#091a32)}
+.qc-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(265px,.75fr);gap:28px;align-items:start}
+.qc-panel{background:#0e2342;border:1px solid #2b486b;border-radius:18px;padding:clamp(18px,3vw,34px)}
+.qc-panel h2{font-size:clamp(1.9rem,3vw,2.5rem);margin:8px 0}
+.qc-muted{color:#b3c5df}
+.qc-step{font:500 .76rem 'IBM Plex Mono',monospace;color:#75b1ff;letter-spacing:.08em;margin:28px 0 13px}
+.qc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.qc-field{min-width:0}
+.qc-field.wide{grid-column:1/-1}
+.qc-field label,.qc-field>.field-label{display:block;font-weight:600;color:#f2f7ff;font-size:.92rem;margin-bottom:6px}
+.qc-field input,.qc-field select{width:100%;border:1px solid #46617e;border-radius:9px;background:#07172d;color:#f7faff;min-height:44px;padding:10px 11px;font:inherit}
+.qc-field input:focus,.qc-field select:focus{outline:2px solid #72a8ff;outline-offset:1px}
+.qc-parts{display:grid;gap:10px}
+.qc-part{display:grid;grid-template-columns:minmax(0,2fr) minmax(128px,1.2fr) 82px auto;gap:9px;align-items:end;padding:12px;border:1px solid #294769;border-radius:12px;background:#0b1d36}
+.qc-part .qc-field label{font-size:.78rem}
+.qc-remove{background:none;border:1px solid #587291;color:#d1e2f6;border-radius:7px;min-height:44px;padding:0 11px;font-weight:600;cursor:pointer}
+.qc-add{border:1px dashed #5a85b9;border-radius:8px;color:#b7d8ff;background:none;padding:11px 15px;font:700 .94rem 'Barlow',sans-serif;cursor:pointer;margin-top:11px}
+.qc-help{font-size:.85rem;color:#a9bedb;margin-top:8px}
+.qc-radio{display:grid;gap:9px}
+.qc-radio label,.qc-checkbox{display:flex;gap:11px;align-items:flex-start;border:1px solid #375778;border-radius:9px;padding:12px 13px;color:#e2edfc;cursor:pointer}
+.qc-radio input,.qc-checkbox input{width:19px;height:19px;margin-top:2px;accent-color:#4d94ff;flex:none}
+.qc-checkbox{margin-top:10px}
+.qc-checkbox a{text-decoration:underline}
+.qc-alert{border:1px solid #dda865;background:#392817;border-radius:9px;color:#ffe2bc;padding:12px;margin-top:10px}
+.qc-submit{width:100%;text-align:center;padding:15px 20px;margin-top:24px;font-size:1.22rem}
+.qc-submit:disabled{opacity:.65;cursor:wait}
+#qc-message{margin-top:14px;padding:12px 14px;border-radius:9px;display:none}
+#qc-message[data-status=success]{display:block;background:#103929;border:1px solid #4b9d76;color:#dbffe9}
+#qc-message[data-status=error]{display:block;background:#462323;border:1px solid #c46a6a;color:#ffe6e6}
+.qc-side{display:grid;gap:16px}
+.qc-side-card{background:#102645;border:1px solid #314f74;border-radius:14px;padding:22px}
+.qc-side-card h3{font-size:1.6rem;margin-bottom:9px}
+.qc-side-card p{font-size:.95rem;color:#b8c9dc}
+.qc-side-card a{font-weight:700}
+.qc-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.qc-steps article{background:#102645;border:1px solid #274768;padding:25px;border-radius:14px}
+.qc-steps h3{font-size:1.5rem;margin:12px 0}
+.qc-steps p{color:#b8c9dc}
+.qc-number{font:600 .82rem 'IBM Plex Mono',monospace;color:#83b9ff}
+.qc-faq{max-width:830px;margin:auto}
+.qc-faq details{border-bottom:1px solid #36516e;padding:17px 0}
+.qc-faq summary{cursor:pointer;font-weight:700;font-size:1.04rem}
+.qc-faq p{color:#b9cbe0;margin-top:10px}
+.qc-legal{font-size:.83rem;color:#a5b7cb;margin:18px 0}
+.qc-hp{position:absolute!important;left:-9999px!important;opacity:0!important;pointer-events:none!important}
+@media(max-width:940px){.qc-hero-grid,.qc-layout{grid-template-columns:1fr}.qc-preview{max-width:660px}.qc-side{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.qc-hero{padding:42px 0}.qc-grid,.qc-side,.qc-steps{grid-template-columns:1fr}.qc-part{grid-template-columns:1fr 1fr}.qc-part .qc-field:first-child{grid-column:1/-1}.qc-part .qc-field:nth-child(2){grid-column:1/2}.qc-panel{padding:18px}.qc-submit{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
+<nav class="nav-links"><a href="/sell-surplus.html">Sell to us</a><a href="/buy-stock.html">Buy stock</a><a href="/obsolete-parts-sourcing.html">Obsolete parts</a><a href="/services.html">Services</a><a href="/contact.html">Contact</a><a href="/obsolescence-check.html" class="btn">Free PLC check</a></nav>
+<button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button></div>
+<nav class="mobile-menu" id="mobileMenu"><a href="/buy-stock.html">Buy stock</a><a href="/obsolete-parts-sourcing.html">Source a part</a><a href="/automation-obsolescence-audit.html">Full audit</a><a href="/contact.html">Contact</a><a href="#quick-check" class="btn big">Check my parts</a></nav></header>
+<main>
+<section class="qc-hero"><div class="qc-shell qc-hero-grid">
+<div><div class="qc-kicker">Free engineering check · UK-wide</div><h1>Is your PLC hardware <em>still supported?</em></h1>
+<p class="qc-lead">Send up to five PLC, HMI, drive or I/O order numbers. We'll check published manufacturer lifecycle information and possible spare-part sourcing routes, then email you a practical summary. Free, no obligation.</p>
+<div class="qc-actions"><a class="btn big" href="#quick-check">Check my parts →</a><a class="btn big ghost" href="/automation-obsolescence-audit.html">Full audits from £195</a></div>
+<div class="qc-badges"><span>Engineer-led review</span><span>Exact order-code checks</span><span>No made-up stock figures</span></div>
+</div>
+<aside class="qc-preview" aria-label="Illustration of the review process"><div class="qc-preview-header"><span>AO / LIFECYCLE REVIEW</span><span>EXAMPLE ONLY</span></div>
+<h2>Know the status.<br>Plan your spares.</h2><p>For each part we review the published manufacturer information and practical purchasing options.</p>
+<div class="qc-status"><span class="qc-code">6ES7… / 1747… / FX…</span><br><strong>Lifecycle:</strong> verified against manufacturer source</div>
+<div class="qc-mini"><div><b>Successor</b>Only where published</div><div><b>AO availability</b>Confirmed before quote</div></div>
+<p style="margin-top:15px;font-size:.8rem">Illustrative layout. No example status is a claim about a particular part.</p>
+</aside>
+</div></section>
+<section id="quick-check" class="qc-form-section"><div class="qc-shell qc-layout">
+<div class="qc-panel"><div class="qc-kicker">Start your free check</div><h2>Tell us what is <span style="color:#76b1ff">on your machine</span></h2>
+<p class="qc-muted">Five part numbers is enough to start a useful conversation. Need to check a whole line? <a href="/automation-obsolescence-audit.html">See our full audit →</a></p>
+<form id="quickCheckForm" novalidate>
+<div class="qc-step">01 / Component details</div>
+<div id="qc-parts" class="qc-parts"></div>
+<button class="qc-add" id="qc-add" type="button">+ Add another part number</button>
+<p class="qc-help">Use the complete manufacturer order code where possible. Maximum five unique parts, 4–40 characters each.</p>
+<div class="qc-grid" style="margin-top:19px"><div class="qc-field wide"><label for="qc-machine">Machine or site <span class="qc-muted">(optional)</span></label><input id="qc-machine" maxlength="120" placeholder="e.g. Line 2 palletiser"></div></div>
+<div class="qc-step">02 / What would help most?</div>
+<div class="qc-radio" role="radiogroup" aria-label="Reason for request">
+<label><input type="radio" name="intent" value="Check lifecycle" checked> Check the lifecycle status and potential risk</label>
+<label><input type="radio" name="intent" value="Source a spare"> Find a suitable replacement or source a spare</label>
+<label><input type="radio" name="intent" value="Plan critical spares"> Plan future critical-spares requirements</label>
+</div>
+<div class="qc-step">03 / How urgent is it?</div>
+<div class="qc-radio" role="radiogroup" aria-label="How urgent is the requirement?">
+<label><input type="radio" name="urgency" value="Planning ahead" checked> Planning ahead</label>
+<label><input type="radio" name="urgency" value="Spare needed soon"> Spare needed soon</label>
+<label><input type="radio" name="urgency" value="Machine is down now"> Machine is down now</label>
+</div>
+<div class="qc-alert" id="qc-urgent" hidden><strong>Machine stopped?</strong> For an urgent sourcing enquiry, WhatsApp <a href="https://wa.me/447849506371">07849 506371</a> as well. The free lifecycle check is not an emergency support service.</div>
+<div class="qc-step">04 / Where should we send your summary?</div>
+<div class="qc-grid">
+<div class="qc-field"><label for="qc-name">Name *</label><input id="qc-name" name="name" type="text" maxlength="80" autocomplete="name" required></div>
+<div class="qc-field"><label for="qc-company">Company <span class="qc-muted">(optional)</span></label><input id="qc-company" name="company" maxlength="120" autocomplete="organization"></div>
+<div class="qc-field"><label for="qc-email">Email address *</label><input id="qc-email" name="email" type="email" maxlength="200" autocomplete="email" required></div>
+<div class="qc-field"><label for="qc-phone">Phone <span class="qc-muted">(optional)</span></label><input id="qc-phone" name="phone" type="tel" maxlength="50" autocomplete="tel"></div>
+</div>
+<div class="qc-field qc-hp" aria-hidden="true"><label for="qc-website">Website</label><input name="website" id="qc-website" tabindex="-1" autocomplete="off"></div>
+<label class="qc-checkbox"><input type="checkbox" id="qc-consent" required><span><strong>Required:</strong> Please review these part numbers and email me the requested summary. I understand my contact and machine details will be used to handle this request. <a href="/privacy.html">Privacy notice</a>.</span></label>
+<label class="qc-checkbox"><input type="checkbox" id="qc-marketing"><span><strong>Optional:</strong> Also email me occasional relevant stock alerts, sourcing opportunities and audit information. I can unsubscribe at any time.</span></label>
+<p class="qc-legal">We don't sell personal information or share your submitted machine list with other factories. Our target is a reply within two working days; urgent enquiries are best sent by WhatsApp.</p>
+<button class="btn qc-submit" id="qc-submit" type="submit">Send my free check →</button>
+<div id="qc-message" aria-live="polite" role="status"></div>
+</form></div>
+<aside class="qc-side">
+<div class="qc-side-card"><div class="qc-kicker">What you'll receive</div><h3>A useful summary, not sales fluff</h3><p>Manufacturer lifecycle status where verified, any published successor, a preliminary supply-risk flag, and whether AO has a listing or a possible sourcing route. Unknowns will be clearly marked.</p></div>
+<div class="qc-side-card"><div class="qc-kicker">Need parts now?</div><h3>Sourcing enquiry</h3><p>Even if a component is no longer sold by its manufacturer, you may still be able to find an appropriate spare. We check price, condition and lead time before quoting.</p><p style="margin-top:12px"><a href="/obsolete-parts-sourcing.html">Request a spare →</a></p></div>
+<div class="qc-side-card"><div class="qc-kicker">Whole line or plant?</div><h3>Fixed-price audits</h3><p>Essential up to 20 parts: <strong>£195</strong>. Production Line up to 60: <strong>£395</strong>. Larger Plant Audits from <strong>£695</strong>. Scope is confirmed before work starts.</p><p style="margin-top:12px"><a href="/automation-obsolescence-audit.html">Compare audit options →</a></p></div>
+<div class="qc-side-card"><div class="qc-kicker">Learn more</div><h3>Older Siemens systems</h3><p>Read our practical guide to S7-300 lifecycle changes and considerations for holding critical spares.</p><p style="margin-top:12px"><a href="/siemens-s7-300-discontinued.html">S7-300 guide →</a></p></div>
+</aside></div></section>
+<section><div class="qc-shell"><div class="sec-head"><h2>How it <span>works</span></h2><p>A quick, human-reviewed first step before you commit to anything.</p></div><div class="qc-steps">
+<article><div class="qc-number">01 / SEND</div><h3>Enter your order codes</h3><p>Siemens, Allen-Bradley, Mitsubishi or Omron. Include the full part number and quantities if known.</p></article>
+<article><div class="qc-number">02 / VERIFY</div><h3>We check official sources</h3><p>We verify lifecycle information on manufacturer pages; missing or uncertain data is marked Unknown — check.</p></article>
+<article><div class="qc-number">03 / ACT</div><h3>Plan, source or quote</h3><p>Keep your summary, request a specific spare, join relevant stock alerts or discuss a line-wide audit.</p></article>
+</div></div></section>
+<section class="qc-form-section"><div class="qc-shell qc-faq">
+<div class="sec-head"><h2>Frequently asked <span>questions</span></h2></div>
+<details><summary>Is the Quick Check really free?</summary><p>Yes, for up to five distinct component order codes per request. Larger lists can be covered by a quoted full audit.</p></details>
+<details><summary>Which makes can I submit?</summary><p>Primarily Siemens, Allen-Bradley/Rockwell, Omron and Mitsubishi. Other makes can be submitted, but information may be limited.</p></details>
+<details><summary>Does discontinued mean my machine must be replaced immediately?</summary><p>No. A lifecycle change affects manufacturer support and procurement. Your installed system's production risk also depends on available spares, backups, redundancy and recovery arrangements.</p></details>
+<details><summary>What if I have only a photo of the label?</summary><p>Send a clear photograph via <a href="https://wa.me/447849506371">WhatsApp</a> or email <a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a>.</p></details>
+<details><summary>Will my details be shared with other factories?</summary><p>No. Your enquiry is handled privately by AO. Marketing follow-ups are optional and separate from delivering your requested summary.</p></details>
+<details><summary>Is this a safety or compatibility assessment?</summary><p>No. This is a desktop review based on supplied part numbers and published manufacturer information, not an on-site inspection, safety certification, proven replacement compatibility or guarantee of future supply.</p></details>
+<p class="qc-legal">Desktop assessment based on information supplied. It is not an on-site condition inspection, safety certification or guarantee of future parts availability. Availability is confirmed before any quote.</p>
+</div></section>
+</main>
+<footer><div class="wrap foot"><div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p>Industrial automation spares · Cambridgeshire, UK</p><p><a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a> · <a href="https://wa.me/447849506371">WhatsApp 07849 506371</a></p></div></div><div class="wrap" style="padding-bottom:20px"><a href="/privacy.html">Privacy notice</a> · <a href="/automation-obsolescence-audit.html">Full audits</a> · <a href="/buyer-alerts.html">Buyer network</a></div></footer>
+<script src="/obsolescence-check.js" defer></script>
+</body>
+</html>
