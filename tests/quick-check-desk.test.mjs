@@ -34,12 +34,15 @@ test("only fresh, exact, manufacturer-matching verified cache entries count",()=
  const bogus={fields:{...known.fields,"Manufacturer Source":"https://bad.com"}};
  assert.equal(cacheMatch(row,[bogus],current),null);
 });
-test("report defaults to Unknown — check and only becomes ready on full verified coverage",()=>{
+test("official source seed covers exact codes; unknown Siemens still needs manual research",()=>{
  const a=reportForLead(lead,[],current);
- assert.equal(a.ready,false);assert.equal(a.pendingCount,2);
- assert.equal(a.lines[0].lifecycle,"Unknown — check");
- assert.equal(a.lines[0].risk,"Unknown");
+ assert.equal(a.ready,true);assert.equal(a.pendingCount,0);
+ assert.equal(a.lines[0].lifecycle,"Discontinued");
+ assert.equal(a.lines[0].risk,"Medium");
  assert.equal(a.lines[0].availability,"Not checked");
+ const pending=reportForLead({fields:{...lead.fields,"Part Numbers":"6ES7315-2AG10-0AB0 | Siemens | Qty 1"}},[],current);
+ assert.equal(pending.ready,false);
+ assert.equal(pending.lines[0].lifecycle,"Unknown — check");
  const b=reportForLead(lead,[known,mitsu],current);
  assert.equal(b.ready,true);assert.equal(b.verifiedCount,2);
  assert.equal(b.lines[1].successor,"FX5U-64MR/ES");
