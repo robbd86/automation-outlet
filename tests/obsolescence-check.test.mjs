@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import quickCheckHandler,{normaliseQuickCheck,validateQuickCheck} from "../lib/obsolescence-check.mjs";
+import quickCheckHandler,{normaliseQuickCheck,validateQuickCheck,dayToken} from "../lib/obsolescence-check.mjs";
 
 const good=()=>({
   parts:[{code:" 6es7 315-2ag10-0ab0 ",manufacturer:"Siemens",quantity:"2"}],
@@ -84,4 +84,40 @@ test("stores a permitted buyer enquiry without triggering outgoing email",async(
       if(before[key]===undefined)delete process.env[name];else process.env[name]=before[key];
     }
   }
+});
+
+test("daily rate token is pseudonymous and rotates",()=>{
+ const old=process.env.AO_DEAL_DESK_KEY;
+ process.env.AO_DEAL_DESK_KEY="local-key";
+ try{
+  const req={headers:{"x-forwarded-for":"198.51.100.18"}};
+  const a=dayToken(req,new Date("2026-10-13T12:00:00Z"));
+  const b=dayToken(req,new Date("2026-10-14T12:00:00Z"));
+  assert.match(a,/^[a-f0-9]{64}$/);
+  assert.notEqual(a,b);
+  assert.doesNotMatch(a,/198\.51/);
+ }finally{if(old===undefined)delete process.env.AO_DEAL_DESK_KEY;else process.env.AO_DEAL_DESK_KEY=old;}
+});
+test("sixth same-IP submission is rejected without saving customer data or emailing",async()=>{
+ const keys=["AIRTABLE_ACCESS_TOKEN","AO_QUICK_CHECK_BASE_ID","AO_QUICK_CHECK_TABLE_ID","AO_QUICK_CHECK_ENABLED","AO_DEAL_DESK_KEY","VERCEL_ENV","AO_QC_OWNER_NOTIFY_ENABLED","AO_QC_AUTOREPLY_ENABLED"];
+ const prior=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+ const priorFetch=globalThis.fetch;
+ Object.assign(process.env,{AIRTABLE_ACCESS_TOKEN:"test",AO_QUICK_CHECK_BASE_ID:"app60WbULZ9PbuKQv",AO_QUICK_CHECK_TABLE_ID:"tblwv21sLnCvovQ9S",
+   AO_QUICK_CHECK_ENABLED:"true",AO_DEAL_DESK_KEY:"local-secret",VERCEL_ENV:"preview",AO_QC_OWNER_NOTIFY_ENABLED:"true",AO_QC_AUTOREPLY_ENABLED:"true"});
+ let attempts=0;
+ globalThis.fetch=async(url,opts)=>{
+  attempts++;
+  assert.equal(opts.method,undefined,"must only check the read-only rate limit");
+  assert.match(url,/filterByFormula/);
+  return {ok:true,json:async()=>({records:Array.from({length:5},()=>({id:"x"}))})};
+ };
+ const res={statusCode:0,payload:null,setHeader(){return this},status(n){this.statusCode=n;return this},json(x){this.payload=x;return this},end(){return this}};
+ try{
+  await quickCheckHandler({method:"POST",headers:{"x-forwarded-for":"198.51.100.18"},body:good()},res);
+  assert.equal(res.statusCode,429);assert.equal(attempts,1);
+  assert.match(res.payload.error,/limit/i);
+ }finally{
+  globalThis.fetch=priorFetch;
+  for(const key of keys){if(prior[key]===undefined)delete process.env[key];else process.env[key]=prior[key];}
+ }
 });
