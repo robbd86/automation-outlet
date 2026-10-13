@@ -129,6 +129,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/obsolescence-check",
+      "destination": "/api/network-signup?quickCheck=1"
+    },
+    {
       "source": "/plc-audit",
       "destination": "/plc-audit.html"
     },
