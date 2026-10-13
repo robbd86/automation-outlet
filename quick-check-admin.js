@@ -69,15 +69,39 @@ function partButtons(item){
    actions.append(b);card.append(actions);h.append(card);
  }
 }
+function followupText(item,kind){
+ if(!item?.marketingConsent||!item.unsubscribeUrl)return "";
+ const first=(item.name||"there").split(" ")[0];
+ const headings={
+   A3:"Can we help source your reviewed spares?",
+   A4:"Next step for your ageing automation equipment",
+   A5:"Automation spares update — your wanted parts"
+ };
+ const bodies={
+   A3:"Following your recent Quick Check, do you need a quote for any of the parts reviewed? Reply with the required order codes and quantities, and I'll check availability and condition before quoting.",
+   A4:"If you'd like to prioritise a full production line rather than just a few parts, our Essential Obsolescence Audit starts at £195 for up to 20 components. Happy to confirm the scope first. If you just need a spare, send the order code and I'll check sourcing routes.",
+   A5:"We're keeping an eye on suitable automation spares as stock becomes available. If your requirements or preferred brands have changed, reply with an updated wanted list. This isn't a stock-availability guarantee."
+ };
+ return "To: "+item.email+"\nSubject: "+headings[kind]+"\n\nHi "+first+",\n\n"+bodies[kind]+
+ "\n\nRob\nAutomation Outlet\ninfo@automation-outlet.co.uk\n\nUnsubscribe from optional updates: "+item.unsubscribeUrl;
+}
+function updateFollowup(){
+ const item=selected(),value=$("desk-followup").value;
+ $("desk-followup-preview").textContent=item?.marketingConsent&&item.unsubscribeUrl?
+   followupText(item,value):"No marketing consent recorded. Do not send.";
+ $("desk-copy-followup").disabled=!item?.marketingConsent||!item.unsubscribeUrl;
+}
+
 function renderDetail(){
  const item=selected();
- for(const id of ["desk-controls","desk-verify-panel","desk-draft-panel","desk-ack-panel","desk-actions-panel"])$(id).hidden=!item;
+ for(const id of ["desk-controls","desk-verify-panel","desk-draft-panel","desk-ack-panel","desk-actions-panel","desk-marketing-panel"])$(id).hidden=!item;
  if(!item)return;
  $("desk-reference").textContent=item.reference+" · "+new Date(item.submitted).toLocaleString("en-GB");
  $("desk-name").textContent=item.name+(item.company?" — "+item.company:"");
  $("desk-meta").textContent=item.email+" · "+(item.phone||"No telephone")+" · "+item.urgency+" · "+item.intent+
    (item.machine?" · "+item.machine:"")+(item.marketingConsent?" · Marketing opted in":" · No marketing opt-in");
  partButtons(item);
+ updateFollowup();
  $("desk-ack").textContent="To: "+item.acknowledgement.email+"\nSubject: "+item.acknowledgement.subject+"\n\n"+item.acknowledgement.body;
  $("desk-ready").textContent=item.report.ready?
   "All "+item.report.lines.length+" part(s) have current official-source records. Review stock information and approve the draft before sending.":
@@ -121,6 +145,8 @@ $("desk-copy-report").addEventListener("click",()=>{
 $("desk-print-report").addEventListener("click",()=>window.print());
 $("desk-copy-ack").addEventListener("click",()=>{const x=selected();if(x)copy("To: "+x.email+"\nSubject: "+x.acknowledgement.subject+"\n\n"+x.acknowledgement.body);});
 $("desk-mailto-ack").addEventListener("click",()=>{const x=selected();if(x)mailto(x.email,x.acknowledgement.subject,x.acknowledgement.body);});
+$("desk-followup").addEventListener("change",updateFollowup);
+$("desk-copy-followup").addEventListener("click",()=>{const item=selected();if(item?.marketingConsent&&item.unsubscribeUrl)copy(followupText(item,$("desk-followup").value));else notify("Marketing consent is missing.","error");});
 $("desk-save-status").addEventListener("click",async()=>{
  const x=selected();if(!x)return;
  const status=$("desk-status").value;
