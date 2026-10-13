@@ -331,7 +331,7 @@ function originAllowed(request) {
 }
 
 export default async function handler(request, response) {
-  if (req.query?.quickCheck === "1") return quickCheckHandler(req,res);
+  if (request.query?.quickCheck === "1") return quickCheckHandler(request,response);
   response.setHeader("Allow", "GET, POST, OPTIONS");
   if (request.method === "OPTIONS") return response.status(204).end();
 
