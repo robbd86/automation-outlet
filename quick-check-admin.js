@@ -112,6 +112,7 @@ function renderDetail(){
  $("desk-copy-report").disabled=!approved;
  $("desk-print-report").disabled=!approved;
  $("desk-ready").textContent+=approved?" Approved for manual delivery.":" Report copy/print disabled until status is approved as Summary ready.";
+ $("desk-accept-unknown").checked=false;
  $("desk-status").value=item.status||"New";
  $("desk-quote").value=item.quoteValue||"";
  $("desk-profit").value=item.orderGrossProfit||"";
@@ -157,7 +158,7 @@ $("desk-save-status").addEventListener("click",async()=>{
  const status=$("desk-status").value;
  if(status==="Summary sent"&&!confirm("Have you already manually emailed this reviewed summary to the customer?"))return;
  if(status==="Summary ready"&&!confirm("Have you checked every official source and the drafted wording? This saves an approved DRAFT; it does not send it."))return;
- const payload={action:"updateLead",id:x.id,status,notes:$("desk-notes").value,
+ const payload={action:"updateLead",id:x.id,status,notes:$("desk-notes").value,acceptUnknown:$("desk-accept-unknown").checked,
     quoteValue:$("desk-quote").value,orderGrossProfit:$("desk-profit").value};
  try{await api("POST",payload);await reload(true);notify("Progress saved: "+status+". No email was sent.");}
  catch(err){notify(err.message,"error");}
