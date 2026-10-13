@@ -87,9 +87,10 @@ function followupText(item,kind){
 }
 function updateFollowup(){
  const item=selected(),value=$("desk-followup").value;
- $("desk-followup-preview").textContent=item?.marketingConsent&&item.unsubscribeUrl?
-   followupText(item,value):"No marketing consent recorded. Do not send.";
- $("desk-copy-followup").disabled=!item?.marketingConsent||!item.unsubscribeUrl;
+ const permitted=Boolean(item?.marketingConsent&&item.unsubscribeUrl&&item.sentAt);
+ $("desk-followup-preview").textContent=permitted?
+   followupText(item,value):"Not available: written marketing consent and a recorded manual summary send are both required.";
+ $("desk-copy-followup").disabled=!permitted;
 }
 
 function renderDetail(){
@@ -107,6 +108,10 @@ function renderDetail(){
   "All "+item.report.lines.length+" part(s) have current official-source records. Review stock information and approve the draft before sending.":
   item.report.pendingCount+" part(s) need source verification. Keep this draft internal until verified.";
  $("desk-report").textContent="To: "+item.report.email+"\nSubject: "+item.report.subject+"\n\n"+(item.draft||item.report.body);
+ const approved=Boolean(item.reviewedAt&&["Summary ready","Summary sent","Quote requested","Quoted","Order won","Closed"].includes(item.status));
+ $("desk-copy-report").disabled=!approved;
+ $("desk-print-report").disabled=!approved;
+ $("desk-ready").textContent+=approved?" Approved for manual delivery.":" Report copy/print disabled until status is approved as Summary ready.";
  $("desk-status").value=item.status||"New";
  $("desk-quote").value=item.quoteValue||"";
  $("desk-profit").value=item.orderGrossProfit||"";
@@ -146,7 +151,7 @@ $("desk-print-report").addEventListener("click",()=>window.print());
 $("desk-copy-ack").addEventListener("click",()=>{const x=selected();if(x)copy("To: "+x.email+"\nSubject: "+x.acknowledgement.subject+"\n\n"+x.acknowledgement.body);});
 $("desk-mailto-ack").addEventListener("click",()=>{const x=selected();if(x)mailto(x.email,x.acknowledgement.subject,x.acknowledgement.body);});
 $("desk-followup").addEventListener("change",updateFollowup);
-$("desk-copy-followup").addEventListener("click",()=>{const item=selected();if(item?.marketingConsent&&item.unsubscribeUrl)copy(followupText(item,$("desk-followup").value));else notify("Marketing consent is missing.","error");});
+$("desk-copy-followup").addEventListener("click",()=>{const item=selected();if(item?.marketingConsent&&item.unsubscribeUrl&&item.sentAt)copy(followupText(item,$("desk-followup").value));else notify("Verified marketing consent and a recorded summary send are required.","error");});
 $("desk-save-status").addEventListener("click",async()=>{
  const x=selected();if(!x)return;
  const status=$("desk-status").value;
