@@ -1,3 +1,4 @@
+import quickCheckHandler from "../lib/obsolescence-check.mjs";
 import pilotRegistrationHandler from "../lib/pilot-registration.mjs";
 const AIRTABLE_API = "https://api.airtable.com/v0";
 const DEFAULT_FORMSPREE_ENDPOINT = "https://formspree.io/f/xqevvvll";
@@ -330,6 +331,7 @@ function originAllowed(request) {
 }
 
 export default async function handler(request, response) {
+  if (req.query?.quickCheck === "1") return quickCheckHandler(req,res);
   response.setHeader("Allow", "GET, POST, OPTIONS");
   if (request.method === "OPTIONS") return response.status(204).end();
 
