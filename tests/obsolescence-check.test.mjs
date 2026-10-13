@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {normaliseQuickCheck,validateQuickCheck} from "../api/obsolescence-check.mjs";
+import {normaliseQuickCheck,validateQuickCheck} from "../lib/obsolescence-check.mjs";
 
 const good=()=>({
   parts:[{code:" 6es7 315-2ag10-0ab0 ",manufacturer:"Siemens",quantity:"2"}],
