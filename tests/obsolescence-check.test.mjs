@@ -121,3 +121,36 @@ test("sixth same-IP submission is rejected without saving customer data or email
   for(const key of keys){if(prior[key]===undefined)delete process.env[key];else process.env[key]=prior[key];}
  }
 });
+
+
+test("production acknowledgement uses AO sender and never sends an unapproved report",async()=>{
+ const keys=["AIRTABLE_ACCESS_TOKEN","AO_QUICK_CHECK_BASE_ID","AO_QUICK_CHECK_TABLE_ID","AO_QUICK_CHECK_ENABLED","AO_DEAL_DESK_KEY","VERCEL_ENV","RESEND_API_KEY","AO_QC_AUTOREPLY_ENABLED","AO_QC_OWNER_NOTIFY_ENABLED"];
+ const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]])),oldFetch=globalThis.fetch;
+ Object.assign(process.env,{AIRTABLE_ACCESS_TOKEN:"test",AO_QUICK_CHECK_BASE_ID:"app60WbULZ9PbuKQv",
+ AO_QUICK_CHECK_TABLE_ID:"tblwv21sLnCvovQ9S",AO_QUICK_CHECK_ENABLED:"true",
+ VERCEL_ENV:"production",RESEND_API_KEY:"test-resend-key",AO_QC_AUTOREPLY_ENABLED:"true",AO_QC_OWNER_NOTIFY_ENABLED:"false"});
+ delete process.env.AO_DEAL_DESK_KEY;
+ const requests=[];
+ globalThis.fetch=async(url,opts)=>{
+  requests.push({url,opts});
+  return {ok:true,status:200,json:async()=>({id:"test"})};
+ };
+ const res={setHeader(){return this},status(n){this.code=n;return this},json(b){this.payload=b;return this},end(){return this}};
+ try{
+   await quickCheckHandler({method:"POST",headers:{},body:good()},res);
+   assert.equal(res.code,200);
+   assert.equal(requests.length,2,"only intake and one acknowledgement");
+   assert.match(requests[0].url,/api.airtable.com/);
+   assert.equal(requests[1].url,"https://api.resend.com/emails");
+   const sent=JSON.parse(requests[1].opts.body);
+   assert.equal(sent.from,"Automation Outlet <info@automation-outlet.co.uk>");
+   assert.equal(sent.reply_to,"info@automation-outlet.co.uk");
+   assert.equal(sent.to[0],"buyer@example.com");
+   assert.match(sent.text,/two working days/);
+   assert.doesNotMatch(sent.text,/Manufacturer lifecycle:/);
+   assert.match(requests[1].opts.headers["Idempotency-Key"],/^ao-qc-ack-AQC-/);
+ }finally{
+   globalThis.fetch=oldFetch;
+   for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}
+ }
+});
