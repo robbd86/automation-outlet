@@ -81,11 +81,25 @@
       window.AOAnalytics?.track("generate_lead",{lead_type:"quick_check"});
       const n=payload.count||data.parts.length;
       alert("Thanks — we've received "+n+" part number"+(n===1?"":"s")+". Reference: "+(payload.reference||"submitted")+". We aim to respond within two working days. Machine down? WhatsApp 07849 506371.","success");
+      const quote=document.createElement("a");
+      quote.textContent="Need one of these parts? Request a sourcing quote →";
+      quote.href="/obsolete-parts-sourcing.html?part="+encodeURIComponent(data.parts[0].code)+
+        "&utm_source=quick_check_success";
+      quote.style.cssText="display:inline-block;margin-top:12px;color:#bde0ff;font-weight:700;text-decoration:underline";
+      message.append(document.createElement("br"),quote);
       form.reset();list.replaceChildren();renderRow();urgent.hidden=true;
     }catch(error){alert(error.message||"Could not send the request.","error");}
     finally{submit.disabled=false;submit.textContent="Send my free check →";}
   });
   renderRow();
+  const params=new URLSearchParams(location.search);
+  const initialCode=(params.get("part")||"").trim().toUpperCase();
+  const initialMake=params.get("make")||"";
+  if(/^[A-Z0-9.+/-]{4,40}$/.test(initialCode)){
+    list.querySelector("input[name=part]").value=initialCode;
+    if(["Siemens","Allen-Bradley","Mitsubishi","Omron"].includes(initialMake))
+      list.querySelector("select[name=manufacturer]").value=initialMake;
+  }
   const toggle=document.getElementById("navToggle"),menu=document.getElementById("mobileMenu");
   toggle?.addEventListener("click",()=>{const open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));});
 })();
