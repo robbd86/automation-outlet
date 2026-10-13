@@ -14,7 +14,7 @@ A buyer-first, up-to-five-part-number check at /obsolescence-check.html. It reus
 - Cache: Lifecycle Verification Cache (tbl0ScTF0KEnkxLam).
 - Branch-scoped preview environment settings: AO_QUICK_CHECK_BASE_ID, AO_QUICK_CHECK_TABLE_ID, AO_QUICK_CHECK_ENABLED=true.
 - Existing AIRTABLE_ACCESS_TOKEN is reused, kept on the server. No token is committed to the site.
-- No public summary is generated automatically. No customer marketing, acknowledgement or stock offer is auto-sent in this preview.
+- Private drafts are generated in the review dashboard but NO customer or owner emails are automatically sent in preview; operational email automation is gated until production approval.
 - On submission, a row is created with a unique request reference; status starts at New.
 - On the eventual production deployment, the intake stays disabled unless production-scoped AO_QUICK_CHECK_* settings are configured. This is intentional.
 
@@ -92,12 +92,12 @@ Do not send A3 without a working unsubscribe workflow. Do not automatically send
 - [x] Existing API route reused to avoid Vercel 12-function cap
 - [ ] Preview build is READY and page visually checked on mobile
 - [ ] Test one Siemens, one Rockwell, one Omron, one Mitsubishi and one invalid input (synthetic contact only)
-- [ ] Confirm preview sample saved as a single Airtable row, with marketing opt-in false
+- [x] Owner preview test AQC-F1E5F345 saved three correctly identified part numbers in a single Airtable row
 - [ ] Run accessibility keyboard check
 - [ ] Privacy wording reviewed for UK GDPR, retention policy and Formspree/Airtable processors
 - [ ] Configure owner notifications (not marketing) if desired
 - [ ] Customer acknowledgement workflow if desired; never claim it exists before configured
-- [ ] Rate limiting / anti-abuse outside honeypot if needed before public launch
+- [x] Honeypot, server validation, HMAC-hashed five-requests-per-IP-per-day limit (best effort under concurrent requests)
 - [ ] Decide whether to enable the optional buyer-alert marketing sequence and test unsubscribe
 - [ ] Explicit approval to publish, then configure production AO_QUICK_CHECK_* env and redeploy
 - [ ] Observe first eight weeks: unique firms, sourced enquiries, quotes, orders and gross margin; compare with manual review hours
@@ -107,3 +107,51 @@ Designed for **£0 additional fixed monthly service subscription** while within 
 
 ## SEO
 Public URL, canonical, title, meta description and internal links staged in home, S7-300 guide and the obsolescence audit page. release.py generates its sitemap entry automatically on a full site build. No indexing or real customer traffic before production approval.
+
+---
+## Implementation update: customer-to-order workflow
+- Public customer page: /obsolescence-check.html. Private admin: /quick-check-admin.html; log in with existing AO deal-desk key. Private API: /api/quick-check-admin reuses the existing /api/network-signup function, preserving the Vercel Hobby 12-function cap.
+- Airtable "Obsolescence Quick Checks": lead pipeline, approval state, manual quote value, recorded order gross profit, report draft, timestamps and pseudonymous daily rate limit token. "Lifecycle Verification Cache": exact part number, official manufacturer URL, verified date, successor, notes and supply channel.
+- The private dashboard reads new enquiries and saved verified cache records. Cache must be from the official manufacturer and less than 90 days old. "Listed" from an old cached record is NEVER proof of current stock. All unverified statuses become "Unknown — check".
+- Report is automatically drafted but cannot be copied or printed until explicitly approved by marking "Summary ready". Unknown entries may be approved only with an explicit owner acceptance and 40+ characters of investigation notes. This allows honest results even when the manufacturer gives no verified answer.
+- Print / Save PDF uses the browser print dialogue on the approved report. Copy to Outlook (no send) and then mark Summary sent to record an actual manual email. The dashboard tracks open leads, quotes, orders and gross profit.
+- A1 acknowledgement email is coded for Resend but turned OFF in preview and OFF in production until explicitly enabled. Owner operational Formspree notification also is OFF. A3/A4/A5 optional follow-up drafts are never sent automatically; available for manual copy only when marketing consent exists and a summary has already been manually sent.
+- Signed unsubscribe links point to /quick-check-unsubscribe.html and /api/quick-check-unsubscribe. Clicking confirms withdrawal of the marketing-only Airtable consent; no further marketing is permitted from that contact without fresh permission.
+- Analytics uses AO's optional-consent tracking; only the permitted generate_lead event name and lead type, not customer details or part numbers, are shared.
+- Daily rate limit keyed by an HMAC of IP address and date. Raw IP is NOT stored. Five accepted requests per IP/day. This check is not fully atomic under simultaneous requests.
+
+## Manufacturer-verified starter records (checked 13 Oct 2026)
+- Allen-Bradley 1747-L542: Discontinued. Exact Rockwell product page: https://www.rockwellautomation.com/en-us/products/details.1747-L542.html . No drop-in replacement asserted.
+- Mitsubishi FX2N-48MR-ES/UL: Discontinued, with manufacturer-suggested replacement FX5U-64MR/ES (engineering work may be required). Manufacturer table: https://us.mitsubishielectric.com/fa/en/support/parts/legacy-products/programmable-controllers/fx2n-fx2nc .
+- Omron CJ2M-CPU31: Phase-out based on UK product page's future discontinuation notice. UK manufacturer source: https://industrial.omron.co.uk/en/products/CJ2M-CPU31 . Recheck the original regional notice before sharing; regional dates may vary.
+- Siemens 6ES7315-2AG10-0AB0 stays Unknown — check, as the official current SiePortal page needs interactive verification. Never copy a status from a dealer page.
+
+## Configuration required AFTER explicit launch approval
+Production-only variables:
+- AO_QUICK_CHECK_BASE_ID, AO_QUICK_CHECK_TABLE_ID, AO_QUICK_CHECK_CACHE_TABLE_ID, AO_QUICK_CHECK_ENABLED=true.
+- Existing AIRTABLE_ACCESS_TOKEN and AO_DEAL_DESK_KEY remain server-side secrets.
+Optional A1 email: RESEND_API_KEY, AO_QC_FROM_EMAIL, AO_QC_AUTOREPLY_ENABLED=true, plus a verified domain. Preview never sends.
+Optional owner notifications: AO_QC_OWNER_NOTIFY_ENABLED=true and optionally FORMSPREE_QC_ENDPOINT. Preview never sends.
+No auto marketing emails are enabled. The signed unsubscribe path must be tested before the manually drafted optional messages are actually sent.
+
+## Cost and limits
+- No new Tally, Zapier or Make subscription is required.
+- Airtable Free currently limits to 1,000 records per base AND 1,000 API calls per workspace per month; the AO Network base shares its record capacity across buyer, supplier, pilot, cache and check tables. Monitor usage.
+- Resend Free currently advertises 3,000 transactional emails/month (100/day), subject to domain/account verification. Not connected yet.
+- The AO Vercel project is currently on Hobby (12 serverless functions/deployment). Vercel states Hobby is intended for personal non-commercial use, so a suitable commercial hosting plan may be required before live launch. Do not promise zero extra monthly cost without that review.
+
+## Two-week acceptance checklist
+| Target | Owner | Acceptance |
+|---|---|---|
+| 13 Oct | Assistant | Landing form, private dashboard, protected API, lifecycle cache, drafts, PDF print and unsubscribe built |
+| 13–14 Oct | Assistant | All automated tests passed in Vercel preview; no production release |
+| 14 Oct | Rob | Visually inspect mobile and desktop page, private review workflow |
+| 14–15 Oct | Rob + assistant | Test an acknowledged mock request, report approval, PDF print and signed unsubscribe |
+| 15 Oct | Rob | Check privacy wording/retention, DPA terms for data processors and email provider |
+| 15–16 Oct | Rob | Review sender domain setup and approve A1/owner operational notifications |
+| 17 Oct | Rob | Explicit production release sign-off (not before) |
+| 20 Oct | Rob | Review first five genuine enquiries and check manual workload |
+| 27 Oct | Rob | Two-week revenue review: companies, sourcing quotes, orders, gross profit |
+
+## Eight-week success scorecard
+Count unique factory enquiries, requirements for sourcing, manufacturer statuses verified from cache, follow-up quotes, won orders, gross margin and engineer time spent. Do not treat test submissions or vanity website traffic as sales. A useful pilot should generate actual buying enquiries without becoming unpaid manual engineering work.
