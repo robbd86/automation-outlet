@@ -78,6 +78,7 @@
       });
       const payload=await response.json().catch(()=>({}));
       if(!response.ok||!payload.ok)throw Error(payload.error||"Could not send your request. Please email us instead.");
+      window.AOAnalytics?.track("generate_lead",{lead_type:"quick_check"});
       const n=payload.count||data.parts.length;
       alert("Thanks — we've received "+n+" part number"+(n===1?"":"s")+". Reference: "+(payload.reference||"submitted")+". We aim to respond within two working days. Machine down? WhatsApp 07849 506371.","success");
       form.reset();list.replaceChildren();renderRow();urgent.hidden=true;
