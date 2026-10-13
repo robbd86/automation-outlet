@@ -1,0 +1,27 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Manage Quick Check Emails | Automation Outlet</title>
+<link rel="stylesheet" href="/styles.css"></head><body>
+<header><div class="wrap nav"><a class="logo" href="/">Automation <span>Outlet</span></a></div></header>
+<main><section style="padding:4rem 0;min-height:65vh"><div class="wrap" style="max-width:660px">
+<div class="eyebrow">Email preferences</div><h1>Stop marketing <span style="color:#78b7ff">emails</span></h1>
+<p style="margin:14px 0;color:var(--grey)">Use this page to stop occasional AO Quick Check stock alerts and audit offers. This won't prevent us replying to an enquiry you already sent.</p>
+<form id="stopForm"><p style="margin:16px 0">Confirm that you want to unsubscribe:</p><button class="btn big" type="submit">Unsubscribe me</button></form>
+<p id="response" role="status" aria-live="polite" style="margin-top:20px;color:#d8ecff"></p>
+<p style="color:var(--grey);margin-top:20px">Need help? Contact <a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a>. <a href="/privacy.html">Privacy notice</a>.</p>
+</div></section></main>
+<script>
+(function(){
+  const p=new URLSearchParams(location.search),form=document.getElementById("stopForm"),out=document.getElementById("response");
+  const ref=p.get("ref")||"",token=p.get("token")||"";
+  if(!/^rec[A-Za-z0-9]{14}$/.test(ref)||!/^[a-f0-9]{64}$/.test(token)){form.hidden=true;out.textContent="This link is invalid. Please email info@automation-outlet.co.uk to unsubscribe.";return;}
+  form.addEventListener("submit",async function(e){
+    e.preventDefault();const button=form.querySelector("button");button.disabled=true;out.textContent="Saving your preference…";
+    try{
+      const res=await fetch("/api/quick-check-unsubscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ref,token})});
+      const data=await res.json();
+      if(!res.ok||!data.ok)throw Error(data.error||"Preference update failed");
+      out.textContent=data.message;form.hidden=true;
+    }catch(err){out.textContent=err.message;button.disabled=false;}
+  });
+})();
+</script></body></html>
