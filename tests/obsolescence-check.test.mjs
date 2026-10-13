@@ -190,3 +190,58 @@ test("preview acknowledgements send only to the designated AO test inbox",async(
   for(const key of keys){if(prior[key]===undefined)delete process.env[key];else process.env[key]=prior[key];}
  }
 });
+
+
+test("production buyer request creates an internal alert and an acknowledgement with separate idempotency keys",async()=>{
+ const names=["AIRTABLE_ACCESS_TOKEN","AO_QUICK_CHECK_BASE_ID","AO_QUICK_CHECK_TABLE_ID","AO_QUICK_CHECK_ENABLED","AO_DEAL_DESK_KEY","VERCEL_ENV","RESEND_API_KEY","AO_QC_AUTOREPLY_ENABLED","AO_QC_OWNER_NOTIFY_ENABLED"];
+ const previous=Object.fromEntries(names.map(n=>[n,process.env[n]])),oldFetch=globalThis.fetch;
+ Object.assign(process.env,{
+   AIRTABLE_ACCESS_TOKEN:"fake-token",AO_QUICK_CHECK_BASE_ID:"app60WbULZ9PbuKQv",
+   AO_QUICK_CHECK_TABLE_ID:"tblwv21sLnCvovQ9S",AO_QUICK_CHECK_ENABLED:"true",
+   VERCEL_ENV:"production",RESEND_API_KEY:"fake-mail-token",
+   AO_QC_AUTOREPLY_ENABLED:"true",AO_QC_OWNER_NOTIFY_ENABLED:"true"
+ });
+ delete process.env.AO_DEAL_DESK_KEY;
+ const requests=[];
+ globalThis.fetch=async(url,opts)=>{
+   requests.push({url,opts});return {ok:true,status:200,json:async()=>({id:"example"})};
+ };
+ const res={setHeader(){return this},status(n){this.code=n;return this},json(x){this.payload=x;return this},end(){return this}};
+ try{
+  await quickCheckHandler({method:"POST",headers:{},body:good()},res);
+  assert.equal(res.code,200);
+  assert.equal(requests.length,3,"one Airtable save and exactly two Resend operational messages");
+  assert.match(requests[0].url,/api.airtable.com/);
+  const owner=JSON.parse(requests[1].opts.body),customer=JSON.parse(requests[2].opts.body);
+  assert.equal(owner.to[0],"info@automation-outlet.co.uk");
+  assert.equal(owner.reply_to,"buyer@example.com");
+  assert.match(owner.text,/internal operational alert only/i);
+  assert.match(owner.text,/1747|6ES7/i);
+  assert.equal(customer.to[0],"buyer@example.com");
+  assert.match(customer.text,/two working days/);
+  assert.match(requests[1].opts.headers["Idempotency-Key"],/^ao-qc-owner-AQC-/);
+  assert.match(requests[2].opts.headers["Idempotency-Key"],/^ao-qc-ack-AQC-/);
+  assert.doesNotMatch(customer.text,/Manufacturer lifecycle:/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  for(const n of names){if(previous[n]===undefined)delete process.env[n];else process.env[n]=previous[n];}
+ }
+});
+test("preview never sends an owner alert even with the production owner switch enabled",async()=>{
+ const names=["AIRTABLE_ACCESS_TOKEN","AO_QUICK_CHECK_BASE_ID","AO_QUICK_CHECK_TABLE_ID","AO_QUICK_CHECK_ENABLED","AO_DEAL_DESK_KEY","VERCEL_ENV","RESEND_API_KEY","AO_QC_AUTOREPLY_ENABLED","AO_QC_OWNER_NOTIFY_ENABLED","AO_QC_TEST_RECIPIENT"];
+ const previous=Object.fromEntries(names.map(n=>[n,process.env[n]])),oldFetch=globalThis.fetch;
+ Object.assign(process.env,{AIRTABLE_ACCESS_TOKEN:"test",AO_QUICK_CHECK_BASE_ID:"app60WbULZ9PbuKQv",
+   AO_QUICK_CHECK_TABLE_ID:"tblwv21sLnCvovQ9S",AO_QUICK_CHECK_ENABLED:"true",
+   VERCEL_ENV:"preview",RESEND_API_KEY:"test",AO_QC_AUTOREPLY_ENABLED:"true",
+   AO_QC_OWNER_NOTIFY_ENABLED:"true",AO_QC_TEST_RECIPIENT:"info@automation-outlet.co.uk"});
+ delete process.env.AO_DEAL_DESK_KEY;
+ let requests=0;globalThis.fetch=async()=>{requests++;return {ok:true,status:200,json:async()=>({})}};
+ const res={setHeader(){return this},status(n){this.code=n;return this},json(x){this.payload=x;return this},end(){return this}};
+ try{
+   await quickCheckHandler({method:"POST",headers:{},body:good()},res);
+   assert.equal(res.code,200);assert.equal(requests,1,"no notification to owner or visitor on preview");
+ }finally{
+   globalThis.fetch=oldFetch;
+   for(const n of names){if(previous[n]===undefined)delete process.env[n];else process.env[n]=previous[n];}
+ }
+});
