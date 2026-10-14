@@ -22,6 +22,13 @@
 .growth-btn.outline{background:rgba(5,25,47,.75);border-color:#3d6085;color:#cee8fb}
 .growth-btn.outline:hover{background:#1c395c}
 .growth-assurance{display:flex;gap:10px 19px;flex-wrap:wrap;margin-top:25px;color:#bad1e5;font-size:.81rem}
+.growth-sell-callout{padding:24px 0 18px!important;background:#f4f8fd;color:#0b2745}
+.growth-sell-panel{display:flex;align-items:center;justify-content:space-between;gap:28px;padding-top:18px;padding-bottom:18px;border-bottom:1px solid #cddfed}
+.growth-sell-panel .growth-kicker{color:#2b658e}
+.growth-sell-panel h2{color:#112b44;font-size:clamp(1.5rem,2.5vw,2.25rem);line-height:1.2;margin:7px 0}
+.growth-sell-panel p{max-width:750px;color:#455d75;font-size:.98rem;line-height:1.5;margin:0}
+.growth-sell-panel .growth-btn{flex-shrink:0;max-width:290px}
+@media(max-width:820px){.growth-sell-panel{flex-direction:column;align-items:stretch;gap:17px}.growth-sell-panel .growth-btn{max-width:none;width:100%}}
 .growth-assurance span::before{content:"✓";display:inline-grid;place-items:center;color:#8ae8c0;margin-right:8px}
 .growth-finder{background:linear-gradient(148deg,#173454,#0a1c33);border:1px solid #3878b1;border-radius:20px;box-shadow:0 22px 66px rgba(0,0,0,.4);overflow:hidden}
 .growth-finder-head{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid #2a4a69;background:rgba(15,40,71,.8)}

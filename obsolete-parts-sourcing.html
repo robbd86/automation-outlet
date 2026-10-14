@@ -78,14 +78,14 @@
         <input id="p-company" name="company" type="text" autocomplete="organization">
       </div>
       <div class="field">
-        <label for="p-phone">Phone</label>
-        <input id="p-phone" name="phone" type="tel" autocomplete="tel" required>
+        <label for="p-phone">Phone (optional)</label>
+        <input id="p-phone" name="phone" type="tel" autocomplete="tel">
       </div>
       <div class="field">
         <label for="p-email">Email</label>
         <input id="p-email" name="email" type="email" autocomplete="email" required>
       </div>
-      <p class="form-note">We'll come back to you the same working day where possible &mdash; sooner if you're down.</p>
+      <p class="form-note">Email is required; phone is optional. We'll respond the same working day where possible. For a machine-down emergency you can also <a href="https://wa.me/447849506371">WhatsApp us</a>.</p>
       <button type="submit" class="btn big">Find me this part</button>
       <p class="form-status" id="partStatus" role="status"></p>
     </form>
@@ -138,7 +138,7 @@ navToggle.addEventListener("click", () => {
 
 const partForm = document.getElementById("partForm");
 const partParam=(new URLSearchParams(location.search).get("part")||"").trim().toUpperCase();
-if(/^[A-Z0-9.+/-]{4,40}$/.test(partParam)){
+if(partParam.length >= 3 && partParam.length <= 100){
   const field=document.getElementById("p-part");
   if(field)field.value=partParam;
 }
