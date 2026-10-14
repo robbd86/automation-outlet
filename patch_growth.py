@@ -211,10 +211,10 @@ def main():
                         '<a href="/obsolete-parts-sourcing.html" class="btn big">Source a part</a>')
     fresh=fresh.replace('<link rel="stylesheet" href="/styles.css">',
                         '<link rel="stylesheet" href="/styles.css">\n<link rel="stylesheet" href="/growth.css">',1)
-    fresh=re.sub(r'<title>.*?</title>','<title>Industrial Automation Spares &amp; PLC Sourcing UK | Automation Outlet</title>',fresh,count=1,flags=re.S)
-    fresh=re.sub(r'(<meta name="description" content=")[^"]*(")',r'\1Buy available automation spares or request sourcing for obsolete Siemens, Allen-Bradley, PLC, HMI and drive parts. Engineer-led UK service with clear stock status.\2',fresh,count=1)
-    fresh=re.sub(r'(<meta property="og:title" content=")[^"]*(")',r'\1Industrial Automation Spares &amp; PLC Sourcing UK | Automation Outlet\2',fresh,count=1)
-    fresh=re.sub(r'(<meta property="og:description" content=")[^"]*(")',r'\1Buy available parts or request sourcing of hard-to-find PLCs, HMIs and drives through UK-based Automation Outlet.\2',fresh,count=1)
+    fresh=re.sub(r'<title>.*?</title>','<title>Industrial Automation Spares | Buy &amp; Sell | Automation Outlet</title>',fresh,count=1,flags=re.S)
+    fresh=re.sub(r'(<meta name="description" content=")[^"]*(")',r'\1Buy and sell surplus PLCs, HMIs, drives and industrial automation spares. Engineer-led UK sourcing, selective stock buying and seller-held consignment.\2',fresh,count=1)
+    fresh=re.sub(r'(<meta property="og:title" content=")[^"]*(")',r'\1Industrial Automation Spares | Buy &amp; Sell | Automation Outlet\2',fresh,count=1)
+    fresh=re.sub(r'(<meta property="og:description" content=")[^"]*(")',r'\1Buy or sell industrial automation equipment. Browse listed stock, request obsolete part sourcing, or ask us to assess surplus PLC and drive stock.\2',fresh,count=1)
     index.write_text(fresh,encoding="utf-8")
 
     (ROOT/"source-parts.html").write_text(
