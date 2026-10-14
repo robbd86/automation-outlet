@@ -25,3 +25,13 @@
 /* Nine Mitsubishi cards form complete rows; Siemens retains its existing grid. */
 .plc-controls-grid-mitsubishi{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:650px){.plc-controls-grid-mitsubishi{grid-template-columns:1fr}}
+
+/* Review scope uses aggregate observations; teaser rows contain no hidden text. */
+.plc-review-investigations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem;margin:1rem 0}
+.plc-review-area{border:1px solid var(--line);border-radius:10px;padding:1rem;background:rgba(6,14,31,.35);min-width:0}
+.plc-review-area h4{margin:0;font-size:1.2rem}.plc-review-area p{margin:.5rem 0 .7rem;font-size:.92rem}
+.plc-review-deliverables{margin-top:1.3rem}.plc-review-deliverables ul{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem}
+.plc-review-teasers{margin-top:1.2rem}.plc-review-teaser{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;border:1px dashed rgba(77,148,255,.45);border-radius:10px;padding:1rem;background:rgba(43,127,255,.06)}
+.plc-review-teaser>strong{flex:1;min-width:200px;font-size:.95rem}.plc-review-teaser p{width:100%;margin:0;font-size:.84rem}
+.plc-review-request{border-top:1px solid var(--line);padding-top:1.2rem;margin-top:1.2rem}.plc-review-request .plc-review-price{font-family:'Barlow Condensed';font-size:1.55rem;font-weight:700;color:var(--white);margin:0 0 .5rem}
+@media(max-width:650px){.plc-review-investigations,.plc-review-deliverables ul{grid-template-columns:1fr}.plc-review-request .btn{width:100%;text-align:center}.plc-review-teaser>strong{min-width:0;flex-basis:100%}}

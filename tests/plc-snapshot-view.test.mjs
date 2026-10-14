@@ -289,7 +289,7 @@ test('manager-first rendering preserves scope, confidence and metrics and never 
   assert.doesNotMatch(html, new RegExp(rawTarget));
   for (const heading of ['Machine Controls Snapshot', 'What this means for your site', 'Machine Recovery Readiness',
     'Shared Control / Multiple Writers', 'Program &amp; Controls Footprint', 'Top Findings', 'Recommended Next Actions',
-    'Areas requiring deeper engineering review', 'Technical Evidence &amp; Analysis Detail']) assert.ok(html.includes(heading));
+    'What Engineer Review would investigate', 'Your Engineer Review would include', 'Technical Evidence &amp; Analysis Detail']) assert.ok(html.includes(heading));
   assert.ok(html.indexOf('Machine Controls Snapshot') < html.indexOf('Technical Evidence &amp; Analysis Detail'));
   assert.match(html, /<details[^>]+id="technicalEvidence">/);
   assert.match(html, /VERIFIED/);
