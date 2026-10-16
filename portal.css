@@ -130,6 +130,8 @@
 
 /* deal desk */
 .desk-body{min-height:100vh}
+/* Keep hidden desk sections and controls out of the layout, even with display rules. */
+.desk-body [hidden]{display:none!important}
 .desk-private{color:var(--grey);font-size:.88rem}
 .desk-header-actions{display:flex;align-items:center;gap:1rem}
 .desk-small-btn{padding:.45rem .9rem;font-size:.9rem}
