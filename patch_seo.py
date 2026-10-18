@@ -336,7 +336,7 @@ def patch_s7_replacement_discovery() -> None:
             continue
         if "</main>" not in html:
             raise RuntimeError(f"Could not locate main for S7 replacement link: {name}")
-        path.write_text(html.replace("</main>", block + "\\n</main>", 1), encoding="utf-8")
+        path.write_text(html.replace("</main>", block + "\n</main>", 1), encoding="utf-8")
     print("patched: S7-300 replacement guide links")
 
 
