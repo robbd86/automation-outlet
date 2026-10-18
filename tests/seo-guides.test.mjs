@@ -91,3 +91,19 @@ test('S7-300 replacement buyer guide has crawlable SEO, structured data and sour
   assert.ok(read('patch_seo.py').includes('patch_s7_replacement_discovery()'));
   assert.ok(read('release.py').includes('siemens-s7-300-cpu-replacement-checklist.html'));
 });
+
+
+test('mobile homepage keeps the three buyer routes and avoids overlapping fixed controls', () => {
+  const template = read('_blocks/growth_home.html');
+  const css = read('growth.css');
+  assert.ok(template.includes('class="growth-sell-callout"'));
+  assert.ok(css.includes('.growth-home .growth-sell-callout{display:none}'));
+  assert.ok(css.includes('@media(max-width:700px)'));
+  assert.ok(template.includes('href="/sell-surplus.html">Request a surplus assessment'));
+  assert.ok(template.includes('class="growth-mobile-contact"'));
+  assert.ok(template.includes('href="/buy-stock.html">Browse current stock'));
+  assert.ok(template.includes('href="/source-parts.html">Explore sourcing'));
+  assert.ok(css.includes('.growth-home .growth-paths .growth-slab:nth-child(3){order:2}'));
+  assert.ok(css.includes('body:has(.growth-home) .wa-float{display:none}'));
+  assert.ok(css.includes('body:has(.growth-home) .ao-analytics-settings{position:static'));
+});
