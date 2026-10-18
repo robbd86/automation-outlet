@@ -326,6 +326,20 @@ def patch_factory_spares_pilot() -> None:
     print("patched: factory spares pilot homepage and public discovery")
 
 
+def patch_s7_replacement_discovery() -> None:
+    """Link the replacement procurement guide from relevant buying journeys."""
+    block = "<section id=\"s7-replacement-checklist-promo\" style=\"padding:2.2rem 0;border-top:1px solid var(--line)\"><div class=\"wrap\"><div class=\"sec-head\"><h2>Replacing an <span>S7-300 CPU?</span></h2><p>Confirm the full 6ES7 order code, hardware revision, memory, backup and test scope before buying a spare.</p></div><a class=\"btn\" href=\"/siemens-s7-300-cpu-replacement-checklist.html\">Read the S7-300 replacement checklist →</a></div></section>"
+    for name in ("buy-stock.html", "siemens-s7-300-discontinued.html", "obsolete-parts-sourcing.html"):
+        path = ROOT / name
+        html = path.read_text(encoding="utf-8")
+        if 'id="s7-replacement-checklist-promo"' in html:
+            continue
+        if "</main>" not in html:
+            raise RuntimeError(f"Could not locate main for S7 replacement link: {name}")
+        path.write_text(html.replace("</main>", block + "\n</main>", 1), encoding="utf-8")
+    print("patched: S7-300 replacement guide links")
+
+
 def main() -> None:
     patch_sell_page()
     patch_buy_page()
@@ -333,6 +347,7 @@ def main() -> None:
     patch_lifecycle_discovery()
     patch_seo_topic_cluster()
     patch_factory_spares_pilot()
+    patch_s7_replacement_discovery()
 
 
 if __name__ == "__main__":

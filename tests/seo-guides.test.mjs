@@ -76,3 +76,18 @@ test('stock sitemap only advertises category URLs with live inventory', () => {
   assert.match(stockSitemap, /publicProducts\(products\)\.filter\(available\)/);
   assert.match(stockSitemap, /liveProducts\.some\(\(product\) => collection\.match\(product\)\)/);
 });
+
+
+test('S7-300 replacement buyer guide has crawlable SEO, structured data and sourcing links', () => {
+  const html = read('siemens-s7-300-cpu-replacement-checklist.html');
+  assert.ok(html.includes('<html lang="en-GB">'));
+  assert.ok(html.includes('rel="canonical" href="https://www.automation-outlet.co.uk/siemens-s7-300-cpu-replacement-checklist.html"'));
+  assert.ok(html.includes('<h1>'));
+  assert.ok(html.includes('href="/parts/siemens"'));
+  assert.ok(html.includes('href="/obsolete-parts-sourcing.html"'));
+  const data = extractJsonLd(html);
+  assert.ok(data.some(item => item['@type'] === 'TechArticle'));
+  assert.ok(data.some(item => item['@type'] === 'BreadcrumbList'));
+  assert.ok(read('patch_seo.py').includes('patch_s7_replacement_discovery()'));
+  assert.ok(read('release.py').includes('siemens-s7-300-cpu-replacement-checklist.html'));
+});

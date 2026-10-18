@@ -23,6 +23,7 @@ PRIVATE_PAGES = {
 # Manually maintained dates of substantive editorial review. Do not use build
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
 EDITORIAL_LASTMOD = {
+    "siemens-s7-300-cpu-replacement-checklist.html": "2026-10-18",
     "plc-lifecycle.html": "2026-10-08",
     "factory-spares-network.html": "2026-10-08",
     "siemens-s7-300-discontinued.html": "2026-10-08",
