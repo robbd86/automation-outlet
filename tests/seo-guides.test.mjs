@@ -80,11 +80,11 @@ test('stock sitemap only advertises category URLs with live inventory', () => {
 
 test('S7-300 replacement buyer guide has crawlable SEO, structured data and sourcing links', () => {
   const html = read('siemens-s7-300-cpu-replacement-checklist.html');
-  assert.match(html, /<html lang="en-GB">/);
-  assert.match(html, /rel="canonical" href="https:\\/\\/www\\.automation-outlet\\.co\\.uk\\/siemens-s7-300-cpu-replacement-checklist\\.html"/);
-  assert.match(html, /<h1>/);
-  assert.match(html, /href="\\/parts\\/siemens"/);
-  assert.match(html, /href="\\/obsolete-parts-sourcing\\.html"/);
+  assert.ok(html.includes('<html lang="en-GB">'));
+  assert.ok(html.includes('rel="canonical" href="https://www.automation-outlet.co.uk/siemens-s7-300-cpu-replacement-checklist.html"'));
+  assert.ok(html.includes('<h1>'));
+  assert.ok(html.includes('href="/parts/siemens"'));
+  assert.ok(html.includes('href="/obsolete-parts-sourcing.html"'));
   const data = extractJsonLd(html);
   assert.ok(data.some(item => item['@type'] === 'TechArticle'));
   assert.ok(data.some(item => item['@type'] === 'BreadcrumbList'));
