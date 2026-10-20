@@ -4,9 +4,9 @@
   if (!section || !grid) return;
 
   const targets = [
-    (p) => matchProduct(p, ["2985314", "ILC390PN2TXIB"]),
-    (p) => matchProduct(p, ["ATV930D22N4"]),
-    (p) => matchProduct(p, ["6ES71366DC000CA0"]),
+    (p) => matchProduct(p, ["6SL3244-0BB12-1FA0"]),
+    (p) => matchProduct(p, ["1769-IQ16"]),
+    (p) => matchProduct(p, ["IC695CPU315-BB"]),
   ];
 
   function compact(value) {
@@ -38,7 +38,8 @@
   const gbp = new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 
   function el(tag, className, text) {
