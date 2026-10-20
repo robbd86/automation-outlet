@@ -124,7 +124,7 @@
       const products = Array.isArray(data.products) ? data.products : [];
 
       const chosen = targets
-        .map((matcher) => products.find(matcher))
+        .map((matcher) => [...products].sort((a, b) => Number(b.priceGbp || 0) - Number(a.priceGbp || 0)).find(matcher))
         .filter(Boolean)
         .filter((product, index, array) =>
           array.findIndex((item) => item.id === product.id) === index
