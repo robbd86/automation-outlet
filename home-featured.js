@@ -4,8 +4,8 @@
   if (!section || !grid) return;
 
   const targets = [
-    (p) => matchProduct(p, ["6SL3244-0BB12-1FA0"]),
-    (p) => matchProduct(p, ["1769-IQ16"]),
+    (p) => matchProduct(p, ["IC695CPE305-ABAC"]),
+    (p) => matchProduct(p, ["IC695ALG600-DD"]),
     (p) => matchProduct(p, ["IC695CPU315-BB"]),
   ];
 
