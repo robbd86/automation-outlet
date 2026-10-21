@@ -59,6 +59,7 @@ function productPayload() {
   return {
     title: el("title").value,
     partNumber: el("partNumber").value,
+    mpn: el("mpn").value.trim(),
     brand: el("brand").value,
     category: el("category").value.trim(),
     condition: el("condition").value,
@@ -106,7 +107,7 @@ function updatePreview() {
 
 function editProduct(product) {
   const fields = [
-    "title", "partNumber", "brand", "category", "condition",
+    "title", "partNumber", "mpn", "brand", "category", "condition",
     "priceGbp", "quantity", "status", "deliveryMode", "sortOrder",
     "imageUrl", "ebayUrl", "description",
   ];
