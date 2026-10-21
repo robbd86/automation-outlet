@@ -1,5 +1,5 @@
 import { listProducts } from "../lib/stock-read.mjs";
-import { header, menuScript, browseLinks, money, available, productCard, productListingTitle, productSeoTitle, relatedProducts, displayBrand, shopCss } from "../lib/shop.mjs";
+import { header, menuScript, browseLinks, money, available, productCard, productListingTitle, productSeoTitle, relatedProducts, displayBrand, shopCss, linkedinFooter } from "../lib/shop.mjs";
 const SITE = "https://www.automation-outlet.co.uk";
 const WA = "447849506371";
 
@@ -234,6 +234,7 @@ ${header()}
     <div><div class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></div><p style="margin-top:.5rem">Industrial automation solutions · Cambridgeshire, UK</p><p style="margin-top:.6rem">&#128241; <a href="https://wa.me/${WA}">07849 506371 (WhatsApp)</a> · &#9993; <a href="mailto:info@automation-outlet.co.uk">info@automation-outlet.co.uk</a></p></div>
   </div>
   <div class="wrap" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.82rem;color:var(--grey)"><a href="/terms.html">Terms of sale</a> · <a href="/returns.html">Returns &amp; refunds</a> · <a href="/privacy.html">Privacy notice</a></div>
+${linkedinFooter}
 </footer>
 ${menuScript}
 <script>const q=document.getElementById('productQty');document.getElementById('qtyMinus')?.addEventListener('click',()=>q.value=Math.max(1,Number(q.value||1)-1));document.getElementById('qtyPlus')?.addEventListener('click',()=>q.value=Math.min(99,Number(q.value||1)+1));</script>
