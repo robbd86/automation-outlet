@@ -1,5 +1,5 @@
 import { listProducts } from "../lib/stock-read.mjs";
-import { header, menuScript, browseLinks, money, available, productCard, productListingTitle, productSeoTitle, relatedProducts, shopCss } from "../lib/shop.mjs";
+import { header, menuScript, browseLinks, money, available, productCard, productListingTitle, productSeoTitle, relatedProducts, displayBrand, shopCss } from "../lib/shop.mjs";
 const SITE = "https://www.automation-outlet.co.uk";
 const WA = "447849506371";
 
@@ -90,7 +90,7 @@ export function renderPage(product, products = []) {
   const canonical = `${SITE}/stock/${slug}`;
   const inStock = availability(product);
   const part = text(product.partNumber, 120);
-  const brand = text(product.brand, 80);
+  const brand = text(displayBrand(product), 80);
   const title = text(product.title, 180) || `${brand} ${part}`;
   const listingTitle = text(productListingTitle(product), 180) || `${brand} ${part}`;
   const fallbackDescription = `${listingTitle} industrial automation spare. ${product.condition || "Condition stated"}. Available from Automation Outlet in the UK.`;
