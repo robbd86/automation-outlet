@@ -155,7 +155,8 @@ def patch_buyer_discovery() -> None:
         '<a href="/buy-stock.html" class="btn big">Browse stock</a><a href="/sell-surplus.html" class="btn big ghost">Sell your surplus</a>')
     org = {"@context":"https://schema.org", "@type":"Organization", "@id":"https://www.automation-outlet.co.uk/#organization",
            "name":"Automation Outlet", "url":"https://www.automation-outlet.co.uk/", "logo":"https://www.automation-outlet.co.uk/ao-site-logo.svg",
-           "email":"info@automation-outlet.co.uk", "telephone":"+447849506371"}
+           "email":"info@automation-outlet.co.uk", "telephone":"+447849506371",
+            "sameAs":["https://www.linkedin.com/company/automation-outlet/"]}
     if 'id="ao-organization"' not in html:
         html = html.replace('</head>', '<script id="ao-organization" type="application/ld+json">'+json.dumps(org)+'</script>\n</head>')
     website = {"@context": "https://schema.org", "@type": "WebSite",
