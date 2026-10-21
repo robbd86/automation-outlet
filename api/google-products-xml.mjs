@@ -137,6 +137,8 @@ export default async function handler(request, response) {
 
     const items = products.map((product) => {
       const title = productListingTitle(product);
+      const candidateMpn = String(product.mpn || product.partNumber || "").trim();
+      const mpn = /^(?:M-\d{3,}|EBAY-\d+)$/i.test(candidateMpn) ? "" : candidateMpn;
       const description =
         publicDescription(product.description) ||
         `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`;
@@ -161,10 +163,10 @@ export default async function handler(request, response) {
         "      </g:free_shipping_threshold>",
         `      <g:condition>${xml(googleCondition(product.condition))}</g:condition>`,
         `      <g:brand>${xml(product.brand)}</g:brand>`,
-        `      <g:mpn>${xml(product.mpn || product.partNumber)}</g:mpn>`,
+        ...(mpn ? [`      <g:mpn>${xml(mpn)}</g:mpn>`] : []),
         ...(product.gtin ? [`      <g:gtin>${xml(product.gtin)}</g:gtin>`] : []),
         `      <g:product_type>${xml(product.category || "Industrial Automation")}</g:product_type>`,
-        `      <g:identifier_exists>${product.gtin || product.mpn || product.partNumber ? "yes" : "no"}</g:identifier_exists>`,
+        `      <g:identifier_exists>${product.gtin || mpn ? "yes" : "no"}</g:identifier_exists>`,
         "    </item>",
       ].join("\n");
     }).join("\n");
