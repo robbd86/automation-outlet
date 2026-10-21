@@ -149,7 +149,10 @@ export default async function handler(request, response) {
       "product_type",
     ];
 
-    const rows = products.map((product) => [
+    const rows = products.map((product) => {
+      const candidateMpn = String(product.mpn || product.partNumber || "").trim();
+      const mpn = /^(?:M-\d{3,}|EBAY-\d+)$/i.test(candidateMpn) ? "" : candidateMpn;
+      return [
       product.id || product.partNumber,
       productListingTitle(product),
       publicDescription(product.description) || `${product.brand} ${product.partNumber}. ${product.condition || "Industrial automation component"}.`,
@@ -161,11 +164,12 @@ export default async function handler(request, response) {
       "GB:250.00 GBP",
       googleCondition(product.condition),
       product.brand,
-      product.mpn || product.partNumber,
+      mpn,
       product.gtin || "",
-      (product.gtin || product.mpn || product.partNumber) ? "yes" : "no",
+      (product.gtin || mpn) ? "yes" : "no",
       product.category || "Industrial Automation",
-    ].map(cleanCell).join("\t"));
+    ].map(cleanCell).join("\t");
+    });
 
     const body = [headers.join("\t"), ...rows].join("\n") + "\n";
 
