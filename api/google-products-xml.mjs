@@ -1,4 +1,4 @@
-import { publicProducts, productListingTitle } from "../lib/shop.mjs";
+import { publicProducts, productListingTitle, displayBrand } from "../lib/shop.mjs";
 
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
@@ -162,7 +162,7 @@ export default async function handler(request, response) {
         "        <g:price_threshold>250.00 GBP</g:price_threshold>",
         "      </g:free_shipping_threshold>",
         `      <g:condition>${xml(googleCondition(product.condition))}</g:condition>`,
-        `      <g:brand>${xml(product.brand)}</g:brand>`,
+        `      <g:brand>${xml(displayBrand(product))}</g:brand>`,
         ...(mpn ? [`      <g:mpn>${xml(mpn)}</g:mpn>`] : []),
         ...(product.gtin ? [`      <g:gtin>${xml(product.gtin)}</g:gtin>`] : []),
         `      <g:product_type>${xml(product.category || "Industrial Automation")}</g:product_type>`,
