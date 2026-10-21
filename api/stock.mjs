@@ -43,10 +43,10 @@ function slugify(value) {
 function productId(raw, existing) {
   if (existing?.id) return existing.id;
   const base = slugify(raw?.partNumber || raw?.title || "stock-item") || "stock-item";
-  return `${base}-${crypto.randomBytes(2).toString("hex")}`;
+  return `${base}-${crypto.randomBytes(4).toString("hex")}`;
 }
 
-function canonicalSlug(raw, existing) {
+function canonicalSlug(raw, existing, newId) {
   const requested = slugify(raw?.slug);
   if (requested) return requested;
 
@@ -55,7 +55,10 @@ function canonicalSlug(raw, existing) {
 
   // Freeze the URL an existing product already has before future edits.
   const source = existing || raw || {};
-  return slugify([source.brand, source.partNumber].filter(Boolean).join("-"));
+  const base = slugify([source.brand, source.partNumber].filter(Boolean).join("-")) || "stock-item";
+  // Preserve established URLs; new listings get a unique suffix so two
+  // units with the same MPN but different conditions cannot hide each other.
+  return existing ? base : `${base}-${String(newId).slice(-8)}`;
 }
 
 function normaliseLegacySlugs(raw, existing, canonical) {
@@ -134,12 +137,13 @@ function normaliseProduct(raw, existing = null) {
       ? existing.deliveryMode
       : "quote";
 
-  const slug = canonicalSlug(raw, existing);
+  const id = productId(raw, existing);
+  const slug = canonicalSlug(raw, existing, id);
   const legacySlugs = normaliseLegacySlugs(raw, existing, slug);
 
   return {
     schema: 2,
-    id: productId(raw, existing),
+    id,
     createdAt: existing?.createdAt || now,
     updatedAt: now,
     slug,
@@ -169,6 +173,9 @@ function validateProduct(product) {
   if (!product.brand) return "Brand is required";
   if (!product.category) return "Category is required";
   if (!product.condition) return "Condition is required";
+  if (/\bnew\s+(?:boxed|in box)\b/i.test(product.title) && /^new without box$/i.test(product.condition)) {
+    return "Listing title claims boxed stock, but condition says New without box. Correct the title or verify the condition before saving.";
+  }
   if (product.priceGbp === null) return "A valid price is required";
   if (product.quantity < 0) return "Quantity cannot be negative";
   if (product.imageUrl && !/^https?:\/\//i.test(product.imageUrl)) {
