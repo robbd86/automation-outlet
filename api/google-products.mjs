@@ -1,4 +1,4 @@
-import { publicProducts, productListingTitle } from "../lib/shop.mjs";
+import { publicProducts, productListingTitle, displayBrand } from "../lib/shop.mjs";
 const API_VERSION = "2022-11-28";
 const DEFAULT_REPO = "robbd86/automation-outlet-site";
 const STOCK_LABEL = "stock-item";
@@ -163,7 +163,7 @@ export default async function handler(request, response) {
       "GB:Standard:7.95 GBP",
       "GB:250.00 GBP",
       googleCondition(product.condition),
-      product.brand,
+      displayBrand(product),
       mpn,
       product.gtin || "",
       (product.gtin || mpn) ? "yes" : "no",
