@@ -399,9 +399,12 @@
     const itemId = String(item.itemNumber || "").replace(/\D/g, "");
     return currentProducts.find((product) => {
       const existingId = ebayIdFromUrl(product.ebayUrl);
-      if (itemId && existingId && itemId === existingId) return true;
-      return item.partNumber && product.partNumber &&
-        item.partNumber.toUpperCase() === String(product.partNumber).toUpperCase();
+      // Same manufacturer MPN may legitimately exist as separate new and used stock.
+      // The eBay listing ID identifies a duplicate much more reliably than MPN.
+      if (itemId && existingId) return itemId === existingId;
+      return Boolean(item.partNumber && product.partNumber &&
+        item.partNumber.toUpperCase() === String(product.partNumber).toUpperCase() &&
+        item.condition === product.condition && item.title === product.title);
     });
   }
 
