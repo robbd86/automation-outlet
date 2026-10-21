@@ -110,18 +110,20 @@ export function renderPage(product, products = []) {
       ? `<button class="btn big add-basket" type="button" data-add-to-cart data-id="${html(slug)}" data-title="${html(title)}" data-part="${html(part)}" data-brand="${html(brand)}" data-price="${html(price)}" data-delivery="parcel" data-image="${html(product.imageUrl || "")}" data-url="/stock/${html(slug)}" data-quantity-target="#productQty">Add to basket</button>`
       : `<a class="btn big" href="/contact.html?part=${encodeURIComponent(part)}">Request delivery quote</a>`;
 
-  const mpn = text(product.mpn, 120) || part;
+  const internalReference = /^(?:M-\d{3,}|EBAY-\d+)$/i.test(part);
+  const candidateMpn = text(product.mpn, 120) || part;
+  const mpn = /^(?:M-\d{3,}|EBAY-\d+)$/i.test(candidateMpn) ? "" : candidateMpn;
   const gtin = text(product.gtin, 32).replace(/\D/g, "");
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: listingTitle,
     sku: text(product.id, 120) || part,
-    mpn,
+    ...(mpn ? { mpn } : {}),
     ...(gtin.length === 13 ? { gtin13: gtin } : {}),
     brand: { "@type": "Brand", name: brand },
     category: text(product.category, 120),
-    model: part,
+    ...(internalReference ? {} : { model: part }),
     description: metaDescription,
     ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
     ...(price ? { offers: {
@@ -205,7 +207,7 @@ ${header()}
       <article class="buy-panel">
         <div class="product-kicker">${html(brand)} · ${html(product.category || "Industrial automation")}</div>
         <h1>${html(title)}</h1>
-        <div class="product-part">${html(part)}</div>
+        <div class="product-part">${internalReference ? "AO stock reference: " : ""}${html(part)}</div>
         <div class="product-status ${statusClass}">${inStock ? "● " : ""}${html(statusLabel)}</div>
         <div class="product-price">${price ? "£"+html(price) : "Enquire for price"}</div>
         ${price ? '<div class="vat-note">No VAT added to this price.</div>' : ''}
