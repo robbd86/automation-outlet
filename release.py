@@ -44,6 +44,9 @@ POLICY_FOOTER = (
     'color:var(--grey)"><a href="/returns.html">Returns &amp; refunds</a> &middot; '
     '<a href="/privacy.html">Privacy notice</a></div>'
 )
+LINKEDIN_URL = "https://www.linkedin.com/company/automation-outlet/"
+LINKEDIN_FOOTER = "<div class=\"wrap ao-linkedin-footer\"><a class=\"ao-linkedin-link\" href=\"https://www.linkedin.com/company/automation-outlet/\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Follow Automation Outlet on LinkedIn (opens in a new tab)\"><span class=\"ao-linkedin-icon\" aria-hidden=\"true\">in</span><span>Follow Automation Outlet on LinkedIn</span><span aria-hidden=\"true\">↗</span></a></div>"
+LINKEDIN_HOME = "<section class=\"ao-linkedin-home\" aria-labelledby=\"ao-linkedin-heading\"><div class=\"wrap\"><div class=\"ao-linkedin-panel\"><div><span class=\"ao-linkedin-kicker\">Connect with Automation Outlet</span><h2 id=\"ao-linkedin-heading\">Follow our stock &amp; engineering updates</h2><p>See surplus automation stock, available spares and updates from the engineer-run business behind Automation Outlet.</p></div><a class=\"ao-linkedin-link ao-linkedin-cta\" href=\"https://www.linkedin.com/company/automation-outlet/\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Visit Automation Outlet on LinkedIn (opens in a new tab)\"><span class=\"ao-linkedin-icon\" aria-hidden=\"true\">in</span><span>Visit our LinkedIn page</span><span aria-hidden=\"true\">↗</span></a></div></div></section>"
 
 
 def is_private_page(name: str) -> bool:
@@ -78,6 +81,15 @@ def clean_html() -> None:
                 and "</footer>" in text
             ):
                 text = text.replace("</footer>", POLICY_FOOTER + "\n</footer>", 1)
+        if not is_private_page(path.name):
+            # Static pages are rebuilt on every deploy. Add the link to the
+            # final HTML rather than a fragile intermediary template.
+            if 'class="wrap ao-linkedin-footer"' not in text and "</footer>" in text:
+                text = text.replace("</footer>", LINKEDIN_FOOTER + "\n</footer>", 1)
+            if path.name == "index.html" and 'class="ao-linkedin-home"' not in text:
+                if "</main>" not in text:
+                    raise RuntimeError("Homepage main element not found for LinkedIn section")
+                text = text.replace("</main>", LINKEDIN_HOME + "\n</main>", 1)
         path.write_text(text, encoding="utf-8")
 
 
