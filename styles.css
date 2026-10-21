@@ -354,3 +354,19 @@ footer{border-top:1px solid var(--line);padding:2.2rem 0;background:var(--navy-d
   .buy-grid{grid-template-columns:1fr}
   .brand-grid{grid-template-columns:1fr}
 }
+
+
+/* AO company LinkedIn presence – no external embed or third-party tracking */
+.ao-linkedin-footer{margin-top:1.1rem;padding-top:1.1rem;border-top:1px solid var(--line)}
+.ao-linkedin-link{display:inline-flex;align-items:center;gap:.65rem;color:var(--white);font-size:.88rem;font-weight:700;text-decoration:none;transition:color .18s ease}
+.ao-linkedin-link:hover{color:var(--blue-bright)}
+.ao-linkedin-link:focus-visible{outline:2px solid var(--blue-bright);outline-offset:4px;border-radius:4px}
+.ao-linkedin-icon{display:inline-grid;place-items:center;flex:none;width:27px;height:27px;border-radius:5px;background:#0a66c2;color:#fff;font:800 17px/1 Arial,Helvetica,sans-serif;letter-spacing:-.07em}
+.ao-linkedin-home{padding:1.4rem 0 2.8rem}
+.ao-linkedin-panel{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;background:var(--navy-card);padding:1.65rem 1.85rem}
+.ao-linkedin-panel>div{flex:1;min-width:230px}
+.ao-linkedin-panel h2{font-size:clamp(1.4rem,2.5vw,1.9rem);line-height:1.16;margin:.35rem 0}
+.ao-linkedin-panel p{margin:.55rem 0 0;color:var(--grey);font-size:.94rem;max-width:580px}
+.ao-linkedin-kicker{color:var(--blue-bright);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.ao-linkedin-cta{padding:.85rem 1.1rem;border:1px solid rgba(77,148,255,.32);border-radius:10px;background:rgba(10,102,194,.08)}
+@media(max-width:640px){.ao-linkedin-panel{padding:1.2rem}.ao-linkedin-cta{width:100%;justify-content:center;min-height:48px}.ao-linkedin-footer .ao-linkedin-link{min-height:44px}}
