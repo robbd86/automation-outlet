@@ -34,7 +34,7 @@
     .ebay-upload-label:hover{border-color:var(--blue-bright)}
     .ebay-upload-label input{display:none}
     .ebay-upload-state{min-height:1em;font-size:.67rem;color:var(--grey);line-height:1.2}
-    .ebay-fields{display:grid;grid-template-columns:minmax(130px,1.1fr) minmax(110px,.9fr) minmax(130px,1fr) 92px 70px minmax(185px,1.25fr);gap:.5rem}
+    .ebay-fields{display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(100px,.9fr) minmax(120px,1fr) minmax(150px,1.15fr) 90px 64px minmax(170px,1.25fr);gap:.5rem}
     .ebay-field{min-width:0}
     .ebay-field label{display:block;margin:0 0 .25rem;color:var(--grey);font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
     .ebay-field input,.ebay-field select{width:100%;min-width:0;padding:.5rem .55rem;font-size:.8rem}
@@ -308,13 +308,20 @@
   }
 
   function inferCondition(raw, title) {
-    const text = `${raw || ""} ${title}`.toLowerCase();
+    const rawText = String(raw || "").toLowerCase();
+    const text = `${rawText} ${title || ""}`.toLowerCase();
+    // "Working pull" is historical provenance, not evidence of a fresh bench test.
     if (/for parts|repair|spares|not working|faulty/.test(text)) return "For parts or repair";
     if (/new sealed|factory sealed|sealed box|brand new sealed/.test(text)) return "New sealed";
     if (/new opened box|opened box|open box/.test(text)) return "New opened box";
-    if (/new without box|new no box|new other|unused/.test(text)) return "New without box";
-    if (/bench tested|tested working|tested & working|tested and working|pulled from working|working machinery|fully working/.test(text)) return "Used - tested working";
+    if (/new without box|new no box|new other/.test(rawText)) return "New without box";
+    if (/\bnew\s+(?:boxed|in box)\b|\bnew in original (?:box|packaging)\b/.test(text)) return "New boxed";
+    if (/new without box|new no box|new other/.test(text)) return "New without box";
+    if (/\buntested\b/.test(rawText)) return /working pull|pulled from working|removed from working/.test(text)
+      ? "Used - untested (working pull)" : "Used - untested";
+    if (/bench tested|tested working|tested & working|tested and working/.test(text)) return "Used - tested working";
     if (/powers up|power up tested|power-up/.test(text)) return "Used - powers up";
+    if (/working pull|pulled from working|removed from working|working machinery/.test(text)) return "Used - untested (working pull)";
     if (/\bnew\b|brand new/.test(text)) return "New without box";
     return "Used - untested";
   }
@@ -369,13 +376,17 @@
       ? "Used item, tested working."
       : condition === "Used - powers up"
         ? "Used item, power-up checked."
-        : condition === "Used - untested"
-          ? "Used item; no additional test status is stated."
-          : condition === "For parts or repair"
-            ? "Sold for parts or repair."
-            : condition === "New opened box"
-              ? "New and unused item with original packaging opened."
-              : "Condition stated above.";
+        : condition === "Used - untested (working pull)"
+          ? "Used, untested. Reported working pull; no current functional test evidence."
+          : condition === "Used - untested"
+            ? "Used item; no current functional test evidence is stated."
+            : condition === "For parts or repair"
+              ? "Sold for parts or repair."
+              : condition === "New opened box"
+                ? "New and unused item with original packaging opened."
+                : condition === "New boxed"
+                  ? "New, with original box. Factory seal status is not confirmed."
+                  : "Condition stated above.";
     return `${title}. ${conditionText} Supplied as described and pictured. Contact Automation Outlet if you need additional photographs or serial confirmation before ordering.`;
   }
 
@@ -662,6 +673,12 @@
       category.maxLength = 80;
       category.placeholder = "Equipment type";
       category.dataset.index = String(index);
+      const condition = makeSelect(
+        ["New sealed", "New boxed", "New opened box", "New without box", "Used - tested working",
+         "Used - powers up", "Used - untested", "Used - untested (working pull)", "For parts or repair"],
+        item.condition, "ebay-condition"
+      );
+      condition.dataset.index = String(index);
       const price = makeInput(item.priceGbp.toFixed(2), "ebay-price", "number");
       price.min = "0";
       price.step = "0.01";
@@ -679,6 +696,7 @@
         makeField("Part number", part),
         makeField("Brand", brand),
         makeField("Equipment type", category),
+        makeField("Condition", condition),
         makeField("Price (£)", price),
         makeField("Qty", qty),
         makeField("Delivery / checkout", delivery)
@@ -707,6 +725,7 @@
       if (control.classList.contains("ebay-part")) item.partNumber = control.value.trim().toUpperCase();
       if (control.classList.contains("ebay-brand")) item.brand = control.value;
       if (control.classList.contains("ebay-category")) item.category = control.value.trim();
+      if (control.classList.contains("ebay-condition")) item.condition = control.value;
       if (control.classList.contains("ebay-price")) item.priceGbp = money(control.value);
       if (control.classList.contains("ebay-qty")) item.quantity = quantity(control.value);
       if (control.classList.contains("ebay-image-url")) item.imageUrl = control.value.trim();
