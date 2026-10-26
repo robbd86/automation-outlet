@@ -26,7 +26,7 @@ function environment(configId,chosen="") {
     location:{origin:"https://www.automation-outlet.co.uk",pathname:"/order-success.html",search:"?session_id=cs_live_PRIVATE_TOKEN"},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     fetch:()=>Promise.resolve({ok:true,json:()=>Promise.resolve({measurementId:configId})}),
-    URL,Date,Number,String,Math,JSON,Promise,console,Set,Array,encodeURIComponent,clearTimeout,setTimeout,
+    URL,URLSearchParams,Date,Number,String,Math,JSON,Promise,console,Set,Array,encodeURIComponent,clearTimeout,setTimeout,
   };
   vm.runInNewContext(source,context,{timeout:1500});
   return {scripts,storage,head,body,window,context};
