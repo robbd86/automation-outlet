@@ -32,3 +32,11 @@ body.ff-body{background:#091524;color:var(--ff-ink);font-family:Barlow,Arial,san
 .ff-visually-hidden{position:absolute;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;width:1px;height:1px}
 @media(max-width:820px){.ff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ff-guide{grid-template-columns:1fr}.ff-nav{align-items:flex-start;flex-direction:column;padding:16px 0}.ff-navlinks{gap:10px}.ff-hero{padding:40px 0 30px}}@media(max-width:560px){.ff-grid{grid-template-columns:1fr}.ff-hero h1{font-size:2.45rem}.ff-search{flex-wrap:wrap}.ff-search input{flex-basis:100%}.ff-search button{width:100%}.ff-panel{padding:19px}.ff-wrap{padding:0 16px}}
 @media print{.ff-top,.ff-foot,.ff-actions,.ff-path,.ff-cta,.ff-search,.ff-chips{display:none!important}.ff-guide{display:block}.ff-hero{padding:10px 0;background:white}.ff-body{background:white;color:#111}.ff-hero h1,.ff-panel h2{color:#111}.ff-panel{border:1px solid #ccc;background:#fff}.ff-panel p,.ff-panel li,.ff-lead{color:#111}.ff-main{padding:8px}.ff-callout{background:#fff;color:#111}.ff-callout p,.ff-callout strong{color:#111}}
+
+.ff-family{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 14px}
+.ff-family label{color:#c1d7ea;font-weight:700;font-size:.92rem}
+.ff-family select{padding:9px 13px;border-radius:9px;background:#112942;color:#fff;border:1px solid #426d95;min-width:215px;max-width:100%}
+.ff-empty p{color:#bdd0e3;line-height:1.55}
+.ff-empty strong{display:block;font-size:1.05rem;color:#fff;margin-bottom:10px}
+#missingSources{padding:10px 0}
+#missingSources[hidden]{display:none}
