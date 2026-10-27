@@ -64,3 +64,12 @@ test("model selector narrows results and unknown faults offer meaningful fallbac
  assert.equal(b.noResults,true);
  assert.match(b.advice,/manufacturer|PowerFlex|fault/i);
 });
+
+test("F010 and F10 queries identify the model-dependent guide, including PowerFlex family filters",()=>{
+ for(const q of ["PowerFlex F010","PowerFlex F10","PowerFlex 525 F010","power-flex f 010"]){
+  const r=render(q);
+  assert.equal(r.count,1,q+" => "+r.shown.join(" / "));
+  assert.match(r.shown[0],/model/i);
+  if(q==="PowerFlex F010") assert.equal(r.setModel("PowerFlex 525"),1);
+ }
+});
