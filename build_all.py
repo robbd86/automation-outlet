@@ -21,6 +21,7 @@ STEPS=(
     "patch_exact_logo.py",
     "finalise_logo.py",
     "patch_analytics.py",
+    "patch_audience_growth.py",
     "release.py",
 )
 
