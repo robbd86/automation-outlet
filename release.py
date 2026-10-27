@@ -23,6 +23,7 @@ PRIVATE_PAGES = {
 # Manually maintained dates of substantive editorial review. Do not use build
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
 EDITORIAL_LASTMOD = {
+    "fault-powerflex-f010-f10-model-identification.html": "2026-10-27",
     "fault-powerflex-525-f002-auxiliary-input.html": "2026-10-27",
     "fault-powerflex-525-f003-power-loss.html": "2026-10-27",
     "fault-powerflex-525-f006-motor-stalled.html": "2026-10-27",
