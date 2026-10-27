@@ -23,6 +23,14 @@ PRIVATE_PAGES = {
 # Manually maintained dates of substantive editorial review. Do not use build
 # timestamps as lastmod: all generated HTML files are rewritten on every deploy.
 EDITORIAL_LASTMOD = {
+    "fault-finder.html": "2026-10-27",
+    "fault-powerflex-40-f005-overvoltage.html": "2026-10-27",
+    "fault-powerflex-525-f004-undervoltage.html": "2026-10-27",
+    "fault-powerflex-525-f005-overvoltage.html": "2026-10-27",
+    "fault-siemens-s7-300-sf-led.html": "2026-10-27",
+    "fault-siemens-s7-300-bf-bus-fault.html": "2026-10-27",
+    "fault-panelview-plus-blank-screen.html": "2026-10-27",
+    "fault-slc-500-battery-low.html": "2026-10-27",
     "siemens-s7-300-cpu-replacement-checklist.html": "2026-10-18",
     "wire-label-generator.html": "2026-10-26",
     "engineering-toolbox.html": "2026-10-26",
@@ -53,6 +61,10 @@ LINKEDIN_HOME = "<section class=\"ao-linkedin-home\" aria-labelledby=\"ao-linked
 
 TOOLBOX_HOME = "<section id=\"ao-toolbox-home\" style=\"padding:2.8rem 0\"><div class=\"wrap\"><div class=\"paths\" style=\"margin:0;grid-template-columns:1fr\"><div class=\"path\"><div class=\"eyebrow\">Free resource for engineers</div><h3>AO Engineering <span>Toolbox</span></h3><p>Generate wire, terminal and PLC I/O labels from Excel or CSV. Free A4 printing; no account or spreadsheet upload required.</p><a class=\"link\" href=\"/engineering-toolbox.html\">Explore the free tools →</a> &nbsp; <a class=\"link\" href=\"/wire-label-generator.html\">Wire label generator →</a></div></div></div></section>"
 TOOLBOX_SERVICES = "<section id=\"ao-toolbox-services\" style=\"padding:2.8rem 0\"><div class=\"wrap\"><div class=\"sec-head\"><h2>Free engineering <span>toolbox</span></h2><p>Use our free wire and PLC I/O label generator, including Excel imports and print-ready A4 labels.</p></div><a class=\"btn big\" href=\"/wire-label-generator.html\">Try the label generator</a> &nbsp; <a class=\"link\" href=\"/engineering-toolbox.html\">All engineering tools →</a></div></section>"
+FAULT_FINDER_HOME = '<section id="ao-fault-finder-home" style="padding:2.7rem 0"><div class="wrap"><div class="paths" style="margin:0;grid-template-columns:1fr"><div class="path"><div class="eyebrow">Free engineering diagnostics</div><h3>AO <span>Fault Finder</span></h3><p>Search real PLC, drive and HMI fault codes, with model-specific checks and links to the official manuals. No login and no paywall.</p><a class="link" href="/fault-finder.html">Search the fault library &rarr;</a></div></div></div></section>'
+FAULT_FINDER_TOOLBOX = '<section id="ao-fault-finder-toolbox" style="padding:2.6rem 0"><div class="wrap"><div class="paths" style="margin:0;grid-template-columns:1fr"><div class="path"><div class="eyebrow">Tool 02 / Free engineering help</div><h3>AO <span>Fault Finder</span></h3><p>Search PowerFlex F004 and F005, Siemens S7-300 system and bus faults, PanelView startup issues and SLC 500 battery warnings. Practical, manufacturer-referenced checks.</p><a class="link" href="/fault-finder.html">Open the fault finder &rarr;</a></div></div></div></section>'
+FAULT_FINDER_FOOTER = '<div class="wrap" id="ao-fault-finder-footer" style="padding-top:.8rem;font-size:.88rem"><a href="/fault-finder.html">Free PLC, HMI &amp; drive fault finder</a></div>'
+
 TOOLBOX_FOOTER = "<div class=\"wrap\" id=\"ao-toolbox-footer\" style=\"padding-top:1rem;font-size:.88rem\"><a href=\"/engineering-toolbox.html\">Free engineering tools</a> &middot; <a href=\"/wire-label-generator.html\">Wire label generator</a></div>"
 
 
@@ -108,6 +120,16 @@ def clean_html() -> None:
                 if "</main>" not in text:
                     raise RuntimeError("Services main element not found for toolbox section")
                 text = text.replace("</main>", TOOLBOX_SERVICES + "\n</main>", 1)
+            if 'id="ao-fault-finder-footer"' not in text and "</footer>" in text:
+                text = text.replace("</footer>", FAULT_FINDER_FOOTER + "\n</footer>", 1)
+            if path.name == "index.html" and 'id="ao-fault-finder-home"' not in text:
+                if "</main>" not in text:
+                    raise RuntimeError("Homepage main missing for Fault Finder")
+                text = text.replace("</main>", FAULT_FINDER_HOME + "\n</main>", 1)
+            if path.name == "engineering-toolbox.html" and 'id="ao-fault-finder-toolbox"' not in text:
+                if "</main>" not in text:
+                    raise RuntimeError("Engineering toolbox main missing for Fault Finder")
+                text = text.replace("</main>", FAULT_FINDER_TOOLBOX + "\n</main>", 1)
         path.write_text(text, encoding="utf-8")
 
 
