@@ -40,3 +40,9 @@ body.ff-body{background:#091524;color:var(--ff-ink);font-family:Barlow,Arial,san
 .ff-empty strong{display:block;font-size:1.05rem;color:#fff;margin-bottom:10px}
 #missingSources{padding:10px 0}
 #missingSources[hidden]{display:none}
+
+.ff-model-guide{display:grid;gap:15px;margin-top:17px}
+.ff-model-row{background:#0e263f;padding:17px 19px;border:1px solid #3c5f81;border-radius:11px}
+.ff-model-row h3{margin:7px 0;color:white;font:800 1.4rem/1.2 "Barlow Condensed",sans-serif}
+.ff-model-row p{margin:8px 0 10px;color:#c5d7eb}
+.ff-model-row a{font-size:.95rem;font-weight:700}
