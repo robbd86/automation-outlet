@@ -61,3 +61,19 @@ test("expanded guides have distinct pages and work with the model-aware fault se
  assert.match(js,/function normalise/);
  assert.match(js,/missingAdvice/);
 });
+
+test("F010 disambiguation page uses model-specific Rockwell source evidence",()=>{
+ const url="fault-powerflex-f010-f10-model-identification.html",p=read(url),hub=read("fault-finder.html"),sitemap=read("sitemap.xml");
+ assert.ok(hub.includes('href="/'+url+'"'));
+ assert.ok(sitemap.includes("/"+url));
+ assert.match(p,/PowerFlex 40/);
+ assert.match(p,/PowerFlex 525/);
+ assert.match(p,/PowerFlex Digital DC/);
+ assert.match(p,/Main Contactor/);
+ assert.match(p,/not in the published fault table/i);
+ assert.match(p,/22b-um001_-en-e\.pdf/);
+ assert.match(p,/520-du001_-en-e\.pdf/);
+ assert.match(p,/20p-tg004_-en-p\.pdf/);
+ assert.match(p,/<link rel="canonical"/);
+ assert.doesNotMatch(p,/meta name="robots" content="noindex/i);
+});
