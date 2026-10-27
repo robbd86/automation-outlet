@@ -29,7 +29,7 @@ function update(){
  for(const card of cards){
   const words=normalise(card.dataset.keywords+" "+card.textContent).split(/\s+/);
   const matches=terms.every(term=>words.some(word=>word.includes(term)));
-  const visible=matches&&(category==="All"||card.dataset.category===category)&&(families.value==="All"||cardFamily(card)===families.value);
+  const visible=matches&&(category==="All"||card.dataset.category===category)&&(families.value==="All"||cardFamily(card)===families.value||(cardFamily(card)==="Cross-family"&&families.value.startsWith("PowerFlex")));
   card.classList.toggle("ff-hide",!visible);
   if(visible)shown++;
  }
