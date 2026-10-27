@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Siemens S7-300 SF and BF Fault LEDs: Practical Diagnostic Guide | Automation Outlet</title><meta name="description" content="What SF and BF lights can mean on Siemens S7-300 CPUs, what to check in STEP 7, and how to separate communication faults from hardware issues.">
+<link rel="canonical" href="https://www.automation-outlet.co.uk/siemens-s7-300-sf-bf-fault.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="Automation Outlet"><meta property="og:title" content="Siemens S7-300 SF and BF Fault LEDs: Practical Diagnostic Guide"><meta property="og:description" content="What SF and BF lights can mean on Siemens S7-300 CPUs, what to check in STEP 7, and how to separate communication faults from hardware issues."><meta property="og:url" content="https://www.automation-outlet.co.uk/siemens-s7-300-sf-bf-fault.html">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.ao-editorial{color:#eaf2fa;background:#091726;font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.72}
+.ao-editorial a{color:#78c6ff}.ao-editorial .shell{max-width:1060px;margin:auto;padding:0 22px}
+.ao-editorial .topline{padding:18px 0;font-size:.94rem}
+.ao-editorial .topline a{margin-right:20px;color:#d5e6fb}
+.ao-editorial .mast{padding:65px 0 50px;background:linear-gradient(115deg,#0a2844,#091726)}
+.ao-editorial .eyebrow{color:#74d5ff;text-transform:uppercase;letter-spacing:.13em;font-size:.8rem;font-weight:750}
+.ao-editorial h1{color:#fff;font-size:clamp(2rem,5vw,3.55rem);line-height:1.13;max-width:850px;margin:14px 0 18px}
+.ao-editorial .lead{font-size:1.12rem;max-width:790px;color:#d3e0ed}
+.ao-editorial .main{padding:48px 0 68px}
+.ao-editorial h2{color:#fff;font-size:clamp(1.4rem,3vw,2rem);margin:42px 0 15px}
+.ao-editorial h3{color:#fff;font-size:1.2rem;margin:12px 0}
+.ao-editorial p,.ao-editorial li{color:#d4e0ec}
+.ao-editorial ul,.ao-editorial ol{padding-left:24px}.ao-editorial li{margin:9px 0}
+.ao-editorial .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.ao-editorial .chips a,.ao-editorial .cta{display:inline-block;border-radius:9px;padding:12px 17px;font-weight:700;text-decoration:none}
+.ao-editorial .cta{background:#1789dc;color:#fff}.ao-editorial .chips .secondary{background:transparent;border:1px solid #54758e;color:#e7f3ff}
+.ao-editorial .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:20px 0}
+.ao-editorial .card{padding:20px;border:1px solid #34536a;border-radius:14px;background:#0e283c}
+.ao-editorial .card p{margin:9px 0 12px}
+.ao-editorial .notice{border-left:4px solid #52baf3;padding:18px 20px;background:#112d44;border-radius:3px 12px 12px 3px;margin:22px 0}
+.ao-editorial table{border-collapse:collapse;width:100%;display:block;overflow-x:auto}
+.ao-editorial th,.ao-editorial td{border-bottom:1px solid #37546a;text-align:left;vertical-align:top;padding:14px 12px;min-width:115px}
+.ao-editorial th{color:#fff;background:#14354f}.ao-editorial td{color:#dce8f3}
+.ao-editorial .last{background:#102e47;padding:27px;border-radius:14px;margin-top:42px}
+.ao-editorial footer{padding:28px 0;border-top:1px solid #33536c}
+.ao-editorial footer p{font-size:.85rem}
+@media(max-width:600px){.ao-editorial .mast{padding:43px 0}.ao-editorial .main{padding:25px 0}.ao-editorial .chips a{width:100%;text-align:center}}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Siemens S7-300 SF and BF Fault LEDs: Practical Diagnostic Guide","description":"What SF and BF lights can mean on Siemens S7-300 CPUs, what to check in STEP 7, and how to separate communication faults from hardware issues.","mainEntityOfPage":"https://www.automation-outlet.co.uk/siemens-s7-300-sf-bf-fault.html","publisher":{"@type":"Organization","name":"Automation Outlet","url":"https://www.automation-outlet.co.uk/"}}</script>
+</head><body class="ao-editorial">
+<div class="shell topline"><a href="/">⚙ Automation Outlet</a><a href="/buy-stock.html">Buy stock</a><a href="/sell-surplus.html">Sell to us</a><a href="/obsolete-parts-sourcing.html">Source a part</a><a href="/engineering-toolbox.html">Free tools</a></div>
+
+<section class="mast"><div class="shell"><div class="eyebrow">Siemens SIMATIC / S7-300 / Fault diagnosis</div><h1>Siemens S7-300 SF &amp; BF lights: what to check first</h1><p class="lead">A red fault LED doesn't automatically mean a faulty CPU. Use the LED pattern and diagnostic information to narrow down the reason before swapping expensive modules or restarting a stopped machine.</p><div class="chips"><a class="cta" href="#diagnostic-steps">Follow the checks</a><a class="secondary" href="/plc-fault-guides.html">All engineering guides</a></div></div></section>
+<main class="shell main">
+<div class="notice"><strong>Scope and safety:</strong> This is general fault-finding guidance for trained personnel, not a substitute for the manual for your exact CPU order number or your site's electrical safety procedure. Isolate where required. Do not disconnect field wiring, move mode switches, reset fault states or load a PLC programme as a speculative fix. Protect personnel and machinery before any intervention.</div>
+<h2>What do the fault indicators mean?</h2>
+<table><thead><tr><th>Indicator</th><th>What it suggests</th><th>Useful next check</th></tr></thead><tbody>
+<tr><td><strong>SF</strong> (system fault)</td><td>A detected hardware, software, I/O, parameter or system diagnostic issue. It does not by itself identify the faulty component.</td><td>Read the CPU diagnostic buffer and inspect diagnostics of the affected rack/modules.</td></tr>
+<tr><td><strong>BF / BUSF</strong> (bus fault)</td><td>Communication problems on a supported interface, often PROFIBUS or PROFINET depending on the CPU variant.</td><td>Identify which interface shows the fault, affected station, network status and its configured address.</td></tr>
+<tr><td><strong>STOP</strong></td><td>The CPU is not executing the user programme. Cause varies: deliberate stop, fault handling, start-up or missing resources.</td><td>Use operating-mode and diagnostic-buffer evidence, not only the LED.</td></tr>
+<tr><td><strong>FRCE</strong></td><td>An active force can exist on models that support the indicator.</td><td>Check authorised forcing status and follow your site's change control. Never remove forces blindly.</td></tr>
+</tbody></table>
+<p>LED labelling and behaviour vary by CPU generation. On some S7-300 models the bus indication is called BF1/BF2; on others BUSF. Consult the matching Siemens CPU manual.</p>
+<h2 id="diagnostic-steps">A useful six-step diagnostic sequence</h2><ol>
+<li><strong>Capture the state.</strong> Note the exact 6ES7 CPU number and all LEDs, including whether RUN or STOP is active. Photograph the rack before touching connectors.</li>
+<li><strong>Establish what changed.</strong> Did this follow a panel intervention, power interruption, I/O replacement, cable damage, software download or machine washdown? Note which drives/HMIs remain online.</li>
+<li><strong>Go online without changing the programme.</strong> With authorised STEP 7 access, open the CPU/module diagnostics and read the diagnostic buffer. Record the first event in the incident and the events immediately before and after it. The newest entry appears first in Siemens' buffer.</li>
+<li><strong>Follow the evidence.</strong> SF plus a module diagnostic directs attention to that module and its power/wiring/configuration. BF plus a missing station directs attention to network health, power to the station and addressing. Do not infer a dead CPU from a red LED alone.</li>
+<li><strong>Check affected hardware safely.</strong> Under an approved isolation and test plan, inspect field supplies, diagnostic LEDs, cable/connector condition, terminations and physical damage. Compare actual module part numbers with the configured hardware.</li>
+<li><strong>Record the resolution.</strong> Retain diagnostic extracts, changes made and a restart plan. If replacement is necessary, verify hardware revision, firmware, memory card, programme backup and communications compatibility first.</li>
+</ol>
+<h2>Common scenarios worth separating</h2><div class="cards">
+<div class="card"><h3>BF after work near a cabinet</h3><p>Review recent wiring work and which slave is unreachable. In an authorised safe condition, inspect power, cable routing, shielding, connectors and termination for that segment.</p></div>
+<div class="card"><h3>SF with the CPU still in RUN</h3><p>Not every system diagnostic forces STOP. Read module and CPU diagnostics before assuming the processor itself is defective.</p></div>
+<div class="card"><h3>SF and STOP after programme work</h3><p>Review the diagnostic buffer for programme/runtime, configuration or module mismatch events. Avoid repeated resets before preserving evidence and backups.</p></div>
+</div>
+<h2>Before ordering a replacement S7-300 CPU</h2><p>Record the full 6ES7 catalogue number and suffix, firmware/hardware revision, MMC details, slot/rack, configured communication interfaces and programme availability. A similar-looking CPU is not automatically interchangeable.</p><p><a href="/siemens-s7-300-cpu-replacement-checklist.html">Read AO's S7-300 replacement checklist →</a></p>
+<h2>Manufacturer documentation</h2><p>These checks should be cross-referenced against Siemens documentation for the actual CPU and STEP 7 version:</p>
+<ul><li><a href="https://docs.tia.siemens.cloud/r/en-us/v21/functional-description-of-s7-300/400-cpus-s7-300-s7-400/memory-areas-s7-300-s7-400/contents-of-work-and-system-memory-s7-300-s7-400/diagnostics-buffer-s7-300-s7-400" target="_blank" rel="noopener noreferrer">Siemens: S7-300/400 diagnostic buffer</a></li>
+<li><a href="https://docs.tia.siemens.cloud/r/en-us/v20/device-and-network-diagnostics/using-additional-diagnostics-options-s7-300-s7-400/hardware-diagnostics-s7-300-s7-400/displaying-current-values-of-dynamic-module-properties-s7-300-s7-400/displaying-current-status-of-the-leds-and-the-mode-selector-of-a-cpu-s7-300-s7-400" target="_blank" rel="noopener noreferrer">Siemens: CPU LED status in STEP 7</a></li>
+</ul>
+<section class="last"><h2 style="margin-top:0">Diagnosis points to a replacement part?</h2><p>Send the exact Siemens 6ES7 order number, required quantity, preferred condition and how urgent the request is. AO will check its listed stock or investigate potential supply. Availability and suitability are confirmed individually, never assumed from this guide.</p><div class="chips"><a class="cta" href="/obsolete-parts-sourcing.html#find-part">Request S7-300 sourcing</a><a class="secondary" href="/buy-stock.html">Browse listed parts</a><a class="secondary" href="/sell-surplus.html#sell-form">Sell spare PLCs</a></div></section>
+</main>
+<footer><div class="shell"><p>Automation Outlet · Engineer-led industrial automation spares and services · Cambridgeshire, UK</p><p><a href="/privacy.html">Privacy</a> · <a href="/returns.html">Returns</a> · <a href="/contact.html">Contact</a></p></div></footer>
+</body></html>
