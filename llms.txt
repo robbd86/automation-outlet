@@ -1,0 +1,30 @@
+# Automation Outlet
+
+> UK broker of surplus and obsolete industrial automation parts: PLCs, I/O, HMIs, drives, servo motors and controls from Siemens, Allen-Bradley, GE Fanuc, Omron, Schneider, Mitsubishi and others. Free wanted-list sourcing and free PLC obsolescence checks. Based near March, Cambridgeshire, UK. Email: info@automation-outlet.co.uk
+
+Automation Outlet buys surplus stock outright or sells it on consignment for factories and engineers, and sources hard-to-find discontinued parts through a UK surplus network. Lifecycle information on this site links to manufacturer notices.
+
+## Key pages
+- [Current stock](https://www.automation-outlet.co.uk/buy-stock.html): parts in stock with condition and quantity
+- [Obsolete parts sourcing / wanted list](https://www.automation-outlet.co.uk/obsolete-parts-sourcing.html): send part numbers, free search, no obligation
+- [Free PLC obsolescence check](https://www.automation-outlet.co.uk/obsolescence-check.html)
+- [PLC lifecycle guide](https://www.automation-outlet.co.uk/plc-lifecycle.html): status, last-order dates and successors for about 60 PLC families, with manufacturer sources
+- [Sell surplus](https://www.automation-outlet.co.uk/sell-surplus.html) and [Consignment](https://www.automation-outlet.co.uk/consignment.html)
+- [Buyer Network alerts](https://www.automation-outlet.co.uk/buyer-alerts.html)
+
+## End-of-life guides
+- [Allen-Bradley SLC 500](https://www.automation-outlet.co.uk/allen-bradley-slc-500-discontinued.html)
+- [Allen-Bradley PLC-5](https://www.automation-outlet.co.uk/allen-bradley-plc-5-discontinued.html)
+- [Allen-Bradley MicroLogix](https://www.automation-outlet.co.uk/allen-bradley-micrologix-discontinued.html)
+- [Siemens SIMATIC S5](https://www.automation-outlet.co.uk/siemens-s5-discontinued.html)
+- [Schneider Modicon Premium and Quantum](https://www.automation-outlet.co.uk/schneider-modicon-premium-quantum-discontinued.html)
+- [GE Fanuc 90-30 and RX3i](https://www.automation-outlet.co.uk/ge-fanuc-90-30-rx3i-discontinued.html)
+- [FANUC legacy servo and CNC spares](https://www.automation-outlet.co.uk/fanuc-obsolete-parts.html)
+
+## Data
+- [Stock feed (JSON)](https://www.automation-outlet.co.uk/api/stock)
+- [Stock sitemap](https://www.automation-outlet.co.uk/sitemap-stock.xml)
+
+## Optional
+- [Services](https://www.automation-outlet.co.uk/services.html)
+- [Returns](https://www.automation-outlet.co.uk/returns.html), [Terms](https://www.automation-outlet.co.uk/terms.html), [Privacy](https://www.automation-outlet.co.uk/privacy.html)
