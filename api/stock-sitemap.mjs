@@ -21,12 +21,12 @@ export function renderSitemap(products) {
     .map((product) => {
       const slug = productSlug(product);
       const updated = String(product.updatedAt || product.createdAt || "").slice(0, 10);
-      const lastmod = /^\\d{4}-\\d{2}-\\d{2}$/.test(updated)
-        ? `\\n    <lastmod>${xml(updated)}</lastmod>`
+      const lastmod = /^\d{4}-\d{2}-\d{2}$/.test(updated)
+        ? `\n    <lastmod>${xml(updated)}</lastmod>`
         : "";
-      return `  <url>\\n    <loc>${xml(`${SITE}/stock/${slug}`)}</loc>${lastmod}\\n  </url>`;
+      return `  <url>\n    <loc>${xml(`${SITE}/stock/${slug}`)}</loc>${lastmod}\n  </url>`;
     })
-    .join("\\n");
+    .join("\n");
 
   // Only advertise category routes that have live stock. The catalogue
   // intentionally noindexes empty categories; do not place those in a sitemap.
