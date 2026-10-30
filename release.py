@@ -56,6 +56,24 @@ TOOLBOX_SERVICES = "<section id=\"ao-toolbox-services\" style=\"padding:2.8rem 0
 TOOLBOX_FOOTER = "<div class=\"wrap\" id=\"ao-toolbox-footer\" style=\"padding-top:1rem;font-size:.88rem\"><a href=\"/engineering-toolbox.html\">Free engineering tools</a> &middot; <a href=\"/wire-label-generator.html\">Wire label generator</a></div>"
 
 
+
+# Link the homepage directly to crawlable, server-rendered product categories.
+STOCK_DISCOVERY_HOME = (
+    '<section id="ao-stock-discovery" style="padding:2.6rem 0">'
+    '<div class="wrap">'
+    '<div class="sec-head"><h2>Browse live <span>automation stock</span></h2>'
+    '<p>Check current UK stock by manufacturer, then open a part-number listing '
+    'for condition, availability and buying details.</p></div>'
+    '<nav aria-label="Shop available automation parts by manufacturer" '
+    'style="display:flex;flex-wrap:wrap;gap:.7rem">'
+    '<a class="btn ghost" href="/parts/siemens">Siemens PLC parts</a>'
+    '<a class="btn ghost" href="/parts/fanuc">Fanuc spares</a>'
+    '<a class="btn ghost" href="/parts/allen-bradley">Allen-Bradley parts</a>'
+    '<a class="btn ghost" href="/parts/omron">Omron PLC parts</a>'
+    '<a class="btn" href="/parts">Browse all current parts</a>'
+    '</nav></div></section>'
+)
+
 def is_private_page(name: str) -> bool:
     return name in PRIVATE_PAGES or name.endswith("-admin.html")
 
@@ -108,6 +126,10 @@ def clean_html() -> None:
                 if "</main>" not in text:
                     raise RuntimeError("Services main element not found for toolbox section")
                 text = text.replace("</main>", TOOLBOX_SERVICES + "\n</main>", 1)
+        if path.name == "index.html" and 'id="ao-stock-discovery"' not in text:
+            if "</main>" not in text:
+                raise RuntimeError("Homepage main element not found for stock discovery")
+            text = text.replace("</main>", STOCK_DISCOVERY_HOME + "\n</main>", 1)
         path.write_text(text, encoding="utf-8")
 
 
@@ -146,7 +168,7 @@ def main() -> None:
     print("production cleanup complete")
     # Run source-level SEO tests after generated pages and sitemap are final.
     import subprocess
-    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/pilot-registration.test.mjs", "tests/obsolescence-check.test.mjs", "tests/quick-check-desk.test.mjs", "tests/quick-check-unsubscribe.test.mjs", "tests/quick-check-pilot.test.mjs", "tests/quick-check-research.test.mjs"], check=True)
+    subprocess.run(["node", "--test", "tests/seo-guides.test.mjs", "tests/stock-sitemap-seo.test.mjs", "tests/pilot-registration.test.mjs", "tests/obsolescence-check.test.mjs", "tests/quick-check-desk.test.mjs", "tests/quick-check-unsubscribe.test.mjs", "tests/quick-check-pilot.test.mjs", "tests/quick-check-research.test.mjs"], check=True)
     for script in ("obsolescence-check.js", "quick-check-admin.js"):
         subprocess.run(["node", "--check", script], check=True)
 
