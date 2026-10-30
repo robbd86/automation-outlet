@@ -169,7 +169,7 @@ def patch_buyer_discovery() -> None:
                             + json.dumps(website) + '</script>\n</head>', 1)
     path.write_text(html, encoding="utf-8")
 
-    links = [('All current parts','/parts'),('Siemens','/parts/siemens'),('Allen-Bradley','/parts/allen-bradley'),
+    links = [('All current parts','/parts'),('Siemens','/parts/siemens'),('Fanuc','/parts/fanuc'),('Allen-Bradley','/parts/allen-bradley'),
              ('Omron','/parts/omron'),('PLC processors','/parts/plc-processors'),('PLC I/O modules','/parts/plc-io-modules'),('Drives &amp; inverters','/parts/drives-inverters')]
     navigation = '<nav aria-label="Browse parts by brand or type" style="display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0">'+''.join(
         f'<a href="{url}" style="padding:.5rem .8rem;border:1px solid var(--line);border-radius:8px">{label}</a>' for label,url in links)+'</nav>'
