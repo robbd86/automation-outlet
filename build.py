@@ -64,14 +64,15 @@ def nav_html(active):
         f'<a href="{href}"{" style=\"color:var(--white)\"" if href == active else ""}>{label}</a>'
         for label, href in NAV)
     mob = "".join(f'<a href="{href}">{label}</a>' for label, href in NAV)
-    nav_cta = '<a href="/contact.html?enquiry=PLC%20programming#quote" class="btn">Discuss engineering work</a>' if active == "/services.html" else '{nav_cta}'
-    nav_cta_mobile = '<a href="/contact.html?enquiry=PLC%20programming#quote" class="btn big">Discuss engineering work</a>' if active == "/services.html" else '{nav_cta_mobile}'
+    engineering = active == "/services.html"
+    cta_href = "/contact.html?enquiry=PLC%20programming#quote" if engineering else "/sell-surplus.html"
+    cta_label = "Discuss engineering work" if engineering else "Get a surplus offer"
     return f'''<header>
   <div class="wrap nav">
     <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
     <nav class="nav-links">
       {links}
-      <a href="/sell-surplus.html" class="btn">Get a surplus offer</a>
+      <a href="{cta_href}" class="btn">{cta_label}</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -79,7 +80,7 @@ def nav_html(active):
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     {mob}
-    <a href="/sell-surplus.html" class="btn big">Get a surplus offer</a>
+    <a href="{cta_href}" class="btn big">{cta_label}</a>
   </nav>
 </header>'''
 
