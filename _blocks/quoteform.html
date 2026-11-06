@@ -1,10 +1,10 @@
 <section class="quote" id="quote">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Tell us <span>what you need</span></h2>
-      <p>One form for surplus stock, parts sourcing, engineering support and technical reports. Pick the enquiry type, add the essentials and we'll route it correctly.</p>
+      <h2>Parts &amp; stock <span>enquiries</span></h2>
+      <p>Buying or selling automation equipment? Select the relevant route below. For PLC, HMI and control panel projects, use our <a href="/engineering-quote.html">engineering enquiry form</a>.</p>
     </div>
-    <form id="quoteForm" action="https://formspree.io/f/xqevvvll" method="POST">
+    <form id="quoteForm" data-enquiry-mode="stock" action="https://formspree.io/f/xqevvvll" method="POST">
       <input type="hidden" name="_subject" value="Automation Outlet — general enquiry">
       <div class="field">
         <label for="enquiry">What's this about?</label>
@@ -12,16 +12,9 @@
           <option>Selling surplus equipment</option>
           <option>Buying parts</option>
           <option>Obsolete part sourcing</option>
-          <option>PLC programming</option>
-          <option>HMI programming</option>
-          <option>Remote fault-finding</option>
-          <option>Control panel design / build</option>
-          <option>Bench testing / report</option>
-          <option>Automation obsolescence audit</option>
-          <option>Critical spares audit</option>
-          <option>Controls disaster recovery audit</option>
+          <option>Consignment / managed resale</option>
           <option>Surplus stock valuation report</option>
-          <option>Something else</option>
+          <option>Other stock / parts enquiry</option>
         </select>
       </div>
       <div class="field">
@@ -42,9 +35,9 @@
       </div>
       <div class="field">
         <label for="details">Tell us more</label>
-        <textarea id="details" name="details" placeholder="e.g. Siemens PLC fault to review remotely, a part number you need sourcing, or a list of surplus stock to sell" required></textarea>
+        <textarea id="details" name="details" placeholder="e.g. Part number, quantity and condition, or details of surplus stock to sell" required></textarea>
       </div>
-      <p class="form-note">For remote reports, a spreadsheet, BOM, part-number list, drawings or clear panel photographs are ideal. We'll confirm what is needed before any paid work starts.</p>
+      <p class="form-note">For stock enquiries, part numbers, quantities, condition details and photos are helpful. We'll confirm what is needed before any paid work starts.</p>
       <p class="form-note">We'll come back to you the same working day where possible.</p>
       <p class="form-note">By submitting this form, you agree that Automation Outlet may use your details to respond to your enquiry. See our <a href="/privacy.html">privacy notice</a>.</p>
       <button type="submit" class="btn big">Send enquiry</button>
