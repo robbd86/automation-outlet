@@ -53,6 +53,10 @@ def main():
             text=require_replace(text,"    consignmentForm.reset();",
                 '    window.AOAnalytics?.track("generate_lead",{lead_type:"consignment"});\n    consignmentForm.reset();',
                 "saved consignment enquiry")
+        elif name=="engineering-quote.html" and 'lead_type:"engineering"' not in text:
+            text=require_replace(text,"    if (res.ok) {\n      form.reset();",
+                '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"engineering",lead_service:form.elements.enquiry?.value || "unspecified"});\n      form.reset();',
+                "confirmed engineering Formspree response")
         elif name=="contact.html" and 'lead_type:"contact"' not in text:
             text=require_replace(text,"    if (res.ok) {\n      form.reset();",
                 '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"contact",lead_service:form.elements.enquiry?.value || "unspecified"});\n      form.reset();',

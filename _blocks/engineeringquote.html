@@ -1,0 +1,53 @@
+<section class="quote" id="quote">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Tell us about <span>the engineering job</span></h2>
+      <p>Select the type of controls work and briefly describe the machine, platform and help required. We review each enquiry against the actual scope and availability.</p>
+    </div>
+    <form id="quoteForm" data-enquiry-mode="engineering" action="https://formspree.io/f/xqevvvll" method="POST">
+      <input type="hidden" name="_subject" value="Automation Outlet — engineering enquiry">
+      <div class="field">
+        <label for="enquiry">What type of engineering work?</label>
+        <select id="enquiry" name="enquiry" required>
+          <option value="" selected disabled>Choose an engineering service</option>
+          <option value="PLC programming">PLC programming / modifications</option>
+          <option value="HMI programming">HMI programming / upgrades</option>
+          <option value="Control panel design / build">Control panel design / build</option>
+          <option value="Remote fault-finding">PLC fault finding / remote support</option>
+          <option value="Engineering consultancy / audits">Engineering audits / consultancy</option>
+          <option value="Bench testing / report">Bench testing / technical report</option>
+          <option value="Other engineering work">Other engineering work</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="company">Company (optional)</label>
+        <input id="company" name="company" type="text" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label for="details">Machine and project details</label>
+        <textarea id="details" name="details" placeholder="e.g. PLC/HMI model, software (TIA Portal, Sysmac Studio, CX-One, GX Works2/3, Studio 5000), machine type and what needs changing" required></textarea>
+      </div>
+      <div class="field">
+        <label for="site_location">Site location (optional)</label>
+        <input id="site_location" name="site_location" type="text" autocomplete="address-level2" placeholder="Town or postcode, or 'remote'">
+      </div>
+      <p class="form-note">A controller model, software version, photos or existing project files can help us assess suitability. Please do not send passwords or confidential code through this form.</p>
+      <p class="form-note">We'll review the enquiry and confirm whether the work is within scope and available.</p>
+      <p class="form-note">By submitting this form, you agree that Automation Outlet may use your details to respond to your enquiry. See our <a href="/privacy.html">privacy notice</a>.</p>
+      <button type="submit" class="btn big">Request engineering quote</button>
+      <p class="form-status" id="formStatus" role="status"></p>
+    </form>
+  </div>
+</section>

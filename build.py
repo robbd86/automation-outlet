@@ -65,7 +65,7 @@ def nav_html(active):
         for label, href in NAV)
     mob = "".join(f'<a href="{href}">{label}</a>' for label, href in NAV)
     engineering = active == "/services.html"
-    cta_href = "/contact.html?enquiry=PLC%20programming#quote" if engineering else "/sell-surplus.html"
+    cta_href = "/engineering-quote.html" if engineering else "/sell-surplus.html"
     cta_label = "Discuss engineering work" if engineering else "Get a surplus offer"
     return f'''<header>
   <div class="wrap nav">
@@ -360,17 +360,17 @@ services_body = (
     hero("Engineering services",
          "PLC programming, HMI &amp; <em>control panels</em>",
          "Industrial controls engineering for manufacturers and machine builders. PLC programming, HMI upgrades, fault diagnosis and control panel builds — with project scope agreed by an experienced factory-floor engineer.",
-         [("Discuss a job", "/contact.html"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27d%20like%20to%20discuss%20a%20job")])
-    + BLOCK('services').replace('<a href="#quote">Get in touch</a>', '<a href="/contact.html">Get in touch</a>')
+         [("Discuss a job", "/engineering-quote.html"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27d%20like%20to%20discuss%20a%20job")])
+    + BLOCK('services').replace('<a href="#quote">Get in touch</a>', '<a href="/engineering-quote.html">Get in touch</a>')
     + cards([
-        ("PLC <span>programming</span>", "Siemens, Omron, Mitsubishi and Allen-Bradley software changes, diagnostics and new projects.", "View PLC services", "/plc-programming.html"),
+        ("PLC <span>programming</span>", "Defined PLC changes and diagnostics using TIA Portal, Sysmac Studio, CX-One, GX Works2/3 and Studio 5000 where appropriate.", "View PLC services", "/plc-programming.html"),
         ("HMI <span>development</span>", "Operator screens, diagnostics and upgrades for industrial machinery.", "View HMI services", "/hmi-programming.html"),
         ("Control panel <span>design &amp; build</span>", "New panels, machine modifications, wiring, testing and agreed documentation.", "View panel builds", "/control-panel-design-build.html"),
         ("PLC <span>fault finding</span>", "Structured diagnostics for machine stops, network problems and PLC alarms.", "View fault finding", "/plc-fault-finding.html"),
     ])
     + cta_band("Got a controls <span>problem?</span>",
                "Describe the machine, the platform and the symptom &mdash; we'll tell you honestly whether it's a quick fix or a proper job.",
-               "Get in touch", "/contact.html")
+               "Get in touch", "/engineering-quote.html")
 )
 page("services",
      "PLC Programming, HMI &amp; Control Panel Builds UK | Automation Outlet",
@@ -380,22 +380,36 @@ page("services",
 # ---- CONTACT (general quote form) ----
 contact_body = (
     hero("Contact",
-         "Get a <em>quote</em>",
-         "Selling surplus, chasing a part, or need something programmed, built or tested? Tell us what you're after and we'll come straight back &mdash; usually the same working day.",
+         "Parts &amp; stock <em>enquiries</em>",
+         "Buying, sourcing or selling automation equipment? Send the relevant part numbers or stock details. For PLC/HMI programming, panels or fault finding, use the dedicated engineering enquiry form.",
          [("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27d%20like%20a%20quote"), ("Email us", "mailto:info@automation-outlet.co.uk")])
     + BLOCK('quoteform')
     + TRUST
 )
-page("contact",
-     "Contact Automation Outlet &mdash; Quotes, Sourcing &amp; Services | UK",
-     "Contact Automation Outlet for surplus equipment quotes, obsolete part sourcing, PLC programming and bench testing. WhatsApp, email or online form.",
-     contact_body,
-     extra_js='''const form = document.getElementById("quoteForm");
+QUOTE_FORM_JS = '''const form = document.getElementById("quoteForm");
 const statusEl = document.getElementById("formStatus");
 const serviceQuery = new URLSearchParams(window.location.search).get("enquiry");
 const enquiryField = form.querySelector('select[name="enquiry"]');
-if (serviceQuery && enquiryField) {
-  const requestedOption = Array.from(enquiryField.options).find(option => option.value.toLowerCase() === serviceQuery.toLowerCase());
+const formMode = form.dataset.enquiryMode || "stock";
+const engineeringEnquiryTypes = new Set([
+  "plc programming", "hmi programming", "remote fault-finding",
+  "control panel design / build", "bench testing / report",
+  "automation obsolescence audit", "critical spares audit",
+  "controls disaster recovery audit", "engineering consultancy / audits",
+  "other engineering work"
+]);
+if (formMode === "stock" && serviceQuery && engineeringEnquiryTypes.has(serviceQuery.trim().toLowerCase())) {
+  window.location.replace("/engineering-quote.html" + window.location.search + "#quote");
+}
+const engineeringAlias = {
+  "automation obsolescence audit": "Engineering consultancy / audits",
+  "critical spares audit": "Engineering consultancy / audits",
+  "controls disaster recovery audit": "Engineering consultancy / audits"
+};
+const effectiveQuery = engineeringAlias[serviceQuery?.trim().toLowerCase()] || serviceQuery;
+
+if (effectiveQuery && enquiryField) {
+  const requestedOption = Array.from(enquiryField.options).find(option => option.value.toLowerCase() === effectiveQuery.toLowerCase());
   if (requestedOption) enquiryField.value = requestedOption.value;
 }
 
@@ -476,6 +490,29 @@ form.addEventListener("submit", async function(e){
   } finally {
     submitBtn.disabled = false;
   }
-});''')
+});'''
+
+page("contact",
+     "Contact Automation Outlet | Buy, Sell &amp; Source Automation Parts",
+     "Contact Automation Outlet about surplus automation equipment, obsolete parts, stock purchasing and consignment. Engineering services have a separate enquiry route.",
+     contact_body,
+     extra_js=QUOTE_FORM_JS)
+
+# ---- ENGINEERING ENQUIRIES (separate from buying and selling) ----
+engineering_quote_body = (
+    hero("Engineering services",
+         "Discuss a <em>controls job</em>",
+         "Need PLC or HMI software changes, a control panel build or help with a machine controls fault? Send a short description and we will review whether the work is suitable.",
+         [("WhatsApp an engineer", f"https://wa.me/{WA}?text=Hi%2C%20I%27d%20like%20to%20discuss%20an%20engineering%20job")])
+    + BLOCK('engineeringquote')
+)
+page("engineering-quote",
+     "Request an Engineering Quote | PLC, HMI &amp; Control Panels | AO",
+     "Enquire about PLC programming, HMI upgrades, control panel builds, Siemens TIA Portal support and factory controls fault finding. Clear, scoped engineering enquiries.",
+     engineering_quote_body,
+     active="/services.html",
+     wa_text="Hi%2C%20I%27d%20like%20to%20discuss%20a%20controls%20job",
+     extra_js=QUOTE_FORM_JS)
+
 
 print("built:", sorted(f for f in os.listdir('.') if f.endswith('.html')))
