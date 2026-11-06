@@ -64,6 +64,8 @@ def nav_html(active):
         f'<a href="{href}"{" style=\"color:var(--white)\"" if href == active else ""}>{label}</a>'
         for label, href in NAV)
     mob = "".join(f'<a href="{href}">{label}</a>' for label, href in NAV)
+    nav_cta = '<a href="/contact.html?enquiry=PLC%20programming#quote" class="btn">Discuss engineering work</a>' if active == "/services.html" else '{nav_cta}'
+    nav_cta_mobile = '<a href="/contact.html?enquiry=PLC%20programming#quote" class="btn big">Discuss engineering work</a>' if active == "/services.html" else '{nav_cta_mobile}'
     return f'''<header>
   <div class="wrap nav">
     <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
