@@ -23,6 +23,17 @@ GUIDE_LINKS = """<section id="ao-fault-resource-links" style="padding:2.6rem 0">
 <div class="path"><div class="eyebrow">Engineering knowledge</div><h3>PLC fault guides</h3><p>Free fault-finding information, a replacement checklist and engineering tools.</p><a class="link" href="/plc-fault-guides.html">Browse the resource hub &rarr;</a></div>
 </div></div></section>"""
 
+
+SERVICE_HOME = """<section id="ao-service-offer" class="growth-paths" style="padding:2.4rem 0">
+<div class="growth-wrap"><div class="growth-section-header"><div><div class="growth-kicker">AO engineering services · Cambridgeshire and UK remote</div>
+<h2>Need a controls engineer, not just a spare part?</h2></div>
+<p>PLC changes, HMI upgrades, machine diagnostics and industrial control panel builds. Speak directly to an experienced controls engineer about the job.</p></div>
+<div class="paths" style="margin:0">
+<div class="path"><h3>PLC programming</h3><p>Siemens TIA Portal, Omron, Mitsubishi and Allen-Bradley modifications and diagnostics.</p><a class="link" href="/plc-programming.html">PLC engineering services &rarr;</a></div>
+<div class="path"><h3>HMI development</h3><p>Operator screen changes, alarms, diagnostics and legacy screen upgrades.</p><a class="link" href="/hmi-programming.html">HMI programming services &rarr;</a></div>
+<div class="path"><h3>Control panel builds</h3><p>Machine control panels, upgrades, wiring, testing and agreed documentation.</p><a class="link" href="/control-panel-design-build.html">Panel design and build &rarr;</a></div>
+</div></div></section>"""
+
 SELL_SIEMENS_LINK = """<section id="ao-siemens-seller-guide" style="padding:2rem 0">
 <div class="wrap"><div class="path"><h3>Got Siemens S7-300, S7-400, HMI or SINAMICS spares?</h3>
 <p>Read which order numbers and condition details make a useful trade or consignment enquiry.</p>
@@ -46,7 +57,8 @@ def main():
     # This creates natural internal links without competing with the main enquiry forms.
     for name in ("index.html","engineering-toolbox.html","obsolete-parts-sourcing.html","source-siemens.html"):
         insert_before(name,"</main>",GUIDE_LINKS,"ao-fault-resource-links")
-    # The existing sourcing and seller journeys remain untouched by this SEO link layer.
+    insert_before("index.html", '<section class="growth-paths"', SERVICE_HOME, "ao-service-offer")
+    # Connect engineering enquiries without replacing the homepage stock-selling journey.
     print("AO audience growth: seller quick path and four guide link placements applied")
 
 if __name__=="__main__":
