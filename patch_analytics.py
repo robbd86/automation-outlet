@@ -55,7 +55,7 @@ def main():
                 "saved consignment enquiry")
         elif name=="contact.html" and 'lead_type:"contact"' not in text:
             text=require_replace(text,"    if (res.ok) {\n      form.reset();",
-                '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"contact"});\n      form.reset();',
+                '    if (res.ok) {\n      window.AOAnalytics?.track("generate_lead",{lead_type:"contact",lead_service:form.elements.enquiry?.value || "unspecified"});\n      form.reset();',
                 "confirmed contact enquiry")
         elif name=="buyer-alerts.html" and 'lead_type:"buyer_alert"' not in text:
             text=require_replace(text,

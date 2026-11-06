@@ -64,12 +64,15 @@ def nav_html(active):
         f'<a href="{href}"{" style=\"color:var(--white)\"" if href == active else ""}>{label}</a>'
         for label, href in NAV)
     mob = "".join(f'<a href="{href}">{label}</a>' for label, href in NAV)
+    engineering = active == "/services.html"
+    cta_href = "/contact.html?enquiry=PLC%20programming#quote" if engineering else "/sell-surplus.html"
+    cta_label = "Discuss engineering work" if engineering else "Get a surplus offer"
     return f'''<header>
   <div class="wrap nav">
     <a href="/" class="logo"><span class="gear">&#9881;</span>Automation <span>Outlet</span></a>
     <nav class="nav-links">
       {links}
-      <a href="/sell-surplus.html" class="btn">Get a surplus offer</a>
+      <a href="{cta_href}" class="btn">{cta_label}</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -77,7 +80,7 @@ def nav_html(active):
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     {mob}
-    <a href="/sell-surplus.html" class="btn big">Get a surplus offer</a>
+    <a href="{cta_href}" class="btn big">{cta_label}</a>
   </nav>
 </header>'''
 
@@ -355,22 +358,23 @@ page("buy-stock",
 # ---- SERVICES hub ----
 services_body = (
     hero("Engineering services",
-         "We also <em>offer</em>",
-         "Beyond buying and selling, we put 10+ years of factory-floor controls experience to work for UK manufacturers, machine builders and maintenance teams.",
+         "PLC programming, HMI &amp; <em>control panels</em>",
+         "Industrial controls engineering for manufacturers and machine builders. PLC programming, HMI upgrades, fault diagnosis and control panel builds — with project scope agreed by an experienced factory-floor engineer.",
          [("Discuss a job", "/contact.html"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27d%20like%20to%20discuss%20a%20job")])
     + BLOCK('services').replace('<a href="#quote">Get in touch</a>', '<a href="/contact.html">Get in touch</a>')
     + cards([
-        ("PLC &amp; HMI <span>programming</span>", "New code, modifications and fault-finding across Siemens, Omron, Allen-Bradley and Mitsubishi.", "Read more", "/plc-programming.html"),
-        ("Bench <span>testing</span>", "Independent testing so you know what works before you buy, sell or fit it.", "Read more", "/bench-testing.html"),
-        ("Panel <span>builds</span>", "Control panels designed, assembled, wired and documented to spec.", "Read more", "/sell-control-panels.html"),
+        ("PLC <span>programming</span>", "Siemens, Omron, Mitsubishi and Allen-Bradley software changes, diagnostics and new projects.", "View PLC services", "/plc-programming.html"),
+        ("HMI <span>development</span>", "Operator screens, diagnostics and upgrades for industrial machinery.", "View HMI services", "/hmi-programming.html"),
+        ("Control panel <span>design &amp; build</span>", "New panels, machine modifications, wiring, testing and agreed documentation.", "View panel builds", "/control-panel-design-build.html"),
+        ("PLC <span>fault finding</span>", "Structured diagnostics for machine stops, network problems and PLC alarms.", "View fault finding", "/plc-fault-finding.html"),
     ])
     + cta_band("Got a controls <span>problem?</span>",
                "Describe the machine, the platform and the symptom &mdash; we'll tell you honestly whether it's a quick fix or a proper job.",
                "Get in touch", "/contact.html")
 )
 page("services",
-     "PLC Programming, Panel Builds &amp; Bench Testing UK | Automation Outlet",
-     "Engineering services for UK manufacturers: PLC and HMI programming, control panel builds and independent bench testing. Siemens, Omron, Allen-Bradley, Mitsubishi.",
+     "PLC Programming, HMI &amp; Control Panel Builds UK | Automation Outlet",
+     "PLC programming, Siemens TIA Portal, HMI upgrades, control panel design and build, and industrial fault finding. Cambridgeshire-based engineering support.",
      services_body, wa_text="Hi%2C%20I%27d%20like%20to%20discuss%20a%20job")
 
 # ---- CONTACT (general quote form) ----
@@ -388,6 +392,13 @@ page("contact",
      contact_body,
      extra_js='''const form = document.getElementById("quoteForm");
 const statusEl = document.getElementById("formStatus");
+const serviceQuery = new URLSearchParams(window.location.search).get("enquiry");
+const enquiryField = form.querySelector('select[name="enquiry"]');
+if (serviceQuery && enquiryField) {
+  const requestedOption = Array.from(enquiryField.options).find(option => option.value.toLowerCase() === serviceQuery.toLowerCase());
+  if (requestedOption) enquiryField.value = requestedOption.value;
+}
+
 const submitBtn = form.querySelector("button[type=submit]");
 
 // Keep the hard blocklist deliberately narrow: only identities confirmed as fraudulent.
