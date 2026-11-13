@@ -4,23 +4,22 @@
   if (!section || !grid) return;
 
   const targets = [
-    (p) => matchProduct(p, ["IC695CPE305-ABAC"]),
-    (p) => matchProduct(p, ["IC695ALG600-DD"]),
-    (p) => matchProduct(p, ["IC695CPU315-BB"]),
+    "KJ2005X1-BK1",
+    "KJ3242X1-BK1",
+    "KJ3211X1-BK1",
+    "KJ2006X1-BK2",
+    "KJ3223X1-BK1",
+    "KJ3241X1-BK1",
+    "KJ1501X1-BK1",
+    "KL2101X1-BA1",
   ];
 
   function compact(value) {
     return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   }
 
-  function matchProduct(product, needles) {
-    const haystack = compact([
-      product.partNumber,
-      product.title,
-      product.brand,
-      product.description,
-    ].join(" "));
-    return needles.some((needle) => haystack.includes(compact(needle)));
+  function matchProduct(product, partNumber) {
+    return compact(product.partNumber) === compact(partNumber);
   }
 
   function slugify(value) {
@@ -121,10 +120,11 @@
       const response = await fetch("/api/stock", { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error("Could not load featured stock");
       const data = await response.json();
-      const products = Array.isArray(data.products) ? data.products : [];
+      const products = (Array.isArray(data.products) ? data.products : [])
+        .filter((product) => product.status === "active" && Number(product.quantity) > 0);
 
       const chosen = targets
-        .map((matcher) => [...products].sort((a, b) => Number(b.priceGbp || 0) - Number(a.priceGbp || 0)).find(matcher))
+        .map((partNumber) => products.find((product) => matchProduct(product, partNumber)))
         .filter(Boolean)
         .filter((product, index, array) =>
           array.findIndex((item) => item.id === product.id) === index
