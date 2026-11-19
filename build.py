@@ -275,7 +275,7 @@ page("index",
 sell_body = (
     hero("Sell to us &middot; UK wide",
          "Sell your <em>surplus automation equipment</em>",
-         "PLCs, HMIs, drives, control panels and spares-store stock &mdash; working, untested or faulty. List what you've got below and we'll come back with a fair, no-obligation offer, usually the same working day.",
+         "PLCs, HMIs, drives, control panels and spares-store stock &mdash; working, untested or faulty. Tell us what you have and the price you want, then choose an outright trade sale, managed consignment or brokerage route.",
          [("List your items", "#sell-form"), ("Consignment", "/consignment.html"), ("WhatsApp us", f"https://wa.me/{WA}?text=Hi%2C%20I%27ve%20got%20surplus%20equipment%20to%20sell")])
     + BLOCK('buygrid')
     + BLOCK('how')
@@ -289,7 +289,7 @@ sell_body = (
 )
 page("sell-surplus",
      "Sell Surplus Automation Equipment UK &mdash; Cash Paid, Free Collection | Automation Outlet",
-     "Sell surplus PLCs, HMIs, drives and control panels anywhere in the UK. Same-day quotes, fair market prices, free collection. List your items online in minutes.",
+     "Sell surplus PLCs, HMIs, drives and control panels to Automation Outlet. Submit your stock details and required price for outright trade purchase, consignment or brokerage.",
      sell_body, wa_text="Hi%2C%20I%27ve%20got%20surplus%20equipment%20to%20sell",
      extra_js=BLOCK('sellform_js'))
 

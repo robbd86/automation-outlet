@@ -4,7 +4,8 @@
     <div class="sec-head">
       <div class="portal-kicker">Automation Outlet seller portal</div>
       <h2>Choose how you want to <span>sell</span></h2>
-      <p>Tell us what you have once. We can make an outright cash offer, manage a consignment sale, or broker a buyer while the stock remains with you.</p>
+      <p>Tell us what you have and the amount you want to achieve. We can consider an outright trade purchase, managed consignment, or brokerage if the figures make commercial sense.</p>
+      <p><strong>Please provide a realistic price expectation.</strong> Automation Outlet buys equipment for resale, not at end-user retail prices. Enquiries without a proposed price or minimum return cannot be submitted.</p>
     </div>
 
     <form id="sellForm" class="sell-form" novalidate>
@@ -93,9 +94,9 @@
             </select>
           </div>
           <div class="field">
-            <label for="s-expectation">Expected trade price, if known</label>
-            <div class="money-field"><span>£</span><input id="s-expectation" name="expected_price" type="number" min="0" step="1" placeholder="Optional"></div>
-            <small>Online asking prices can remain unsold for months. Enter the amount you would realistically accept for a straightforward trade transaction.</small>
+            <label for="s-expectation" id="s-expectation-label">What amount would you like to receive? *</label>
+            <div class="money-field"><span>£</span><input id="s-expectation" name="expected_price" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter your price" required aria-describedby="s-expectation-help"></div>
+            <small id="s-expectation-help">Enter the total amount you want to receive for the equipment or mixed lot. This helps us decide if a trade purchase or managed sale is realistic.</small>
           </div>
           <div class="field">
             <label for="s-postcode">Collection postcode / area</label>
@@ -151,7 +152,7 @@
           <input id="s-owner" type="checkbox" required>
           <span>I confirm that I own the equipment or am authorised to offer it for sale.</span>
         </label>
-        <p class="form-note">Outright offers are commercial trade offers based on condition, demand, realistic resale timescale and the work and risk involved. For outright cash purchases, payment is made by bank transfer after delivery and inspection against the agreed inventory, within up to 10 working days unless different terms are agreed in writing. After submitting, you will receive a reference and a WhatsApp button for sending photographs against the same enquiry.</p>
+        <p class="form-note">A positive price expectation is required. This is not a free retail valuation service. Outright offers are commercial trade offers based on condition, demand, realistic resale timescale and the work and risk involved. For outright cash purchases, payment is made by bank transfer after delivery and inspection against the agreed inventory, within up to 10 working days unless different terms are agreed in writing. After submitting, you will receive a reference and a WhatsApp button for sending photographs against the same enquiry.</p>
         <button type="submit" class="btn big">Submit equipment for assessment</button>
         <p class="form-status" id="sellStatus" role="status" aria-live="polite"></p>
         <div id="sellSuccess" class="portal-success" hidden></div>

@@ -4,7 +4,7 @@
     <div class="sec-head">
       <div class="portal-kicker">Automation Outlet consignment intake</div>
       <h2>Send us your <span>stock</span></h2>
-      <p>No polished inventory required. Add the key parts below, upload an existing stock list or a few photos, and we will review what is worth marketing.</p>
+      <p>Add the key parts below, upload a stock list or a few photos, and tell us the minimum amount you would need to receive after a successful sale. We only take on stock where the numbers make commercial sense.</p>
     </div>
 
     <form id="consignmentForm" class="sell-form" novalidate enctype="multipart/form-data">
@@ -56,6 +56,11 @@
           <div class="field">
             <label for="c-count">Approximate total items</label>
             <input id="c-count" name="approx_count" type="number" min="1" max="100000" placeholder="e.g. 30">
+          </div>
+          <div class="field">
+            <label for="c-expectation">Minimum net return you want to receive (£) *</label>
+            <div class="money-field"><span>£</span><input id="c-expectation" name="expected_price" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter your minimum" required aria-describedby="c-expectation-help"></div>
+            <small id="c-expectation-help">Enter your minimum total return for the lot after AO's standard 20% commission and any agreed third-party costs. This is not an advertised retail price.</small>
           </div>
           <div class="field">
             <label for="c-location">Stock location / postcode</label>
@@ -120,7 +125,7 @@
           <input id="c-owner" type="checkbox" required>
           <span>I confirm that I own the equipment or am authorised to place it into a consignment / managed resale arrangement.</span>
         </label>
-        <p class="form-note"><strong>Standard AO consignment:</strong> seller receives 80% of net sale proceeds and Automation Outlet receives 20%. Any unusual third-party costs or different terms are agreed before listing.</p>
+        <p class="form-note">A minimum net return is required to assess a consignment enquiry. <strong>Standard AO consignment:</strong> seller receives 80% of net sale proceeds and Automation Outlet receives 20%. Any unusual third-party costs or different terms are agreed before listing.</p>
         <button type="submit" class="btn big">Submit stock for consignment review</button>
         <p class="form-status" id="consignmentStatus" role="status" aria-live="polite"></p>
         <div id="consignmentSuccess" class="portal-success" hidden></div>

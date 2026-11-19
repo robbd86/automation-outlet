@@ -65,6 +65,7 @@ async function sendConsignmentCopy(payload, reference) {
   form.append("location", payload.postcode || "Not stated");
   form.append("holding", payload.logistics || "Not stated");
   form.append("availability", payload.availability || "Not stated");
+  form.append("Minimum net return requested", "£" + Number(payload.expectedPriceGbp).toLocaleString("en-GB"));
   form.append("items", "\n" + consignmentReadableItems(payload.items).join("\n"));
   form.append("notes", payload.notes || "-");
 
@@ -97,7 +98,7 @@ consignmentForm.addEventListener("submit", async (event) => {
   const items = collectConsignmentItems();
   if (!consignmentForm.reportValidity()) {
     consignmentStatus.style.color = "#ff9c9c";
-    consignmentStatus.textContent = "Please complete the required contact and ownership fields.";
+    consignmentStatus.textContent = "Please complete all required fields, including your minimum net return.";
     consignmentBtn.disabled = false;
     return;
   }
@@ -114,6 +115,14 @@ consignmentForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  const requiredReturn = Number(cValue("c-expectation"));
+  if (!Number.isFinite(requiredReturn) || requiredReturn <= 0) {
+    consignmentStatus.style.color = "#ff9c9c";
+    consignmentStatus.textContent = "Please enter a positive minimum net return.";
+    consignmentBtn.disabled = false;
+    return;
+  }
+
   const count = cValue("c-count");
   const holding = cValue("c-holding");
   const sellerNotes = cValue("c-notes");
@@ -122,7 +131,7 @@ consignmentForm.addEventListener("submit", async (event) => {
     preference: "revenue-share",
     sellerType: "Business / company",
     urgency: "flexible",
-    expectedPriceGbp: null,
+    expectedPriceGbp: requiredReturn,
     postcode: cValue("c-location"),
     logistics: holding,
     availability: cValue("c-availability"),

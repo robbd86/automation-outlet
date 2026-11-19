@@ -122,7 +122,7 @@ async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy
   form.append("Stock availability", payload.availability || "Not specified");
   form.append("Transport / collection", readableChoice(LOGISTICS_LABELS, payload.logistics));
   form.append("Collection postcode / area", payload.postcode || "Not provided");
-  form.append("Expected trade price", readableGbp(payload.expectedPriceGbp));
+  form.append("Seller asking price / required return", readableGbp(payload.expectedPriceGbp));
   form.append("Additional information", payload.notes || "None provided");
 
   const response = await fetch(FORM_ENDPOINT, {
@@ -137,6 +137,34 @@ const sellForm = document.getElementById("sellForm");
 const sellStatus = document.getElementById("sellStatus");
 const sellSuccess = document.getElementById("sellSuccess");
 const sellBtn = sellForm.querySelector("button[type=submit]");
+const sellerPriceLabel = document.getElementById("s-expectation-label");
+const sellerPriceHelp = document.getElementById("s-expectation-help");
+const sellerPriceWording = {
+  "best-option": {
+    label: "What amount would you like to receive? *",
+    help: "Enter the total amount you want to receive for the equipment or mixed lot. We can then assess the most realistic selling route."
+  },
+  cash: {
+    label: "What trade price are you asking for? *",
+    help: "Enter your asking price for the entire lot, not the highest advertised retail price. AO buys for resale and must allow for costs and risk."
+  },
+  "revenue-share": {
+    label: "What is your minimum net return from a sale? *",
+    help: "Enter the minimum total amount you would need to receive after AO's commission and agreed selling costs."
+  },
+  brokerage: {
+    label: "What is your minimum net return from a sale? *",
+    help: "Enter the minimum total amount you would need to receive after agreed brokerage and transaction costs."
+  }
+};
+function updateSellerPriceWording() {
+  const route = sellForm.querySelector('[name="sale_route"]:checked')?.value || "best-option";
+  const wording = sellerPriceWording[route] || sellerPriceWording["best-option"];
+  sellerPriceLabel.textContent = wording.label;
+  sellerPriceHelp.textContent = wording.help;
+}
+sellForm.querySelectorAll('[name="sale_route"]').forEach((radio) => radio.addEventListener("change", updateSellerPriceWording));
+updateSellerPriceWording();
 
 sellForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -148,7 +176,7 @@ sellForm.addEventListener("submit", async (event) => {
   const items = collectItems();
   if (!sellForm.reportValidity()) {
     sellStatus.style.color = "#ff9c9c";
-    sellStatus.textContent = "Please complete the required contact and ownership fields.";
+    sellStatus.textContent = "Please complete all required fields, including a positive asking price or minimum return.";
     sellBtn.disabled = false;
     return;
   }
@@ -159,12 +187,20 @@ sellForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  const requestedPrice = Number(formValue("s-expectation"));
+  if (!Number.isFinite(requestedPrice) || requestedPrice <= 0) {
+    sellStatus.style.color = "#ff9c9c";
+    sellStatus.textContent = "Please enter a positive price expectation before submitting.";
+    sellBtn.disabled = false;
+    return;
+  }
+
   const payload = {
     website: formValue("sellerWebsite"),
     preference: sellForm.querySelector("[name=sale_route]:checked").value,
     sellerType: formValue("s-seller-type"),
     urgency: formValue("s-urgency"),
-    expectedPriceGbp: Number(formValue("s-expectation") || 0) || null,
+    expectedPriceGbp: requestedPrice,
     postcode: formValue("s-postcode"),
     logistics: formValue("s-logistics"),
     availability: formValue("s-availability"),
