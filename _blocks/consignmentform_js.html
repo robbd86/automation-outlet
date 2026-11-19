@@ -65,7 +65,7 @@ async function sendConsignmentCopy(payload, reference) {
   form.append("location", payload.postcode || "Not stated");
   form.append("holding", payload.logistics || "Not stated");
   form.append("availability", payload.availability || "Not stated");
-  form.append("Minimum net return requested", "£" + Number(payload.expectedPriceGbp).toLocaleString("en-GB"));
+  form.append("Seller target net return (not agreed)", "£" + Number(payload.expectedPriceGbp).toLocaleString("en-GB"));
   form.append("items", "\n" + consignmentReadableItems(payload.items).join("\n"));
   form.append("notes", payload.notes || "-");
 
@@ -98,7 +98,7 @@ consignmentForm.addEventListener("submit", async (event) => {
   const items = collectConsignmentItems();
   if (!consignmentForm.reportValidity()) {
     consignmentStatus.style.color = "#ff9c9c";
-    consignmentStatus.textContent = "Please complete all required fields, including your minimum net return.";
+    consignmentStatus.textContent = "Please complete all required fields, including your target net return.";
     consignmentBtn.disabled = false;
     return;
   }
@@ -118,7 +118,7 @@ consignmentForm.addEventListener("submit", async (event) => {
   const requiredReturn = Number(cValue("c-expectation"));
   if (!Number.isFinite(requiredReturn) || requiredReturn <= 0) {
     consignmentStatus.style.color = "#ff9c9c";
-    consignmentStatus.textContent = "Please enter a positive minimum net return.";
+    consignmentStatus.textContent = "Please enter a positive target net return.";
     consignmentBtn.disabled = false;
     return;
   }

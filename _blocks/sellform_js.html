@@ -122,7 +122,7 @@ async function sendFormspreeNotification(payload, captureRoute = "deal-desk-copy
   form.append("Stock availability", payload.availability || "Not specified");
   form.append("Transport / collection", readableChoice(LOGISTICS_LABELS, payload.logistics));
   form.append("Collection postcode / area", payload.postcode || "Not provided");
-  form.append("Seller asking price / required return", readableGbp(payload.expectedPriceGbp));
+  form.append("Seller price expectation (not agreed)", readableGbp(payload.expectedPriceGbp));
   form.append("Additional information", payload.notes || "None provided");
 
   const response = await fetch(FORM_ENDPOINT, {
@@ -141,20 +141,20 @@ const sellerPriceLabel = document.getElementById("s-expectation-label");
 const sellerPriceHelp = document.getElementById("s-expectation-help");
 const sellerPriceWording = {
   "best-option": {
-    label: "What amount would you like to receive? *",
-    help: "Enter the total amount you want to receive for the equipment or mixed lot. We can then assess the most realistic selling route."
+    label: "What price are you hoping to achieve? *",
+    help: "Give your realistic price expectation for the entire lot. This does not commit AO to that figure; we may suggest a different amount or decline."
   },
   cash: {
-    label: "What trade price are you asking for? *",
-    help: "Enter your asking price for the entire lot, not the highest advertised retail price. AO buys for resale and must allow for costs and risk."
+    label: "What trade price are you hoping to achieve? *",
+    help: "Enter your price expectation for the whole lot, not its advertised retail value. This is not an agreed price; AO may offer a different amount or decline."
   },
   "revenue-share": {
-    label: "What is your minimum net return from a sale? *",
-    help: "Enter the minimum total amount you would need to receive after AO's commission and agreed selling costs."
+    label: "What net return are you hoping to achieve? *",
+    help: "State the total net return you would aim for after AO's commission and agreed costs. This is a guide only, not an agreed reserve or guaranteed return; terms are agreed separately."
   },
   brokerage: {
-    label: "What is your minimum net return from a sale? *",
-    help: "Enter the minimum total amount you would need to receive after agreed brokerage and transaction costs."
+    label: "What net return are you hoping to achieve? *",
+    help: "State the net return you would aim for after agreed brokerage costs. This is for initial assessment only, not a guaranteed return or agreed sale price."
   }
 };
 function updateSellerPriceWording() {
