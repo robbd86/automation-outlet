@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Automation Outlet product reference graphic for Mitsubishi Electric MR-J4-10B-RJ">
+<rect width="1024" height="1024" fill="#f8fbff"/>
+<path d="M0 0 H1024 V24 H0Z" fill="#0b2d5c"/>
+<g fill="none" stroke="#bbd5ed" stroke-width="3" opacity=".7"><path d="M-20 390 H142 V500 H202"/><path d="M1050 620 H890 V770 H813"/><path d="M200 1024 V842 H280"/><path d="M740 0 V125 H835"/><circle cx="202" cy="500" r="9"/><circle cx="813" cy="770" r="9"/><circle cx="280" cy="842" r="9"/></g>
+<text x="72" y="124" fill="#102b54" font-family="Arial,sans-serif" font-size="72" font-weight="800">AO</text>
+<path d="M71 142 H219" stroke="#0f83d5" stroke-width="9"/>
+<text x="248" y="103" fill="#102b54" font-family="Arial,sans-serif" font-weight="800" font-size="39">AUTOMATION</text>
+<text x="248" y="148" fill="#102b54" font-family="Arial,sans-serif" font-weight="800" font-size="39">OUTLET</text>
+<rect x="62" y="213" width="900" height="118" rx="8" fill="#102b54"/>
+<text x="86" y="289" font-family="Arial,sans-serif" font-size="65" font-weight="700" fill="white">MR-J4-10B-RJ</text>
+<rect x="62" y="350" width="900" height="484" rx="20" fill="#ffffff" stroke="#c5d6e8" stroke-width="4"/>
+<text x="108" y="431" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#2a4a71">MITSUBISHI ELECTRIC</text>
+<text x="108" y="485" font-family="Arial,sans-serif" font-size="34" fill="#4b5e78">MELSERVO J4</text>
+<text x="108" y="578" font-family="Arial,sans-serif" font-size="64" font-weight="800" fill="#102b54">100W</text>
+<text x="108" y="630" font-family="Arial,sans-serif" font-size="34" fill="#2a4a71">AC Servo Amplifier</text>
+<path d="M108 663 H915" stroke="#dae7f2" stroke-width="3"/>
+<text x="108" y="728" font-family="Arial,sans-serif" font-size="31" fill="#102b54">Original packaging | Seller-declared unused</text>
+<text x="108" y="785" font-family="Arial,sans-serif" font-size="27" fill="#62748b">Product reference graphic - actual photos available</text>
+<rect x="62" y="855" width="900" height="99" rx="10" fill="#e5f1fd"/>
+<text x="108" y="916" font-family="Arial,sans-serif" font-size="36" font-weight="700" fill="#164a82">automation-outlet.co.uk</text>
+</svg>
