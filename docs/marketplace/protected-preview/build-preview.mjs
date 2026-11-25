@@ -5,6 +5,7 @@ const host=process.env.VERCEL_URL;
 if(process.env.VERCEL_ENV!=='preview'||!/^ao-marketplace-preview-[a-z0-9-]+\.vercel\.app$/.test(host||''))throw new Error('Only isolated Vercel preview builds may activate authentication');
 const settings=JSON.parse(readFileSync('preview-settings.json','utf8'));
 if(settings.projectUrl!=='https://hsitmryzukpldqenfhcu.supabase.co'||!settings.publishableKey.startsWith('sb_publishable_'))throw new Error('Invalid development settings');
+for(const f of ['account-ui.mjs','listing-ui.mjs','admin-ui.mjs','listing-client.mjs','auth-client.mjs'])execFileSync(process.execPath,['--check',f],{stdio:'inherit'});
 execFileSync(process.execPath,['--test','auth-client.test.mjs','listing-client.test.mjs'],{stdio:'inherit'});
 mkdirSync('dist',{recursive:true});
 mkdirSync('sdk',{recursive:true});
