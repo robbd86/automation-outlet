@@ -31,6 +31,7 @@ export function createListingClient(client,auth){
  async edit(id,input){const u=await user();return check(await db.from('listings').update({...validateListing(input),status:'draft'}).eq('id',id).eq('seller_id',u.id).in('status',['draft','rejected','withdrawn']).select(cols).single())},
  async submit(id){const u=await user();return check(await db.from('listings').update({status:'pending'}).eq('id',id).eq('seller_id',u.id).eq('status','draft').select(cols).single())},
  async withdrawDraft(id){const u=await user();return check(await db.from('listings').update({status:'withdrawn'}).eq('id',id).eq('seller_id',u.id).in('status',['draft','rejected']).select(cols).single())},
+ async cancelPending(id){const u=await user();return check(await db.from('listings').update({status:'withdrawn'}).eq('id',id).eq('seller_id',u.id).eq('status','pending').select(cols).single())},
  async browse(){return check(await db.from('listings').select(cols).eq('status','published').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(200))}
  };
 }
