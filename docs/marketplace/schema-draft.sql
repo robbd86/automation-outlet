@@ -1,9 +1,12 @@
 -- AO Marketplace: proposed isolated Supabase development schema.
--- NOT applied. Review in a new empty development project only.
+-- Reviewed migration for a new empty development project only.
 -- Never run against the existing AO stock, checkout or customer systems.
 -- Public data is deliberately separated from private user/contact records.
 begin;
 create schema marketplace; -- fail if the schema already exists; no overwrite
+create schema marketplace_private;
+revoke all on schema marketplace_private from public;
+grant usage on schema marketplace_private to anon, authenticated, service_role;
 revoke all on schema marketplace from public;
 grant usage on schema marketplace to anon, authenticated, service_role;
 create table marketplace.profiles (
@@ -79,11 +82,16 @@ create table marketplace.moderation_log (
   created_at timestamptz not null default now()
 );
 -- Approval is a server-only capability. SECURITY DEFINER has fixed search_path.
-create function marketplace.seller_is_approved(uid uuid) returns boolean
+create function marketplace_private.seller_is_approved(uid uuid) returns boolean
 language sql stable security definer set search_path = ''
 as $$ select exists(select 1 from marketplace.seller_approvals a where a.user_id=uid and a.revoked_at is null) $$;
-revoke all on function marketplace.seller_is_approved(uuid) from public;
-grant execute on function marketplace.seller_is_approved(uuid) to anon, authenticated, service_role;
+revoke all on function marketplace_private.seller_is_approved(uuid) from public;
+grant execute on function marketplace_private.seller_is_approved(uuid) to anon, authenticated, service_role;
+create function marketplace_private.verified_user() returns boolean
+language sql stable security definer set search_path = ''
+as $$ select exists(select 1 from auth.users u where u.id=(select auth.uid()) and u.email_confirmed_at is not null and not u.is_anonymous) $$;
+revoke all on function marketplace_private.verified_user() from public;
+grant execute on function marketplace_private.verified_user() to authenticated,service_role;
 alter table marketplace.profiles enable row level security;
 alter table marketplace.seller_approvals enable row level security;
 alter table marketplace.listings enable row level security;
@@ -103,7 +111,7 @@ create policy profile_update on marketplace.profiles for update to authenticated
 grant select on marketplace.listings to anon,authenticated;
 grant insert (seller_id,manufacturer,part_number,title,category,condition,description,price_pence,quantity,vat_treatment,delivery,region) on marketplace.listings to authenticated;
 grant update (manufacturer,part_number,title,category,condition,description,price_pence,quantity,vat_treatment,delivery,region,status) on marketplace.listings to authenticated;
-create policy listing_visible on marketplace.listings for select to anon,authenticated using(status='published' and expires_at>now() and marketplace.seller_is_approved(seller_id));
+create policy listing_visible on marketplace.listings for select to anon,authenticated using(status='published' and expires_at>now() and marketplace_private.seller_is_approved(seller_id));
 create policy listing_own_read on marketplace.listings for select to authenticated using(seller_id=(select auth.uid()));
 create policy listing_own_create on marketplace.listings for insert to authenticated with check(seller_id=(select auth.uid()) and status='draft');
 create policy listing_own_edit on marketplace.listings for update to authenticated
@@ -112,12 +120,12 @@ with check(seller_id=(select auth.uid()) and status in ('draft','pending','withd
 -- Pending and published listings are locked against direct seller edits. A future
 -- reviewed server endpoint may withdraw them; moderation must approve the locked
 -- revision and set an expiry atomically. Clients cannot directly publish.
-create function marketplace.touch_listing() returns trigger
+create function marketplace_private.touch_listing() returns trigger
 language plpgsql set search_path='' as $$ begin new.updated_at=now(); return new; end $$;
-create trigger listing_updated before update on marketplace.listings for each row execute function marketplace.touch_listing();
+create trigger listing_updated before update on marketplace.listings for each row execute function marketplace_private.touch_listing();
 grant select on marketplace.listing_images to authenticated,anon;
 grant insert(listing_id,storage_path,position),delete on marketplace.listing_images to authenticated;
-create policy image_visible on marketplace.listing_images for select to anon,authenticated using(exists(select 1 from marketplace.listings l where l.id=listing_id and l.status='published' and l.expires_at>now() and marketplace.seller_is_approved(l.seller_id)));
+create policy image_visible on marketplace.listing_images for select to anon,authenticated using(exists(select 1 from marketplace.listings l where l.id=listing_id and l.status='published' and l.expires_at>now() and marketplace_private.seller_is_approved(l.seller_id)));
 create policy image_own_read on marketplace.listing_images for select to authenticated using(exists(select 1 from marketplace.listings l where l.id=listing_id and l.seller_id=(select auth.uid())));
 create policy image_own_create on marketplace.listing_images for insert to authenticated with check(exists(select 1 from marketplace.listings l where l.id=listing_id and l.seller_id=(select auth.uid()) and l.status='draft' and storage_path like l.seller_id::text||'/'||l.id::text||'/%'));
 create policy image_own_remove on marketplace.listing_images for delete to authenticated using(exists(select 1 from marketplace.listings l where l.id=listing_id and l.seller_id=(select auth.uid()) and l.status='draft'));
@@ -134,8 +142,14 @@ create policy wanted_own_create on marketplace.wanted_parts for insert to authen
 create policy wanted_own_edit on marketplace.wanted_parts for update to authenticated using(buyer_id=(select auth.uid()) and status in ('draft','rejected')) with check(buyer_id=(select auth.uid()) and status in ('draft','pending','closed'));
 -- Public wanted feed will be implemented through an allowlisted endpoint, not raw row grants.
 -- Moderation, enquiry delivery, verification, storage and public feed remain server-only.
+-- Restrictive policies also cover direct API access, not only the UI.
+create policy verified_profile on marketplace.profiles as restrictive for all to authenticated using ((select marketplace_private.verified_user())) with check ((select marketplace_private.verified_user()));
+create policy verified_listing on marketplace.listings as restrictive for all to authenticated using ((select marketplace_private.verified_user())) with check ((select marketplace_private.verified_user()));
+create policy verified_image on marketplace.listing_images as restrictive for all to authenticated using ((select marketplace_private.verified_user())) with check ((select marketplace_private.verified_user()));
+create policy verified_enquiry on marketplace.enquiries as restrictive for all to authenticated using ((select marketplace_private.verified_user())) with check ((select marketplace_private.verified_user()));
+create policy verified_wanted on marketplace.wanted_parts as restrictive for all to authenticated using ((select marketplace_private.verified_user())) with check ((select marketplace_private.verified_user()));
 grant all on all tables in schema marketplace to service_role;
 grant usage,select on all sequences in schema marketplace to service_role;
 -- Explicit function permissions: touch_listing is a trigger, not an API endpoint.
-revoke all on function marketplace.touch_listing() from public,anon,authenticated;
+revoke all on function marketplace_private.touch_listing() from public,anon,authenticated;
 commit;
