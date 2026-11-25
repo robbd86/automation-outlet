@@ -3,7 +3,7 @@
 -- Never run against the existing AO stock, checkout or customer systems.
 -- Public data is deliberately separated from private user/contact records.
 begin;
-create schema if not exists marketplace;
+create schema marketplace; -- fail if the schema already exists; no overwrite
 revoke all on schema marketplace from public;
 grant usage on schema marketplace to anon, authenticated, service_role;
 create table marketplace.profiles (
@@ -93,7 +93,9 @@ alter table marketplace.wanted_parts enable row level security;
 alter table marketplace.moderation_log enable row level security;
 revoke all on all tables in schema marketplace from public, anon, authenticated;
 -- No public access to profiles or raw wanted rows (which contain buyer IDs).
-grant select,insert,update on marketplace.profiles to authenticated;
+grant select on marketplace.profiles to authenticated;
+grant insert (user_id,display_name,company_name,region) on marketplace.profiles to authenticated;
+grant update (display_name,company_name,region) on marketplace.profiles to authenticated;
 create policy profile_read on marketplace.profiles for select to authenticated using(user_id=(select auth.uid()));
 create policy profile_insert on marketplace.profiles for insert to authenticated with check(user_id=(select auth.uid()));
 create policy profile_update on marketplace.profiles for update to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
@@ -105,10 +107,11 @@ create policy listing_visible on marketplace.listings for select to anon,authent
 create policy listing_own_read on marketplace.listings for select to authenticated using(seller_id=(select auth.uid()));
 create policy listing_own_create on marketplace.listings for insert to authenticated with check(seller_id=(select auth.uid()) and status='draft');
 create policy listing_own_edit on marketplace.listings for update to authenticated
-using(seller_id=(select auth.uid()) and status in ('draft','pending','rejected','withdrawn'))
+using(seller_id=(select auth.uid()) and status in ('draft','rejected','withdrawn'))
 with check(seller_id=(select auth.uid()) and status in ('draft','pending','withdrawn'));
--- Published listing revisions require withdrawal via a reviewed server endpoint;
--- clients cannot edit published data or directly publish it.
+-- Pending and published listings are locked against direct seller edits. A future
+-- reviewed server endpoint may withdraw them; moderation must approve the locked
+-- revision and set an expiry atomically. Clients cannot directly publish.
 create function marketplace.touch_listing() returns trigger
 language plpgsql set search_path='' as $$ begin new.updated_at=now(); return new; end $$;
 create trigger listing_updated before update on marketplace.listings for each row execute function marketplace.touch_listing();
@@ -123,13 +126,16 @@ create policy image_own_remove on marketplace.listing_images for delete to authe
 -- Enquiry sending must go through a rate-limited authenticated server endpoint.
 grant select on marketplace.enquiries to authenticated;
 create policy enquiry_participants on marketplace.enquiries for select to authenticated using(buyer_id=(select auth.uid()) or exists(select 1 from marketplace.listings l where l.id=listing_id and l.seller_id=(select auth.uid())));
-grant select,insert on marketplace.wanted_parts to authenticated;
+grant select on marketplace.wanted_parts to authenticated;
+grant insert (buyer_id,part_number,quantity,urgency,budget_pence) on marketplace.wanted_parts to authenticated;
 grant update(part_number,quantity,urgency,budget_pence,status) on marketplace.wanted_parts to authenticated;
 create policy wanted_own_read on marketplace.wanted_parts for select to authenticated using(buyer_id=(select auth.uid()));
 create policy wanted_own_create on marketplace.wanted_parts for insert to authenticated with check(buyer_id=(select auth.uid()) and status='draft' and expires_at is null);
-create policy wanted_own_edit on marketplace.wanted_parts for update to authenticated using(buyer_id=(select auth.uid()) and status in ('draft','pending','rejected')) with check(buyer_id=(select auth.uid()) and status in ('draft','pending','closed'));
+create policy wanted_own_edit on marketplace.wanted_parts for update to authenticated using(buyer_id=(select auth.uid()) and status in ('draft','rejected')) with check(buyer_id=(select auth.uid()) and status in ('draft','pending','closed'));
 -- Public wanted feed will be implemented through an allowlisted endpoint, not raw row grants.
 -- Moderation, enquiry delivery, verification, storage and public feed remain server-only.
 grant all on all tables in schema marketplace to service_role;
 grant usage,select on all sequences in schema marketplace to service_role;
+-- Explicit function permissions: touch_listing is a trigger, not an API endpoint.
+revoke all on function marketplace.touch_listing() from public,anon,authenticated;
 commit;
