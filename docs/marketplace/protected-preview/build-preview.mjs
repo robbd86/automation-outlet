@@ -5,7 +5,7 @@ const host=process.env.VERCEL_URL;
 if(process.env.VERCEL_ENV!=='preview'||!/^ao-marketplace-preview-[a-z0-9-]+\.vercel\.app$/.test(host||''))throw new Error('Only isolated Vercel preview builds may activate authentication');
 const settings=JSON.parse(readFileSync('preview-settings.json','utf8'));
 if(settings.projectUrl!=='https://hsitmryzukpldqenfhcu.supabase.co'||!settings.publishableKey.startsWith('sb_publishable_'))throw new Error('Invalid development settings');
-for(const f of ['account-ui.mjs','listing-ui.mjs','admin-ui.mjs','listing-client.mjs','auth-client.mjs'])execFileSync(process.execPath,['--check',f],{stdio:'inherit'});
+for(const f of ['account-ui.mjs','listing-ui.mjs','admin-ui.mjs','marketplace-ui.mjs','listing-client.mjs','auth-client.mjs'])execFileSync(process.execPath,['--check',f],{stdio:'inherit'});
 execFileSync(process.execPath,['--test','auth-client.test.mjs','listing-client.test.mjs'],{stdio:'inherit'});
 mkdirSync('dist',{recursive:true});
 mkdirSync('sdk',{recursive:true});
@@ -15,6 +15,6 @@ const bundle=pack.files.find(f=>f.path==='dist/umd/supabase.js')||pack.files.fin
 if(!bundle)throw new Error('Official browser bundle missing');
 execFileSync('tar',['-xzf',join('sdk',pack.filename),'-O','package/'+bundle.path],{stdio:['ignore','pipe','inherit'],maxBuffer:10*1024*1024});
 writeFileSync('dist/vendor.js',execFileSync('tar',['-xzf',join('sdk',pack.filename),'-O','package/'+bundle.path],{maxBuffer:10*1024*1024}));
-for(const f of ['account.html','account-ui.mjs','auth-client.mjs','listings.html','listing-ui.mjs','listing-client.mjs','admin.html','admin-ui.mjs'])copyFileSync(f,join('dist',f));
+for(const f of ['account.html','account-ui.mjs','auth-client.mjs','listings.html','listing-ui.mjs','listing-client.mjs','admin.html','admin-ui.mjs','index.html','marketplace-ui.mjs'])copyFileSync(f,join('dist',f));
 writeFileSync('dist/account-config.mjs','export const allowedHost='+JSON.stringify(host)+';\nexport const projectUrl='+JSON.stringify(settings.projectUrl)+';\nexport const publishableKey='+JSON.stringify(settings.publishableKey)+';\nexport const enablePreviewTesting=true;\nexport const createClient=(...args)=>globalThis.supabase.createClient(...args);\n');
 console.log('Isolated preview account build; SDK '+pack.version+'; integrity '+pack.integrity);
